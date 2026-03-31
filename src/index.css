@@ -1,0 +1,60 @@
+/* 파일 경로: src/index.css */
+/* ======================================== */
+/* 📌 감성여행2 전역 초기화 스타일 */
+/* - 기본 여백 제거 */
+/* - 전체 화면 넓이 정상화 */
+/* - 전역 박스모델 및 폰트 통일 */
+/* ======================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  font-family:
+    "Pretendard",
+    "Noto Sans KR",
+    "Malgun Gothic",
+    "Apple SD Gothic Neo",
+    sans-serif;
+  line-height: 1.5;
+  color: #1f2937;
+  background: #f8f5ef;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}

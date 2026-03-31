@@ -1,0 +1,181 @@
+/* 파일 경로: src/pages/HomePage.css */
+/* ======================================== */
+/* 📌 감성여행2 홈페이지 메인 전용 스타일
+/* - public 폴더의 호범 호순 메인 이미지 배경 사용
+/* - 메인 비주얼 배경 및 오버레이 구성
+/* - 브랜드 타이틀과 소개 문구 강조
+/* - 주요 이동 버튼 스타일 정리
+/* - 반응형 레이아웃 대응
+/* ======================================== */
+
+.home-page {
+  width: 100%;
+}
+
+.hero-section {
+  position: relative;
+  min-height: calc(100vh - 96px);
+  background-image: url("/gamsung2.png");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.hero-darken {
+  min-height: calc(100vh - 96px);
+  background: linear-gradient(
+    135deg,
+    rgba(17, 24, 39, 0.28),
+    rgba(17, 24, 39, 0.18),
+    rgba(17, 24, 39, 0.12)
+  );
+  display: flex;
+  align-items: center;
+}
+
+.hero-inner {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 72px 24px 88px;
+  color: #ffffff;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(8px);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  margin: 0 0 20px;
+}
+
+.hero-title {
+  margin: 0 0 22px;
+  max-width: 940px;
+  font-size: 3.5rem;
+  line-height: 1.16;
+  letter-spacing: -0.04em;
+  font-weight: 900;
+  text-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+}
+
+.hero-title-brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.hero-title-text {
+  color: #ffffff;
+}
+
+.hero-title-number {
+  color: #f59e0b;
+}
+
+.hero-description {
+  max-width: 760px;
+  margin: 0;
+  font-size: 1.1rem;
+  line-height: 1.95;
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 34px;
+}
+
+.primary-btn,
+.secondary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 14px 22px;
+  border-radius: 16px;
+  text-decoration: none;
+  font-size: 0.98rem;
+  font-weight: 800;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.primary-btn {
+  background: #f59e0b;
+  color: #1f2937;
+  box-shadow: 0 16px 30px rgba(245, 158, 11, 0.28);
+}
+
+.primary-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 36px rgba(245, 158, 11, 0.32);
+}
+
+.secondary-btn {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  backdrop-filter: blur(8px);
+}
+
+.secondary-btn:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.22);
+}
+
+@media (max-width: 900px) {
+  .hero-inner {
+    padding: 60px 20px 72px;
+  }
+
+  .hero-title {
+    font-size: 2.8rem;
+  }
+
+  .hero-description {
+    font-size: 1.02rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-section,
+  .hero-darken {
+    min-height: calc(100vh - 84px);
+  }
+
+  .hero-inner {
+    padding: 46px 16px 56px;
+  }
+
+  .hero-title {
+    font-size: 2.1rem;
+    line-height: 1.22;
+  }
+
+  .hero-description {
+    font-size: 0.96rem;
+    line-height: 1.8;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .primary-btn,
+  .secondary-btn {
+    width: 100%;
+  }
+}
