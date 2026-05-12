@@ -5,6 +5,9 @@
    - AuthContext 기반 사용자 상태 표시 영역 추가
    - demo 로그인 / 로그아웃 버튼 스타일 포함
    - 모바일에서는 로고 + 메뉴 버튼만 우선 표시
+   - 모바일 메뉴 안에 PC버전 보기 / 모바일버전 보기 버튼 추가
+   - PC버전 보기 선택 시 모바일에서도 데스크톱 폭으로 홈페이지 확인 가능
+   - PC 기본 화면에서는 PC버전 보기 버튼 숨김
    - QR 안내 페이지(/app)에서 본문이 바로 보이도록 모바일 헤더 높이 최소화
    ======================================== */
 
@@ -106,14 +109,22 @@
     box-shadow 0.2s ease;
 }
 
-.nav-link:hover {
+/* 📌 PC 기본 화면에서는 PC버전 보기 버튼 숨김 */
+.desktop-view-toggle {
+  display: none;
+  font-family: inherit;
+}
+
+.nav-link:hover,
+.desktop-view-toggle:hover {
   background: rgba(37, 99, 235, 0.1);
   color: #2563eb;
   transform: translateY(-1px);
   box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.14);
 }
 
-.nav-link.active {
+.nav-link.active,
+.desktop-view-toggle.active {
   background: linear-gradient(
     135deg,
     rgba(37, 99, 235, 0.16),
@@ -341,9 +352,29 @@
 .dropdown-toggle:focus-visible,
 .dropdown-menu a:focus-visible,
 .site-auth-button:focus-visible,
-.mobile-menu-button:focus-visible {
+.mobile-menu-button:focus-visible,
+.desktop-view-toggle:focus-visible {
   outline: 2px solid #2563eb;
   outline-offset: 2px;
+}
+
+/* 📌 PC버전 보기 강제 적용 */
+html.gamsung-force-desktop {
+  min-width: 1200px;
+  overflow-x: auto;
+}
+
+html.gamsung-force-desktop body {
+  min-width: 1200px;
+  overflow-x: auto;
+}
+
+html.gamsung-force-desktop #root {
+  min-width: 1200px;
+}
+
+html.gamsung-force-desktop .site-header-inner {
+  max-width: 1200px;
 }
 
 @media (max-width: 1024px) {
@@ -476,13 +507,30 @@
     gap: 8px;
   }
 
-  .nav-link {
+  .nav-link,
+  .desktop-view-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 100%;
     min-height: 42px;
     padding: 10px 12px;
     border-radius: 14px;
     font-size: 0.92rem;
     line-height: 1.25;
+  }
+
+  .desktop-view-toggle {
+    grid-column: 1 / -1;
+    background: rgba(245, 158, 11, 0.12);
+    color: #92400e;
+    box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.22);
+  }
+
+  .desktop-view-toggle.active {
+    background: linear-gradient(135deg, #f59e0b, #2563eb);
+    color: #ffffff;
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.14);
   }
 
   .dropdown {
@@ -550,6 +598,93 @@
     border-radius: 14px;
     white-space: nowrap;
   }
+
+  html.gamsung-force-desktop .site-header-inner {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    padding: 14px 24px;
+    gap: 20px;
+  }
+
+  html.gamsung-force-desktop .site-header-top {
+    display: contents;
+  }
+
+  html.gamsung-force-desktop .site-header-menu {
+    display: contents;
+    padding-top: 0;
+  }
+
+  html.gamsung-force-desktop .mobile-menu-button {
+    display: none;
+  }
+
+  html.gamsung-force-desktop .site-logo-text {
+    font-size: 2rem;
+  }
+
+  html.gamsung-force-desktop .site-logo-number {
+    font-size: 2.8rem;
+  }
+
+  html.gamsung-force-desktop .site-nav {
+    display: flex;
+    width: auto;
+    grid-template-columns: none;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  html.gamsung-force-desktop .nav-link {
+    width: auto;
+    min-height: 46px;
+    padding: 12px 18px;
+    border-radius: 16px;
+    font-size: 1.02rem;
+  }
+
+  html.gamsung-force-desktop .desktop-view-toggle {
+    display: inline-flex;
+    width: auto;
+    min-height: 46px;
+    padding: 12px 18px;
+    border-radius: 16px;
+    font-size: 1.02rem;
+  }
+
+  html.gamsung-force-desktop .dropdown {
+    width: auto;
+  }
+
+  html.gamsung-force-desktop .dropdown-trigger-group {
+    width: auto;
+    display: inline-flex;
+    grid-template-columns: none;
+    gap: 4px;
+    padding: 4px;
+  }
+
+  html.gamsung-force-desktop .dropdown-toggle {
+    min-width: 42px;
+    height: 42px;
+  }
+
+  html.gamsung-force-desktop .site-auth-panel {
+    width: auto;
+    display: flex;
+    grid-template-columns: none;
+    justify-content: flex-end;
+  }
+
+  html.gamsung-force-desktop .site-auth-user-box {
+    display: flex;
+    align-items: flex-end;
+  }
+
+  html.gamsung-force-desktop .site-auth-button {
+    width: auto;
+  }
 }
 
 @media (max-width: 560px) {
@@ -575,7 +710,8 @@
     grid-template-columns: 1fr;
   }
 
-  .nav-link {
+  .nav-link,
+  .desktop-view-toggle {
     min-height: 40px;
     font-size: 0.9rem;
     padding: 9px 12px;
@@ -600,5 +736,9 @@
 
   .site-auth-button {
     width: 100%;
+  }
+
+  html.gamsung-force-desktop .site-auth-user-box {
+    display: flex;
   }
 }

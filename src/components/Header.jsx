@@ -7,6 +7,8 @@
 // - AuthContext 기반 로그인 사용자 상태 표시
 // - demo 로그인 / 로그아웃 전환 버튼 포함
 // - 모바일에서는 로고 + 메뉴 버튼만 먼저 보이고, 메뉴는 펼침 방식으로 표시
+// - 모바일 메뉴 안에 PC버전 보기 / 모바일버전 보기 전환 버튼 추가
+// - localStorage에 PC버전 보기 상태 저장
 // - /app QR 안내 페이지에서 모바일 화면이 헤더 때문에 밀리지 않도록 반응형 구조 개선
 // - 바깥 클릭 및 ESC 입력 시 드롭다운 / 모바일 메뉴 닫힘 처리
 // ========================================
@@ -37,6 +39,8 @@ const DEMO_LOGIN_USER = {
   isLoggedIn: true,
 };
 
+const DESKTOP_VIEW_STORAGE_KEY = "gamsung2_force_desktop_view";
+
 function toSafeText(value, fallback = "") {
   return typeof value === "string" && value.trim().length > 0
     ? value.trim()
@@ -54,12 +58,19 @@ function getUserDisplayName(user) {
   return nickname || userId || "비로그인";
 }
 
+function readDesktopViewPreference() {
+  if (typeof window === "undefined") return false;
+
+  return window.localStorage.getItem(DESKTOP_VIEW_STORAGE_KEY) === "true";
+}
+
 export default function Header() {
   const location = useLocation();
   const headerRef = useRef(null);
   const dropdownRef = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isDesktopView, setIsDesktopView] = useState(readDesktopViewPreference);
   const { currentUser, isLoggedIn, login, logout } = useAuth();
 
   const regions = useMemo(() => {
@@ -107,6 +118,27 @@ export default function Header() {
     setIsOpen(false);
   }
 
+  function handleToggleDesktopView() {
+    setIsDesktopView((prev) => !prev);
+    setIsOpen(false);
+  }
+
+  useEffect(() => {
+    const root = document.documentElement;
+
+    if (isDesktopView) {
+      root.classList.add("gamsung-force-desktop");
+      window.localStorage.setItem(DESKTOP_VIEW_STORAGE_KEY, "true");
+    } else {
+      root.classList.remove("gamsung-force-desktop");
+      window.localStorage.setItem(DESKTOP_VIEW_STORAGE_KEY, "false");
+    }
+
+    return () => {
+      root.classList.remove("gamsung-force-desktop");
+    };
+  }, [isDesktopView]);
+
   useEffect(() => {
     function handleClickOutside(event) {
       if (!headerRef.current) return;
@@ -137,7 +169,9 @@ export default function Header() {
   return (
     <header
       ref={headerRef}
-      className={`site-header ${isMobileMenuOpen ? "mobile-menu-open" : ""}`}
+      className={`site-header ${isMobileMenuOpen ? "mobile-menu-open" : ""} ${
+        isDesktopView ? "desktop-view-enabled" : ""
+      }`}
     >
       <div className="site-header-inner">
         <div className="site-header-top">
@@ -256,6 +290,16 @@ export default function Header() {
             >
               문의하기
             </NavLink>
+
+            <button
+              type="button"
+              className={`desktop-view-toggle ${
+                isDesktopView ? "active" : ""
+              }`}
+              onClick={handleToggleDesktopView}
+            >
+              {isDesktopView ? "모바일버전으로 보기" : "PC버전으로 보기"}
+            </button>
           </nav>
 
           <div className="site-auth-panel">
