@@ -2,10 +2,9 @@
 /* ======================================== */
 /* 📌 감성여행2 공용 상단 헤더 스타일
 /* - 상단 로고 / 메뉴 / 드롭다운 레이아웃 정리
-/* - 헤더 클릭 영역이 다른 섹션에 가려지지 않도록 보강
-/* - 버튼 간격 / 그림자 / active 상태 통일
-/* - 모바일 구간에서도 메뉴 줄바꿈 안정화
-/* - 이벤트 드롭다운 그룹 제목 스타일 포함
+/* - AuthContext 기반 사용자 상태 표시 영역 추가
+/* - demo 로그인 / 로그아웃 버튼 스타일 포함
+/* - 모바일 구간에서도 메뉴 줄바꿈과 사용자 영역이 안정적으로 보이도록 보강
 /* ======================================== */
 
 .site-header {
@@ -26,10 +25,10 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 14px 24px;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 24px;
+  gap: 20px;
 }
 
 .site-logo {
@@ -65,6 +64,7 @@
 .site-nav {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 12px;
   flex-wrap: wrap;
 }
@@ -181,14 +181,14 @@
   position: absolute;
   top: calc(100% + 8px);
   left: 0;
-  min-width: 250px;
+  min-width: 260px;
   max-height: 70vh;
   overflow-y: auto;
   background: rgba(255, 255, 255, 0.985);
   border-radius: 18px;
   box-shadow: 0 20px 38px rgba(15, 23, 42, 0.16);
   border: 1px solid rgba(15, 23, 42, 0.07);
-  padding: 10px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -196,26 +196,43 @@
 }
 
 .dropdown-group + .dropdown-group {
-  margin-top: 10px;
-  padding-top: 10px;
+  margin-top: 12px;
+  padding-top: 14px;
   border-top: 1px solid rgba(15, 23, 42, 0.08);
 }
 
+.dropdown-group-head {
+  margin-bottom: 10px;
+}
+
 .dropdown-group-title {
-  margin: 0 0 6px;
-  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  margin: 0;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.1);
   color: #2563eb;
-  font-size: 0.78rem;
+  font-size: 1rem;
   font-weight: 900;
-  letter-spacing: 0.08em;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+}
+
+.dropdown-group-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .dropdown-menu a {
   display: block;
   text-decoration: none;
   color: #1f2937;
-  font-size: 0.98rem;
+  font-size: 0.96rem;
   font-weight: 700;
+  line-height: 1.45;
   padding: 13px 14px;
   border-radius: 13px;
   transition:
@@ -230,18 +247,107 @@
   transform: translateX(2px);
 }
 
+.site-auth-panel {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  min-width: 0;
+}
+
+.site-auth-user-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 0;
+  padding: 8px 12px;
+  border-radius: 16px;
+  background: rgba(248, 250, 252, 0.96);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.site-auth-user-label {
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.site-auth-user-name {
+  color: #0f172a;
+  font-size: 0.92rem;
+  font-weight: 900;
+  line-height: 1.45;
+  text-align: right;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+.site-auth-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: 14px;
+  font-size: 0.92rem;
+  font-weight: 800;
+  cursor: pointer;
+  border: none;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.site-auth-button.is-login {
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.18);
+}
+
+.site-auth-button.is-login:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.site-auth-button.is-logout {
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+  border: 1px solid rgba(37, 99, 235, 0.16);
+}
+
+.site-auth-button.is-logout:hover {
+  background: rgba(37, 99, 235, 0.14);
+  transform: translateY(-1px);
+}
+
 .site-logo:focus-visible,
 .nav-link:focus-visible,
 .dropdown-toggle:focus-visible,
-.dropdown-menu a:focus-visible {
+.dropdown-menu a:focus-visible,
+.site-auth-button:focus-visible {
   outline: 2px solid #2563eb;
   outline-offset: 2px;
 }
 
+@media (max-width: 1024px) {
+  .site-header-inner {
+    grid-template-columns: auto 1fr;
+    align-items: start;
+  }
+
+  .site-auth-panel {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+}
+
 @media (max-width: 768px) {
   .site-header-inner {
-    flex-direction: column;
-    align-items: flex-start;
+    grid-template-columns: 1fr;
+    padding: 14px 20px;
   }
 
   .site-logo-text {
@@ -253,8 +359,27 @@
   }
 
   .site-nav {
+    justify-content: flex-start;
     width: 100%;
     gap: 8px;
+  }
+
+  .site-auth-panel {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .site-auth-user-box {
+    align-items: flex-start;
+  }
+
+  .site-auth-user-name {
+    text-align: left;
+  }
+
+  .site-auth-button {
+    width: 100%;
   }
 
   .dropdown {
@@ -269,7 +394,15 @@
   .dropdown-menu {
     left: 0;
     right: auto;
-    min-width: 220px;
+    min-width: 230px;
+  }
+
+  .dropdown-group-title {
+    font-size: 0.96rem;
+  }
+
+  .dropdown-menu a {
+    font-size: 0.95rem;
   }
 }
 
@@ -305,6 +438,17 @@
   }
 
   .dropdown-menu {
-    min-width: 200px;
+    min-width: 208px;
+  }
+
+  .dropdown-group-title {
+    font-size: 0.94rem;
+    min-height: 30px;
+    padding: 5px 11px;
+  }
+
+  .dropdown-menu a {
+    font-size: 0.94rem;
+    padding: 12px 13px;
   }
 }

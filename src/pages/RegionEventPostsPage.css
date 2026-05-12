@@ -1,0 +1,458 @@
+/* 파일 경로: src/pages/RegionEventPostsPage.css */
+/* ======================================== */
+/* 📌 감성여행2 지역별 후기 / 참여글 전용 페이지 스타일
+/* - 후기 / 참여글 전용 목록형 화면 구성
+/* - 전체 / 후기 / 참여글 / 내 글 필터 UI 포함
+/* - 로그인 사용자 기준 내 글 표시 배지 추가
+/* - 작성자명과 이벤트명이 길어져도 안정적으로 보이도록 보강
+/* - 카드형 목록 / 정렬 / 개수 표시 / 빈 상태 / 반응형 포함
+/* ======================================== */
+
+.region-posts-page {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 56px 24px 80px;
+}
+
+.region-posts-shell {
+  padding: 28px;
+  border-radius: 28px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 16px 38px rgba(15, 23, 42, 0.05);
+}
+
+.region-posts-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.region-posts-label {
+  margin: 0 0 10px;
+  color: #2563eb;
+  font-size: 0.84rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.region-posts-header h2,
+.region-posts-empty h1,
+.region-posts-empty h3 {
+  margin: 0;
+  color: #0f172a;
+  line-height: 1.3;
+}
+
+.region-posts-header h2 {
+  font-size: 2rem;
+}
+
+.region-posts-description,
+.region-posts-empty p {
+  margin: 10px 0 0;
+  color: #475569;
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+.region-posts-actions,
+.region-posts-empty-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.region-posts-primary-button,
+.region-posts-secondary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: 14px;
+  font-size: 0.96rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.region-posts-primary-button {
+  border: none;
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.region-posts-primary-button:hover {
+  transform: translateY(-1px);
+  background: #1d4ed8;
+}
+
+.region-posts-secondary-button {
+  border: 1px solid rgba(37, 99, 235, 0.16);
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+}
+
+.region-posts-secondary-button:hover {
+  transform: translateY(-1px);
+  background: rgba(37, 99, 235, 0.14);
+}
+
+.region-posts-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: #f8fafc;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.region-posts-filter-group,
+.region-posts-sort-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.region-posts-filter-button,
+.region-posts-sort-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #ffffff;
+  color: #475569;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.region-posts-filter-button:hover,
+.region-posts-sort-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(37, 99, 235, 0.24);
+  color: #1d4ed8;
+}
+
+.region-posts-filter-button.is-active,
+.region-posts-sort-button.is-active {
+  border-color: rgba(37, 99, 235, 0.24);
+  background: rgba(37, 99, 235, 0.1);
+  color: #1d4ed8;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.08);
+}
+
+.region-posts-count-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #f8fafc;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  color: #334155;
+  font-size: 0.96rem;
+  font-weight: 700;
+  line-height: 1.7;
+}
+
+.region-posts-list {
+  display: grid;
+  gap: 16px;
+}
+
+.region-posts-card {
+  padding: 22px;
+  border-radius: 22px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  box-shadow: 0 16px 38px rgba(15, 23, 42, 0.05);
+}
+
+.region-posts-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.region-posts-card-top-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.region-posts-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.09);
+  color: #2563eb;
+  font-size: 0.84rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.region-posts-event-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.05);
+  color: #334155;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: normal;
+  word-break: keep-all;
+}
+
+.region-posts-card-top-left .region-posts-event-chip:last-child {
+  background: rgba(37, 99, 235, 0.1);
+  color: #1d4ed8;
+}
+
+.region-posts-author {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  max-width: min(100%, 360px);
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 0.84rem;
+  font-weight: 800;
+  line-height: 1.45;
+  text-align: right;
+  white-space: normal;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+.region-posts-card h3 {
+  margin: 0 0 12px;
+  color: #0f172a;
+  font-size: 1.18rem;
+  line-height: 1.45;
+}
+
+.region-posts-summary {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.96rem;
+  line-height: 1.8;
+}
+
+.region-posts-social {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.region-posts-social-item {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #1d4ed8;
+  font-size: 0.84rem;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.region-posts-meta {
+  display: flex;
+  gap: 10px 16px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+  color: #475569;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.region-posts-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.region-posts-card-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 10px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(37, 99, 235, 0.16);
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+  font-size: 0.92rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.region-posts-card-button:hover {
+  transform: translateY(-1px);
+  background: rgba(37, 99, 235, 0.14);
+  border-color: rgba(37, 99, 235, 0.24);
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.08);
+}
+
+.region-posts-empty {
+  max-width: 760px;
+  margin: 40px auto 0;
+  padding: 36px 28px;
+  text-align: center;
+  border-radius: 24px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+}
+
+.region-posts-empty-badge {
+  margin: 0 0 12px;
+  color: #2563eb;
+  font-size: 0.84rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+@media (max-width: 1024px) {
+  .region-posts-page {
+    padding: 48px 20px 72px;
+  }
+
+  .region-posts-author {
+    max-width: min(100%, 320px);
+  }
+}
+
+@media (max-width: 768px) {
+  .region-posts-page {
+    padding: 40px 16px 64px;
+  }
+
+  .region-posts-shell {
+    padding: 22px;
+    border-radius: 22px;
+  }
+
+  .region-posts-header h2 {
+    font-size: 1.7rem;
+  }
+
+  .region-posts-actions,
+  .region-posts-empty-actions {
+    width: 100%;
+  }
+
+  .region-posts-primary-button,
+  .region-posts-secondary-button {
+    width: 100%;
+  }
+
+  .region-posts-toolbar {
+    padding: 14px;
+  }
+
+  .region-posts-filter-group,
+  .region-posts-sort-group {
+    width: 100%;
+  }
+
+  .region-posts-filter-button,
+  .region-posts-sort-button {
+    flex: 1 1 auto;
+  }
+
+  .region-posts-count-box {
+    font-size: 0.92rem;
+  }
+
+  .region-posts-card {
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  .region-posts-card-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .region-posts-card-top-left {
+    width: 100%;
+  }
+
+  .region-posts-event-chip {
+    max-width: 100%;
+  }
+
+  .region-posts-author {
+    justify-content: flex-start;
+    max-width: 100%;
+    text-align: left;
+    border-radius: 14px;
+  }
+
+  .region-posts-social {
+    gap: 8px;
+  }
+
+  .region-posts-social-item {
+    font-size: 0.82rem;
+  }
+
+  .region-posts-card-actions {
+    justify-content: stretch;
+  }
+
+  .region-posts-card-button {
+    width: 100%;
+  }
+}

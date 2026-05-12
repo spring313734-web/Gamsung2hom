@@ -1,0 +1,206 @@
+/* 파일 경로: src/pages/EventHubPage.css */
+/* ======================================== */
+/* 📌 감성여행2 이벤트 허브 메인 페이지 스타일
+/* - EventHubPage.jsx 인라인 스타일을 별도 CSS로 분리
+/* - 메인 소개 영역 / 그룹 헤더 / 메타칩 / 빈 상태 카드 스타일 정리
+/* - 단일 카드 그룹 폭 보정
+/* - 태블릿 / 모바일 반응형 간격과 글자 크기 조정
+/* ======================================== */
+
+.event-hub-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 56px 24px 80px;
+}
+
+.event-hub-intro-section {
+  margin-bottom: 44px;
+}
+
+.event-hub-section-label {
+  margin: 0 0 10px;
+  color: #2563eb;
+  font-size: 0.84rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.event-hub-title {
+  margin: 0 0 14px;
+  color: #0f172a;
+  font-size: 2rem;
+  line-height: 1.3;
+}
+
+.event-hub-description {
+  margin: 0;
+  color: #475569;
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+.event-hub-meta-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.event-hub-meta-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.event-hub-group-section {
+  margin-bottom: 48px;
+}
+
+.event-hub-group-header {
+  margin-bottom: 18px;
+}
+
+.event-hub-group-label {
+  margin: 0 0 8px;
+  color: #2563eb;
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.event-hub-group-title {
+  margin: 0 0 8px;
+  color: #0f172a;
+  font-size: 1.55rem;
+  line-height: 1.3;
+}
+
+.event-hub-group-description {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.97rem;
+  line-height: 1.7;
+}
+
+.event-hub-group-grid-wrap {
+  width: 100%;
+}
+
+.event-hub-single-card-wrap {
+  width: 100%;
+  max-width: 380px;
+}
+
+.event-hub-empty-section {
+  padding: 36px 28px;
+  border-radius: 28px;
+  background: #f8fbff;
+  border: 1px solid rgba(37, 99, 235, 0.12);
+}
+
+.event-hub-empty-label {
+  margin: 0 0 10px;
+  color: #2563eb;
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.event-hub-empty-title {
+  margin: 0 0 12px;
+  color: #0f172a;
+  font-size: 1.5rem;
+  line-height: 1.3;
+}
+
+.event-hub-empty-description {
+  margin: 0;
+  color: #475569;
+  font-size: 0.98rem;
+  line-height: 1.8;
+}
+
+@media (max-width: 980px) {
+  .event-hub-page {
+    padding: 48px 20px 72px;
+  }
+
+  .event-hub-intro-section {
+    margin-bottom: 40px;
+  }
+
+  .event-hub-title {
+    font-size: 1.85rem;
+  }
+
+  .event-hub-group-title {
+    font-size: 1.42rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .event-hub-page {
+    padding: 40px 16px 64px;
+  }
+
+  .event-hub-intro-section {
+    margin-bottom: 36px;
+  }
+
+  .event-hub-title {
+    font-size: 1.65rem;
+  }
+
+  .event-hub-description {
+    font-size: 0.96rem;
+    line-height: 1.75;
+  }
+
+  .event-hub-meta-wrap {
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .event-hub-meta-chip {
+    min-height: 32px;
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+
+  .event-hub-group-section {
+    margin-bottom: 40px;
+  }
+
+  .event-hub-group-title {
+    font-size: 1.28rem;
+  }
+
+  .event-hub-group-description {
+    font-size: 0.94rem;
+    line-height: 1.68;
+  }
+
+  .event-hub-single-card-wrap {
+    max-width: 100%;
+  }
+
+  .event-hub-empty-section {
+    padding: 28px 20px;
+    border-radius: 22px;
+  }
+
+  .event-hub-empty-title {
+    font-size: 1.32rem;
+  }
+
+  .event-hub-empty-description {
+    font-size: 0.95rem;
+    line-height: 1.72;
+  }
+}

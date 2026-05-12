@@ -5,11 +5,13 @@
 /* - 메인 비주얼 배경 및 오버레이 구성
 /* - 브랜드 타이틀과 소개 문구 강조
 /* - 주요 이동 버튼 스타일 정리
+/* - 이벤트 허브 연결 섹션과 대표 지역 카드 추가
 /* - 반응형 레이아웃 대응
 /* ======================================== */
 
 .home-page {
   width: 100%;
+  background: #f8fafc;
 }
 
 .hero-section {
@@ -95,7 +97,9 @@
 }
 
 .primary-btn,
-.secondary-btn {
+.secondary-btn,
+.hub-primary-link,
+.hub-secondary-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -109,7 +113,8 @@
     transform 0.2s ease,
     box-shadow 0.2s ease,
     background 0.2s ease,
-    color 0.2s ease;
+    color 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .primary-btn {
@@ -135,6 +140,147 @@
   background: rgba(255, 255, 255, 0.22);
 }
 
+.home-event-hub-section {
+  background: #f8fafc;
+}
+
+.home-event-hub-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 76px 24px 92px;
+}
+
+.home-event-hub-head {
+  margin-bottom: 30px;
+}
+
+.home-event-hub-label {
+  margin: 0 0 10px;
+  color: #2563eb;
+  font-size: 0.84rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.home-event-hub-head h2 {
+  margin: 0 0 14px;
+  color: #0f172a;
+  font-size: 2.2rem;
+  line-height: 1.25;
+}
+
+.home-event-hub-head p {
+  max-width: 860px;
+  margin: 0;
+  color: #475569;
+  font-size: 1.02rem;
+  line-height: 1.85;
+}
+
+.home-event-hub-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 26px;
+}
+
+.hub-primary-link {
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 16px 32px rgba(37, 99, 235, 0.18);
+}
+
+.hub-primary-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 38px rgba(37, 99, 235, 0.22);
+}
+
+.hub-secondary-link {
+  background: #ffffff;
+  color: #1e293b;
+  border: 1px solid rgba(15, 23, 42, 0.09);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.hub-secondary-link:hover {
+  transform: translateY(-2px);
+  border-color: rgba(37, 99, 235, 0.18);
+  color: #2563eb;
+}
+
+.home-featured-region-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.home-featured-region-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 250px;
+  padding: 24px 22px;
+  border-radius: 24px;
+  background: #ffffff;
+  text-decoration: none;
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+  transition:
+    transform 0.24s ease,
+    box-shadow 0.24s ease,
+    border-color 0.24s ease;
+}
+
+.home-featured-region-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 24px 50px rgba(37, 99, 235, 0.12);
+  border-color: rgba(37, 99, 235, 0.18);
+}
+
+.home-featured-region-top {
+  margin-bottom: 16px;
+}
+
+.home-featured-region-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.09);
+  color: #2563eb;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.home-featured-region-card h3 {
+  margin: 0 0 10px;
+  color: #0f172a;
+  font-size: 1.45rem;
+  line-height: 1.3;
+}
+
+.home-featured-region-card p {
+  margin: 0;
+  color: #475569;
+  font-size: 0.97rem;
+  line-height: 1.72;
+}
+
+.home-featured-region-link {
+  margin-top: auto;
+  padding-top: 18px;
+  color: #2563eb;
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+@media (max-width: 1100px) {
+  .home-featured-region-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 900px) {
   .hero-inner {
     padding: 60px 20px 72px;
@@ -146,6 +292,14 @@
 
   .hero-description {
     font-size: 1.02rem;
+  }
+
+  .home-event-hub-inner {
+    padding: 64px 20px 78px;
+  }
+
+  .home-event-hub-head h2 {
+    font-size: 1.95rem;
   }
 }
 
@@ -169,13 +323,47 @@
     line-height: 1.8;
   }
 
-  .hero-actions {
+  .hero-actions,
+  .home-event-hub-actions {
     flex-direction: column;
     align-items: stretch;
   }
 
   .primary-btn,
-  .secondary-btn {
+  .secondary-btn,
+  .hub-primary-link,
+  .hub-secondary-link {
     width: 100%;
+  }
+
+  .home-event-hub-inner {
+    padding: 52px 16px 62px;
+  }
+
+  .home-event-hub-head h2 {
+    font-size: 1.65rem;
+  }
+
+  .home-event-hub-head p {
+    font-size: 0.96rem;
+    line-height: 1.78;
+  }
+
+  .home-featured-region-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .home-featured-region-card {
+    min-height: auto;
+    padding: 20px 18px;
+  }
+
+  .home-featured-region-card h3 {
+    font-size: 1.28rem;
+  }
+
+  .home-featured-region-card p {
+    font-size: 0.95rem;
   }
 }

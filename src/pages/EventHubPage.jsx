@@ -1,15 +1,18 @@
 // 파일 경로: src/pages/EventHubPage.jsx
 // ========================================
 // 📌 감성여행2 이벤트 허브 메인 페이지
-// - 지역별 이벤트 허브 메인 목록 출력
-// - 특별시 / 광역시 / 특별자치시 / 도 단위로 그룹화
-// - 각 지역 카드는 상세 이벤트 허브 페이지로 이동
-// - regionEvents 공통 데이터의 regionType 기준으로 화면 구성
+// - /events 메인에서 지역별 이벤트 허브 목록 출력
+// - 홈페이지 로컬 regionEvents 대신 Supabase 기반 지자체 콘텐츠 데이터를 읽음
+// - 지역축제와 관광이벤트를 함께 보는 공용 허브 소개 구조 유지
+// - 특별시 / 광역시 / 특별자치시 / 도 / 기타 지역 순서로 정리
+// - 서버 데이터가 일부 비정상이어도 화면이 깨지지 않도록 방어 처리
 // ========================================
 
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import PageHero from "../components/PageHero";
-import { getRegionEventData } from "../data/regionEvents";
+import RegionCardGrid from "../components/RegionCardGrid";
+import { getGovEventHubRegions } from "../lib/govEventApi";
+import "./EventHubPage.css";
 
 const REGION_GROUPS = [
   { key: "special_city", label: "특별시" },
@@ -18,204 +21,236 @@ const REGION_GROUPS = [
   { key: "province", label: "도" },
 ];
 
-export default function EventHubPage() {
-  const regions = getRegionEventData();
+const UNKNOWN_GROUP = {
+  key: "other",
+  label: "기타 지역",
+};
 
-  const groupedRegions = REGION_GROUPS.map((group) => ({
-    ...group,
-    items: regions.filter((region) => region.regionType === group.key),
-  })).filter((group) => group.items.length > 0);
+function toSafeArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function toSafeCount(value) {
+  return Number.isFinite(value) && value > 0 ? value : 0;
+}
+
+function getRegionTotalEventCount(region) {
+  return toSafeCount(region?.eventCount ?? region?.totalEventCount);
+}
+
+function buildGroupMeta(items = []) {
+  return items.reduce(
+    (acc, item) => {
+      acc.totalRegions += 1;
+      acc.totalEvents += getRegionTotalEventCount(item);
+      acc.totalNotices += toSafeCount(item?.noticeCount);
+      acc.totalUserPosts += toSafeCount(item?.userPostCount);
+      acc.totalPhotos += toSafeCount(item?.photoCount);
+      return acc;
+    },
+    {
+      totalRegions: 0,
+      totalEvents: 0,
+      totalNotices: 0,
+      totalUserPosts: 0,
+      totalPhotos: 0,
+    }
+  );
+}
+
+function buildSummaryParts(meta) {
+  const parts = [
+    `${meta.totalRegions}개 지역 허브`,
+    `대표 이벤트 ${meta.totalEvents}개`,
+  ];
+
+  if (meta.totalNotices > 0) {
+    parts.push(`공지 ${meta.totalNotices}개`);
+  }
+
+  if (meta.totalUserPosts > 0) {
+    parts.push(`후기 ${meta.totalUserPosts}개`);
+  }
+
+  if (meta.totalPhotos > 0) {
+    parts.push(`사진 ${meta.totalPhotos}장`);
+  }
+
+  return parts;
+}
+
+function buildGroupDescription(groupLabel, items = []) {
+  const meta = buildGroupMeta(items);
+  const summaryParts = buildSummaryParts(meta);
+
+  return `${groupLabel} 단위로 연결된 지역축제와 관광이벤트 허브를 한눈에 확인하고, 원하는 지역의 상세 페이지로 이어질 수 있도록 정리했습니다. ${summaryParts.join(" · ")}`;
+}
+
+function groupRegions(regions = []) {
+  const knownGroupMap = new Map(
+    REGION_GROUPS.map((group) => [group.key, { ...group, items: [] }])
+  );
+
+  const unknownItems = [];
+
+  regions.forEach((region) => {
+    const regionType = region?.regionType;
+
+    if (knownGroupMap.has(regionType)) {
+      knownGroupMap.get(regionType).items.push(region);
+      return;
+    }
+
+    unknownItems.push(region);
+  });
+
+  const orderedGroups = REGION_GROUPS.map((group) => knownGroupMap.get(group.key))
+    .filter((group) => group.items.length > 0);
+
+  if (unknownItems.length > 0) {
+    orderedGroups.push({
+      ...UNKNOWN_GROUP,
+      items: unknownItems,
+    });
+  }
+
+  return orderedGroups;
+}
+
+export default function EventHubPage() {
+  const [regions, setRegions] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadRegions() {
+      setIsLoading(true);
+      setErrorMessage("");
+
+      try {
+        const nextRegions = await getGovEventHubRegions();
+        if (!isMounted) return;
+        setRegions(toSafeArray(nextRegions));
+      } catch (error) {
+        if (!isMounted) return;
+        console.error("[EventHubPage] failed to load gov event hub regions", error);
+        setRegions([]);
+        setErrorMessage(
+          "지역 허브 데이터를 불러오지 못했습니다. Supabase 연결 또는 테이블 상태를 확인해주세요."
+        );
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadRegions();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const groupedRegions = useMemo(() => groupRegions(regions), [regions]);
+  const hasGroupedRegions = groupedRegions.length > 0;
+
+  const totalMeta = useMemo(() => buildGroupMeta(regions), [regions]);
+  const introMetaParts = useMemo(() => buildSummaryParts(totalMeta), [totalMeta]);
 
   return (
     <>
       <PageHero
         badge="EVENT HUB"
         title="지역별 이벤트 허브"
-        description="특별시, 광역시, 특별자치시, 도 단위로 지역별 대표 이벤트와 추천 코스를 한눈에 보고 감성여행2 여행 흐름으로 자연스럽게 이어보세요."
+        description="지자체에서 등록한 지역축제와 관광이벤트를 행정구역 단위로 모아 보고, 원하는 지역의 상세 허브로 바로 이어질 수 있도록 정리한 감성여행2 공용 이벤트 화면입니다."
         backgroundImage="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=80"
       />
 
-      <div style={styles.page}>
-        <section style={styles.introSection}>
-          <p style={styles.sectionLabel}>EVENT HUB MAIN</p>
-          <h2 style={styles.title}>행정구역별 이벤트 허브</h2>
-          <p style={styles.description}>
-            이벤트 허브를 특별시, 광역시, 특별자치시, 도 기준으로 나누어
-            보기 쉽게 정리했습니다. 원하는 지역을 선택하면 상세 허브로
-            이동합니다.
+      <div className="event-hub-page">
+        <section className="event-hub-intro-section">
+          <p className="event-hub-section-label">EVENT HUB MAIN</p>
+          <h2 className="event-hub-title">행정구역별 이벤트 허브</h2>
+          <p className="event-hub-description">
+            특별시, 광역시, 특별자치시, 도 기준으로 지역 허브를 정리했습니다.
+            각 지역 카드에서 대표 이벤트 흐름을 먼저 보고, 상세 허브 페이지에서
+            유형, 상태, 기간, 장소, 주관, 문의 정보를 이어서 확인할 수 있습니다.
           </p>
-        </section>
 
-        {groupedRegions.map((group) => (
-          <section key={group.key} style={styles.groupSection}>
-            <div style={styles.groupHeader}>
-              <p style={styles.groupLabel}>{group.label}</p>
-              <h3 style={styles.groupTitle}>{group.label} 이벤트 허브</h3>
-            </div>
-
-            <div style={styles.grid}>
-              {group.items.map((region) => (
-                <article key={region.slug} style={styles.card}>
-                  <div
-                    style={{
-                      ...styles.cardImage,
-                      backgroundImage: `url(${region.heroImage || region.image})`,
-                    }}
-                  />
-                  <div style={styles.cardBody}>
-                    <p style={styles.badge}>{region.badge}</p>
-                    <h4 style={styles.cardTitle}>{region.name} 이벤트 허브</h4>
-                    <p style={styles.cardDescription}>
-                      {region.shortDescription}
-                    </p>
-
-                    <div style={styles.metaRow}>
-                      <span style={styles.metaChip}>
-                        이벤트 {region.eventCount}개
-                      </span>
-                      {Array.isArray(region.tags) && region.tags.length > 0 ? (
-                        <span style={styles.metaChip}>#{region.tags[0]}</span>
-                      ) : null}
-                    </div>
-
-                    <Link
-                      to={`/events/region/${region.slug}`}
-                      style={styles.linkButton}
-                    >
-                      전체 보기
-                    </Link>
-                  </div>
-                </article>
+          {introMetaParts.length > 0 ? (
+            <div className="event-hub-meta-wrap">
+              {introMetaParts.map((text) => (
+                <span key={text} className="event-hub-meta-chip">
+                  {text}
+                </span>
               ))}
             </div>
+          ) : null}
+        </section>
+
+        {isLoading ? (
+          <section className="event-hub-empty-section">
+            <p className="event-hub-empty-label">EVENT HUB LOADING</p>
+            <h3 className="event-hub-empty-title">지역 이벤트 허브를 불러오는 중입니다</h3>
+            <p className="event-hub-empty-description">
+              지자체에서 등록한 지역축제와 관광이벤트 데이터를 서버에서 불러오고 있습니다.
+            </p>
           </section>
-        ))}
+        ) : errorMessage ? (
+          <section className="event-hub-empty-section">
+            <p className="event-hub-empty-label">EVENT HUB ERROR</p>
+            <h3 className="event-hub-empty-title">지역 이벤트 허브를 불러오지 못했습니다</h3>
+            <p className="event-hub-empty-description">{errorMessage}</p>
+          </section>
+        ) : hasGroupedRegions ? (
+          groupedRegions.map((group) => {
+            const isSingleCardGroup = group.items.length === 1;
+
+            return (
+              <section key={group.key} className="event-hub-group-section">
+                <div className="event-hub-group-header">
+                  <p className="event-hub-group-label">{group.label}</p>
+                  <h3 className="event-hub-group-title">
+                    {group.label} 이벤트 허브
+                  </h3>
+                  <p className="event-hub-group-description">
+                    {buildGroupDescription(group.label, group.items)}
+                  </p>
+                </div>
+
+                <div
+                  className={
+                    isSingleCardGroup
+                      ? "event-hub-single-card-wrap"
+                      : "event-hub-group-grid-wrap"
+                  }
+                >
+                  <RegionCardGrid
+                    regions={group.items}
+                    gridClassName={
+                      isSingleCardGroup ? "region-card-grid-single" : ""
+                    }
+                  />
+                </div>
+              </section>
+            );
+          })
+        ) : (
+          <section className="event-hub-empty-section">
+            <p className="event-hub-empty-label">EVENT HUB READY</p>
+            <h3 className="event-hub-empty-title">
+              지역 이벤트 허브를 준비중입니다
+            </h3>
+            <p className="event-hub-empty-description">
+              현재 연결된 지역 데이터가 없어 메인 허브 목록을 불러오지 못했습니다.
+              지자체 콘텐츠 데이터가 연결되면 이 화면에서 지역별 허브를 바로
+              확인할 수 있습니다.
+            </p>
+          </section>
+        )}
       </div>
     </>
   );
 }
-
-const styles = {
-  page: {
-    maxWidth: "1200px",
-    margin: "0 auto",
-    padding: "56px 24px 80px",
-  },
-  introSection: {
-    marginBottom: "40px",
-  },
-  sectionLabel: {
-    margin: "0 0 10px",
-    color: "#2563eb",
-    fontSize: "0.84rem",
-    fontWeight: 900,
-    letterSpacing: "0.08em",
-  },
-  title: {
-    margin: "0 0 14px",
-    color: "#0f172a",
-    fontSize: "2rem",
-    lineHeight: 1.3,
-  },
-  description: {
-    margin: 0,
-    color: "#475569",
-    fontSize: "1rem",
-    lineHeight: 1.8,
-  },
-  groupSection: {
-    marginBottom: "42px",
-  },
-  groupHeader: {
-    marginBottom: "18px",
-  },
-  groupLabel: {
-    margin: "0 0 8px",
-    color: "#2563eb",
-    fontSize: "0.82rem",
-    fontWeight: 900,
-    letterSpacing: "0.08em",
-  },
-  groupTitle: {
-    margin: 0,
-    color: "#0f172a",
-    fontSize: "1.55rem",
-    lineHeight: 1.3,
-  },
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-    gap: "22px",
-  },
-  card: {
-    overflow: "hidden",
-    borderRadius: "24px",
-    background: "#ffffff",
-    border: "1px solid rgba(15, 23, 42, 0.07)",
-    boxShadow: "0 18px 40px rgba(15, 23, 42, 0.06)",
-  },
-  cardImage: {
-    width: "100%",
-    height: "220px",
-    backgroundPosition: "center",
-    backgroundRepeat: "no-repeat",
-    backgroundSize: "cover",
-  },
-  cardBody: {
-    padding: "22px",
-  },
-  badge: {
-    display: "inline-flex",
-    alignItems: "center",
-    minHeight: "34px",
-    margin: "0 0 14px",
-    padding: "6px 12px",
-    borderRadius: "999px",
-    background: "rgba(37, 99, 235, 0.1)",
-    color: "#2563eb",
-    fontSize: "0.84rem",
-    fontWeight: 800,
-  },
-  cardTitle: {
-    margin: "0 0 10px",
-    color: "#0f172a",
-    fontSize: "1.3rem",
-    lineHeight: 1.4,
-  },
-  cardDescription: {
-    margin: "0 0 16px",
-    color: "#64748b",
-    fontSize: "0.97rem",
-    lineHeight: 1.7,
-  },
-  metaRow: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: "8px",
-    marginBottom: "18px",
-  },
-  metaChip: {
-    display: "inline-flex",
-    alignItems: "center",
-    minHeight: "32px",
-    padding: "6px 12px",
-    borderRadius: "999px",
-    background: "#f8fafc",
-    color: "#334155",
-    fontSize: "0.84rem",
-    fontWeight: 700,
-  },
-  linkButton: {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: "44px",
-    padding: "10px 16px",
-    borderRadius: "14px",
-    textDecoration: "none",
-    background: "#2563eb",
-    color: "#ffffff",
-    fontSize: "0.95rem",
-    fontWeight: 800,
-  },
-};

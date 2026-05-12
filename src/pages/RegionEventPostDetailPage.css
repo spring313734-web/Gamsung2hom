@@ -1,0 +1,479 @@
+/* 파일 경로: src/pages/RegionEventPostDetailPage.css */
+/* ======================================== */
+/* 📌 감성여행2 지역별 후기 / 참여글 상세 페이지 스타일
+/* - 후기 본문 / 대표 이미지 / 메타 정보 / 댓글 목록 레이아웃 구성
+/* - 현재 로그인 사용자 기준 댓글 작성 UI 분리
+/* - 내 댓글에만 수정 / 삭제 버튼이 자연스럽게 보이도록 정리
+/* - 비로그인 안내 박스 / 빈 상태 박스 / 모바일 대응 포함
+/* ======================================== */
+
+.region-post-detail-page {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 56px 24px 80px;
+}
+
+.region-post-detail-shell {
+  padding: 28px;
+  border-radius: 28px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 16px 38px rgba(15, 23, 42, 0.05);
+}
+
+.region-post-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+}
+
+.region-post-detail-label {
+  margin: 0 0 10px;
+  color: #2563eb;
+  font-size: 0.84rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.region-post-detail-header h2,
+.region-post-detail-empty h1,
+.region-post-detail-comments-head h3 {
+  margin: 0;
+  color: #0f172a;
+  line-height: 1.35;
+}
+
+.region-post-detail-header h2 {
+  font-size: 2rem;
+}
+
+.region-post-detail-description,
+.region-post-detail-comments-head p,
+.region-post-detail-empty p {
+  margin: 10px 0 0;
+  color: #475569;
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+.region-post-detail-header-actions,
+.region-post-detail-empty-actions,
+.region-post-detail-comment-edit-actions,
+.region-post-detail-comment-write-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.region-post-detail-primary-button,
+.region-post-detail-secondary-button,
+.region-post-detail-save-button,
+.region-post-detail-cancel-button,
+.region-post-detail-comment-edit-button,
+.region-post-detail-comment-delete-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: 14px;
+  font-size: 0.94rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.region-post-detail-primary-button,
+.region-post-detail-save-button {
+  border: none;
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.region-post-detail-primary-button:hover,
+.region-post-detail-save-button:hover {
+  transform: translateY(-1px);
+  background: #1d4ed8;
+}
+
+.region-post-detail-secondary-button,
+.region-post-detail-cancel-button,
+.region-post-detail-comment-edit-button {
+  border: 1px solid rgba(37, 99, 235, 0.16);
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+}
+
+.region-post-detail-secondary-button:hover,
+.region-post-detail-cancel-button:hover,
+.region-post-detail-comment-edit-button:hover {
+  transform: translateY(-1px);
+  background: rgba(37, 99, 235, 0.14);
+}
+
+.region-post-detail-comment-delete-button {
+  border: 1px solid rgba(239, 68, 68, 0.18);
+  background: rgba(239, 68, 68, 0.08);
+  color: #dc2626;
+}
+
+.region-post-detail-comment-delete-button:hover {
+  transform: translateY(-1px);
+  background: rgba(239, 68, 68, 0.14);
+}
+
+.region-post-detail-main-card {
+  padding: 24px;
+  border-radius: 24px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  box-shadow: 0 16px 38px rgba(15, 23, 42, 0.05);
+}
+
+.region-post-detail-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.region-post-detail-top-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.region-post-detail-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.09);
+  color: #2563eb;
+  font-size: 0.84rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.region-post-detail-event-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.05);
+  color: #334155;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.region-post-detail-author {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  max-width: min(100%, 360px);
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 0.84rem;
+  font-weight: 800;
+  line-height: 1.45;
+  text-align: right;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+.region-post-detail-image-wrap {
+  overflow: hidden;
+  margin-bottom: 18px;
+  border-radius: 22px;
+}
+
+.region-post-detail-image {
+  display: block;
+  width: 100%;
+  max-height: 460px;
+  object-fit: cover;
+}
+
+.region-post-detail-content-box {
+  color: #334155;
+  font-size: 1rem;
+  line-height: 1.9;
+}
+
+.region-post-detail-content-box p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.region-post-detail-social {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.region-post-detail-social-item {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #1d4ed8;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.region-post-detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin-top: 18px;
+  color: #64748b;
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+
+.region-post-detail-comments-section {
+  margin-top: 28px;
+  padding: 24px;
+  border-radius: 24px;
+  background: #f8fafc;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.region-post-detail-comments-head {
+  margin-bottom: 18px;
+}
+
+.region-post-detail-comment-write-box,
+.region-post-detail-comment-login-box,
+.region-post-detail-empty-comments,
+.region-post-detail-empty {
+  padding: 20px;
+  border-radius: 22px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+}
+
+.region-post-detail-comment-login-box,
+.region-post-detail-empty-comments {
+  color: #475569;
+  font-size: 0.97rem;
+  line-height: 1.8;
+}
+
+.region-post-detail-login-state {
+  margin: 0 0 12px;
+  color: #2563eb;
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.region-post-detail-comment-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 0.98rem;
+  line-height: 1.7;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.region-post-detail-comment-textarea:focus {
+  border-color: rgba(37, 99, 235, 0.45);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+.region-post-detail-comments-list {
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.region-post-detail-comment-card {
+  padding: 18px 18px 16px;
+  border-radius: 20px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+}
+
+.region-post-detail-comment-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.region-post-detail-comment-author {
+  margin: 0;
+  color: #0f172a;
+  font-size: 0.98rem;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.region-post-detail-comment-date {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.region-post-detail-comment-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.region-post-detail-comment-content {
+  margin: 0;
+  color: #334155;
+  font-size: 0.97rem;
+  line-height: 1.85;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.region-post-detail-comment-edit-box {
+  display: grid;
+  gap: 12px;
+}
+
+.region-post-detail-empty {
+  max-width: 860px;
+  margin: 80px auto;
+}
+
+.region-post-detail-empty-badge {
+  margin: 0 0 10px;
+  color: #2563eb;
+  font-size: 0.84rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+@media (max-width: 900px) {
+  .region-post-detail-page {
+    padding: 42px 18px 68px;
+  }
+
+  .region-post-detail-shell,
+  .region-post-detail-main-card,
+  .region-post-detail-comments-section {
+    padding: 20px;
+  }
+
+  .region-post-detail-header h2 {
+    font-size: 1.72rem;
+  }
+
+  .region-post-detail-image {
+    max-height: 360px;
+  }
+}
+
+@media (max-width: 640px) {
+  .region-post-detail-page {
+    padding: 34px 14px 56px;
+  }
+
+  .region-post-detail-shell,
+  .region-post-detail-main-card,
+  .region-post-detail-comments-section,
+  .region-post-detail-comment-card,
+  .region-post-detail-comment-write-box,
+  .region-post-detail-comment-login-box,
+  .region-post-detail-empty-comments,
+  .region-post-detail-empty {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .region-post-detail-header {
+    margin-bottom: 18px;
+  }
+
+  .region-post-detail-header h2 {
+    font-size: 1.48rem;
+  }
+
+  .region-post-detail-description,
+  .region-post-detail-comments-head p,
+  .region-post-detail-empty p,
+  .region-post-detail-content-box,
+  .region-post-detail-comment-content {
+    font-size: 0.95rem;
+  }
+
+  .region-post-detail-header-actions,
+  .region-post-detail-empty-actions,
+  .region-post-detail-comment-action-buttons,
+  .region-post-detail-comment-edit-actions,
+  .region-post-detail-comment-write-actions {
+    width: 100%;
+  }
+
+  .region-post-detail-primary-button,
+  .region-post-detail-secondary-button,
+  .region-post-detail-save-button,
+  .region-post-detail-cancel-button,
+  .region-post-detail-comment-edit-button,
+  .region-post-detail-comment-delete-button {
+    width: 100%;
+  }
+
+  .region-post-detail-comment-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .region-post-detail-author {
+    justify-content: flex-start;
+    text-align: left;
+    max-width: 100%;
+  }
+
+  .region-post-detail-image {
+    max-height: 280px;
+  }
+
+  .region-post-detail-comment-textarea {
+    min-height: 110px;
+    font-size: 0.95rem;
+  }
+}

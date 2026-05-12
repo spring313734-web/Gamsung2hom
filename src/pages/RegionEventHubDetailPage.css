@@ -2,10 +2,13 @@
 /* ======================================== */
 /* 📌 감성여행2 지역별 이벤트 허브 상세 페이지 스타일
 /* - 지역 소개 / 태그 / 이벤트 카드 / 추천 코스 스타일 구성
+/* - 관광이벤트 소개 / 참여 사진 / 후기 미리보기 / 발표 / 당선작 / 인터뷰 섹션 흐름에 맞게 정리
+/* - 참여 사진은 갤러리형 썸네일 + 가로 6개 × 세로 3줄 페이지네이션 구조 적용
+/* - 후기 / 참여글은 상세페이지 미리보기 + 카드 클릭 + 더보기 버튼 구조 적용
+/* - 앱 공용 구조 기준으로 이벤트 상태 / 기간 / 장소 / 주관 / 문의 정보 블록 유지
 /* - 허브 메인 복귀 버튼 디자인 포함
 /* - 반응형 구간에서 세로 정렬 유지
 /* - 빈 상태 화면도 함께 대응
-/* - 전체 보기 버튼 클릭 간섭 방지용 레이어 정리 포함
 /* ======================================== */
 
 .region-detail-page {
@@ -19,7 +22,12 @@
 .region-detail-intro,
 .region-detail-events,
 .region-detail-courses {
-  margin-bottom: 42px;
+  margin-bottom: 28px;
+  padding: 28px;
+  border-radius: 28px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 16px 38px rgba(15, 23, 42, 0.05);
 }
 
 .region-detail-title-row {
@@ -89,6 +97,11 @@
   margin-bottom: 18px;
 }
 
+.region-detail-section-head h3 {
+  margin-bottom: 8px;
+  font-size: 1.45rem;
+}
+
 .region-detail-event-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -96,32 +109,91 @@
 }
 
 .region-detail-event-card {
-  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  overflow: hidden;
   border-radius: 22px;
   background: #ffffff;
   border: 1px solid rgba(15, 23, 42, 0.07);
   box-shadow: 0 16px 38px rgba(15, 23, 42, 0.06);
 }
 
-.region-detail-event-period {
-  margin: 0 0 10px;
+.region-detail-event-image {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: #e2e8f0;
+}
+
+.region-detail-event-content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 22px;
+}
+
+.region-detail-event-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.region-detail-event-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.09);
   color: #2563eb;
-  font-size: 0.86rem;
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.region-detail-event-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 0.84rem;
   font-weight: 800;
 }
 
 .region-detail-event-card h4 {
-  margin: 0 0 10px;
+  margin: 0 0 14px;
   color: #0f172a;
   font-size: 1.2rem;
   line-height: 1.4;
 }
 
-.region-detail-event-place {
-  margin: 0 0 12px;
+.region-detail-event-info-list {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.region-detail-event-info {
+  margin: 0;
   color: #334155;
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-size: 0.94rem;
+  line-height: 1.6;
+}
+
+.region-detail-event-info-label {
+  display: inline-block;
+  min-width: 44px;
+  margin-right: 8px;
+  color: #64748b;
+  font-weight: 800;
 }
 
 .region-detail-event-summary {
@@ -195,6 +267,276 @@
   transform: translateY(-1px);
 }
 
+/* ======================================== */
+/* 참여 사진 갤러리 */
+/* ======================================== */
+
+.region-detail-photo-section {
+  overflow: hidden;
+}
+
+.region-detail-photo-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.region-detail-photo-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.region-detail-photo-count {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 0.88rem;
+  font-weight: 800;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.region-detail-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.region-detail-photo-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #e2e8f0;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+  aspect-ratio: 1 / 1;
+}
+
+.region-detail-photo-thumb {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transform: scale(1);
+  transition: transform 0.3s ease;
+}
+
+.region-detail-photo-card:hover .region-detail-photo-thumb {
+  transform: scale(1.05);
+}
+
+.region-detail-photo-overlay {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 12px;
+  background: linear-gradient(
+    180deg,
+    rgba(15, 23, 42, 0) 0%,
+    rgba(15, 23, 42, 0.72) 48%,
+    rgba(15, 23, 42, 0.9) 100%
+  );
+  color: #ffffff;
+}
+
+.region-detail-photo-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  margin-bottom: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  backdrop-filter: blur(4px);
+}
+
+.region-detail-photo-overlay h4 {
+  margin: 0 0 4px;
+  color: #ffffff;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.region-detail-photo-overlay p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.76rem;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.region-detail-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.region-detail-page-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 12px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 0.92rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.region-detail-page-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(37, 99, 235, 0.35);
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+}
+
+.region-detail-page-button.is-active {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.region-detail-page-button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.region-detail-photo-empty {
+  display: grid;
+}
+
+.region-detail-photo-empty .region-detail-event-card {
+  max-width: 420px;
+}
+
+/* ======================================== */
+/* 후기 / 참여글 미리보기 */
+/* ======================================== */
+
+.region-detail-post-section {
+  overflow: hidden;
+}
+
+.region-detail-post-card-button {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.region-detail-post-card {
+  position: relative;
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
+}
+
+.region-detail-post-card::after {
+  content: "전체 보기 →";
+  position: absolute;
+  right: 16px;
+  bottom: 14px;
+  color: #2563eb;
+  font-size: 0.82rem;
+  font-weight: 800;
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.region-detail-post-card-button:hover .region-detail-post-card {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 44px rgba(15, 23, 42, 0.1);
+  border-color: rgba(37, 99, 235, 0.2);
+}
+
+.region-detail-post-card-button:hover .region-detail-post-card::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.region-detail-post-card-button:focus-visible {
+  outline: none;
+}
+
+.region-detail-post-card-button:focus-visible .region-detail-post-card {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+  border-color: rgba(37, 99, 235, 0.28);
+}
+
+.region-detail-post-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 22px;
+}
+
+.region-detail-more-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 11px 18px;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  border-radius: 14px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+  font-size: 0.96rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.region-detail-more-button:hover {
+  background: rgba(37, 99, 235, 0.14);
+  border-color: rgba(37, 99, 235, 0.3);
+  box-shadow: 0 12px 26px rgba(37, 99, 235, 0.12);
+  transform: translateY(-1px);
+}
+
+/* ======================================== */
+/* 빈 상태 */
+/* ======================================== */
+
 .region-detail-empty {
   max-width: 720px;
   margin: 80px auto;
@@ -214,27 +556,102 @@
   letter-spacing: 0.08em;
 }
 
-@media (max-width: 980px) {
-  .region-detail-event-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+/* ======================================== */
+/* 반응형 */
+/* ======================================== */
+
+@media (max-width: 1180px) {
+  .region-detail-photo-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 1024px) {
   .region-detail-page {
-    padding: 44px 18px 64px;
+    padding: 48px 20px 72px;
+  }
+
+  .region-detail-event-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .region-detail-photo-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .region-detail-page {
+    padding: 40px 16px 64px;
+  }
+
+  .region-detail-intro,
+  .region-detail-events,
+  .region-detail-courses {
+    padding: 22px;
+    border-radius: 22px;
   }
 
   .region-detail-intro h2 {
-    font-size: 1.65rem;
+    font-size: 1.7rem;
+  }
+
+  .region-detail-section-head h3 {
+    font-size: 1.28rem;
   }
 
   .region-detail-event-grid {
     grid-template-columns: 1fr;
   }
 
-  .region-detail-course-item {
+  .region-detail-photo-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .region-detail-photo-head {
     align-items: flex-start;
+  }
+
+  .region-detail-post-card::after {
+    opacity: 1;
+    transform: translateY(0);
+    position: static;
+    display: inline-flex;
+    margin-top: 12px;
+  }
+
+  .region-detail-post-actions {
+    justify-content: stretch;
+  }
+
+  .region-detail-more-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 560px) {
+  .region-detail-title-row {
     flex-direction: column;
+    align-items: stretch;
+  }
+
+  .region-detail-back-button {
+    width: 100%;
+  }
+
+  .region-detail-photo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .region-detail-photo-overlay {
+    padding: 10px;
+  }
+
+  .region-detail-photo-overlay h4 {
+    font-size: 0.84rem;
+  }
+
+  .region-detail-photo-overlay p {
+    font-size: 0.72rem;
   }
 }

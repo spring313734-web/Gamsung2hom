@@ -4,6 +4,8 @@
 // - 왼쪽 로고는 홈으로 이동
 // - 감성여행2 소개 / 감성배달 소개 / 제휴문의 메뉴를 각각 분리
 // - 이벤트 지역 드롭다운 유지
+// - AuthContext 기반 로그인 사용자 상태 표시
+// - demo 로그인 / 로그아웃 전환 버튼 포함
 // - 바깥 클릭 및 ESC 입력 시 드롭다운 닫힘 처리
 // ========================================
 
@@ -11,6 +13,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import "./Header.css";
 import { getAllRegions } from "../data/regionEvents";
+import { useAuth } from "../contect/AuthContext";
 
 const REGION_GROUP_LABELS = {
   special_city: "특별시",
@@ -26,10 +29,34 @@ const REGION_GROUP_ORDER = [
   "province",
 ];
 
+const DEMO_LOGIN_USER = {
+  id: "demo_user",
+  nickname: "감성여행2사용자",
+  isLoggedIn: true,
+};
+
+function toSafeText(value, fallback = "") {
+  return typeof value === "string" && value.trim().length > 0
+    ? value.trim()
+    : fallback;
+}
+
+function getUserDisplayName(user) {
+  const nickname = toSafeText(user?.nickname, "");
+  const userId = toSafeText(user?.id, "");
+
+  if (nickname && userId && nickname !== userId) {
+    return `${nickname} (${userId})`;
+  }
+
+  return nickname || userId || "비로그인";
+}
+
 export default function Header() {
   const location = useLocation();
   const dropdownRef = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
+  const { currentUser, isLoggedIn, login, logout } = useAuth();
 
   const regions = useMemo(() => {
     try {
@@ -54,6 +81,17 @@ export default function Header() {
     location.pathname === "/events" ||
     location.pathname.startsWith("/events/") ||
     location.pathname.startsWith("/event-hub");
+
+  const currentUserLabel = getUserDisplayName(currentUser);
+
+  function handleToggleDemoLogin() {
+    if (isLoggedIn) {
+      logout();
+      return;
+    }
+
+    login(DEMO_LOGIN_USER);
+  }
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -141,17 +179,21 @@ export default function Header() {
               <div className="dropdown-menu">
                 {groupedRegions.map((group) => (
                   <div key={group.type} className="dropdown-group">
-                    <p className="dropdown-group-title">{group.label}</p>
+                    <div className="dropdown-group-head">
+                      <p className="dropdown-group-title">{group.label}</p>
+                    </div>
 
-                    {group.items.map((region) => (
-                      <Link
-                        key={region.slug}
-                        to={`/events/region/${region.slug}`}
-                        onClick={() => setIsOpen(false)}
-                      >
-                        {region.name}
-                      </Link>
-                    ))}
+                    <div className="dropdown-group-items">
+                      {group.items.map((region) => (
+                        <Link
+                          key={region.slug}
+                          to={`/events/region/${region.slug}`}
+                          onClick={() => setIsOpen(false)}
+                        >
+                          {region.name}
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -176,6 +218,23 @@ export default function Header() {
             문의하기
           </NavLink>
         </nav>
+
+        <div className="site-auth-panel">
+          <div className="site-auth-user-box">
+            <span className="site-auth-user-label">
+              {isLoggedIn ? "현재 사용자" : "로그인 상태"}
+            </span>
+            <strong className="site-auth-user-name">{currentUserLabel}</strong>
+          </div>
+
+          <button
+            type="button"
+            className={`site-auth-button ${isLoggedIn ? "is-logout" : "is-login"}`}
+            onClick={handleToggleDemoLogin}
+          >
+            {isLoggedIn ? "로그아웃" : "demo 로그인"}
+          </button>
+        </div>
       </div>
     </header>
   );
