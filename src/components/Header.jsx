@@ -6,7 +6,9 @@
 // - 이벤트 지역 드롭다운 유지
 // - AuthContext 기반 로그인 사용자 상태 표시
 // - demo 로그인 / 로그아웃 전환 버튼 포함
-// - 바깥 클릭 및 ESC 입력 시 드롭다운 닫힘 처리
+// - 모바일에서는 로고 + 메뉴 버튼만 먼저 보이고, 메뉴는 펼침 방식으로 표시
+// - /app QR 안내 페이지에서 모바일 화면이 헤더 때문에 밀리지 않도록 반응형 구조 개선
+// - 바깥 클릭 및 ESC 입력 시 드롭다운 / 모바일 메뉴 닫힘 처리
 // ========================================
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -54,8 +56,10 @@ function getUserDisplayName(user) {
 
 export default function Header() {
   const location = useLocation();
+  const headerRef = useRef(null);
   const dropdownRef = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { currentUser, isLoggedIn, login, logout } = useAuth();
 
   const regions = useMemo(() => {
@@ -93,17 +97,27 @@ export default function Header() {
     login(DEMO_LOGIN_USER);
   }
 
+  function closeAllMenus() {
+    setIsOpen(false);
+    setIsMobileMenuOpen(false);
+  }
+
+  function handleMobileMenuToggle() {
+    setIsMobileMenuOpen((prev) => !prev);
+    setIsOpen(false);
+  }
+
   useEffect(() => {
     function handleClickOutside(event) {
-      if (!dropdownRef.current) return;
-      if (!dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
+      if (!headerRef.current) return;
+      if (!headerRef.current.contains(event.target)) {
+        closeAllMenus();
       }
     }
 
     function handleEscape(event) {
       if (event.key === "Escape") {
-        setIsOpen(false);
+        closeAllMenus();
       }
     }
 
@@ -117,123 +131,151 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
-    setIsOpen(false);
+    closeAllMenus();
   }, [location.pathname]);
 
   return (
-    <header className="site-header">
+    <header
+      ref={headerRef}
+      className={`site-header ${isMobileMenuOpen ? "mobile-menu-open" : ""}`}
+    >
       <div className="site-header-inner">
-        <Link to="/" className="site-logo" aria-label="감성여행2 홈으로 이동">
-          <span className="site-logo-text">감성여행</span>
-          <span className="site-logo-number">2</span>
-        </Link>
-
-        <nav className="site-nav" aria-label="주요 메뉴">
-          <NavLink
-            to="/about"
-            className={({ isActive }) =>
-              isActive ? "nav-link active" : "nav-link"
-            }
+        <div className="site-header-top">
+          <Link
+            to="/"
+            className="site-logo"
+            aria-label="감성여행2 홈으로 이동"
+            onClick={closeAllMenus}
           >
-            감성여행2 소개
-          </NavLink>
-
-          <NavLink
-            to="/delivery-about"
-            className={({ isActive }) =>
-              isActive ? "nav-link active" : "nav-link"
-            }
-          >
-            감성배달 소개
-          </NavLink>
-
-          <div
-            ref={dropdownRef}
-            className={`dropdown ${isOpen ? "open" : ""}`}
-          >
-            <div className="dropdown-trigger-group">
-              <NavLink
-                to="/events"
-                className={
-                  isEventsActive
-                    ? "nav-link active dropdown-main-link"
-                    : "nav-link dropdown-main-link"
-                }
-              >
-                이벤트
-              </NavLink>
-
-              <button
-                type="button"
-                className={`dropdown-toggle ${isOpen ? "active" : ""}`}
-                aria-label="지역 이벤트 메뉴 열기"
-                aria-expanded={isOpen}
-                aria-haspopup="true"
-                onClick={() => setIsOpen((prev) => !prev)}
-              >
-                <span className="dropdown-arrow">▼</span>
-              </button>
-            </div>
-
-            {isOpen ? (
-              <div className="dropdown-menu">
-                {groupedRegions.map((group) => (
-                  <div key={group.type} className="dropdown-group">
-                    <div className="dropdown-group-head">
-                      <p className="dropdown-group-title">{group.label}</p>
-                    </div>
-
-                    <div className="dropdown-group-items">
-                      {group.items.map((region) => (
-                        <Link
-                          key={region.slug}
-                          to={`/events/region/${region.slug}`}
-                          onClick={() => setIsOpen(false)}
-                        >
-                          {region.name}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-          </div>
-
-          <NavLink
-            to="/partner"
-            className={({ isActive }) =>
-              isActive ? "nav-link active" : "nav-link"
-            }
-          >
-            제휴문의
-          </NavLink>
-
-          <NavLink
-            to="/contact"
-            className={({ isActive }) =>
-              isActive ? "nav-link active" : "nav-link"
-            }
-          >
-            문의하기
-          </NavLink>
-        </nav>
-
-        <div className="site-auth-panel">
-          <div className="site-auth-user-box">
-            <span className="site-auth-user-label">
-              {isLoggedIn ? "현재 사용자" : "로그인 상태"}
-            </span>
-            <strong className="site-auth-user-name">{currentUserLabel}</strong>
-          </div>
+            <span className="site-logo-text">감성여행</span>
+            <span className="site-logo-number">2</span>
+          </Link>
 
           <button
             type="button"
-            className={`site-auth-button ${isLoggedIn ? "is-logout" : "is-login"}`}
-            onClick={handleToggleDemoLogin}
+            className={`mobile-menu-button ${
+              isMobileMenuOpen ? "active" : ""
+            }`}
+            aria-label={isMobileMenuOpen ? "메뉴 닫기" : "메뉴 열기"}
+            aria-expanded={isMobileMenuOpen}
+            onClick={handleMobileMenuToggle}
           >
-            {isLoggedIn ? "로그아웃" : "demo 로그인"}
+            <span className="mobile-menu-line" />
+            <span className="mobile-menu-line" />
+            <span className="mobile-menu-line" />
           </button>
+        </div>
+
+        <div className="site-header-menu">
+          <nav className="site-nav" aria-label="주요 메뉴">
+            <NavLink
+              to="/about"
+              className={({ isActive }) =>
+                isActive ? "nav-link active" : "nav-link"
+              }
+            >
+              감성여행2 소개
+            </NavLink>
+
+            <NavLink
+              to="/delivery-about"
+              className={({ isActive }) =>
+                isActive ? "nav-link active" : "nav-link"
+              }
+            >
+              감성배달 소개
+            </NavLink>
+
+            <div
+              ref={dropdownRef}
+              className={`dropdown ${isOpen ? "open" : ""}`}
+            >
+              <div className="dropdown-trigger-group">
+                <NavLink
+                  to="/events"
+                  className={
+                    isEventsActive
+                      ? "nav-link active dropdown-main-link"
+                      : "nav-link dropdown-main-link"
+                  }
+                >
+                  이벤트
+                </NavLink>
+
+                <button
+                  type="button"
+                  className={`dropdown-toggle ${isOpen ? "active" : ""}`}
+                  aria-label="지역 이벤트 메뉴 열기"
+                  aria-expanded={isOpen}
+                  aria-haspopup="true"
+                  onClick={() => setIsOpen((prev) => !prev)}
+                >
+                  <span className="dropdown-arrow">▼</span>
+                </button>
+              </div>
+
+              {isOpen ? (
+                <div className="dropdown-menu">
+                  {groupedRegions.map((group) => (
+                    <div key={group.type} className="dropdown-group">
+                      <div className="dropdown-group-head">
+                        <p className="dropdown-group-title">{group.label}</p>
+                      </div>
+
+                      <div className="dropdown-group-items">
+                        {group.items.map((region) => (
+                          <Link
+                            key={region.slug}
+                            to={`/events/region/${region.slug}`}
+                            onClick={closeAllMenus}
+                          >
+                            {region.name}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
+            <NavLink
+              to="/partner"
+              className={({ isActive }) =>
+                isActive ? "nav-link active" : "nav-link"
+              }
+            >
+              제휴문의
+            </NavLink>
+
+            <NavLink
+              to="/contact"
+              className={({ isActive }) =>
+                isActive ? "nav-link active" : "nav-link"
+              }
+            >
+              문의하기
+            </NavLink>
+          </nav>
+
+          <div className="site-auth-panel">
+            <div className="site-auth-user-box">
+              <span className="site-auth-user-label">
+                {isLoggedIn ? "현재 사용자" : "로그인 상태"}
+              </span>
+              <strong className="site-auth-user-name">{currentUserLabel}</strong>
+            </div>
+
+            <button
+              type="button"
+              className={`site-auth-button ${
+                isLoggedIn ? "is-logout" : "is-login"
+              }`}
+              onClick={handleToggleDemoLogin}
+            >
+              {isLoggedIn ? "로그아웃" : "demo 로그인"}
+            </button>
+          </div>
         </div>
       </div>
     </header>

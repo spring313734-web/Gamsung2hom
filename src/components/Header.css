@@ -1,11 +1,12 @@
 /* 파일 경로: src/components/Header.css */
-/* ======================================== */
-/* 📌 감성여행2 공용 상단 헤더 스타일
-/* - 상단 로고 / 메뉴 / 드롭다운 레이아웃 정리
-/* - AuthContext 기반 사용자 상태 표시 영역 추가
-/* - demo 로그인 / 로그아웃 버튼 스타일 포함
-/* - 모바일 구간에서도 메뉴 줄바꿈과 사용자 영역이 안정적으로 보이도록 보강
-/* ======================================== */
+/* ========================================
+   📌 감성여행2 공용 상단 헤더 스타일
+   - 상단 로고 / 메뉴 / 드롭다운 레이아웃 정리
+   - AuthContext 기반 사용자 상태 표시 영역 추가
+   - demo 로그인 / 로그아웃 버튼 스타일 포함
+   - 모바일에서는 로고 + 메뉴 버튼만 우선 표시
+   - QR 안내 페이지(/app)에서 본문이 바로 보이도록 모바일 헤더 높이 최소화
+   ======================================== */
 
 .site-header {
   position: sticky;
@@ -29,6 +30,10 @@
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 20px;
+}
+
+.site-header-top {
+  display: contents;
 }
 
 .site-logo {
@@ -59,6 +64,14 @@
   line-height: 0.9;
   color: #f59e0b;
   text-shadow: 0 4px 14px rgba(245, 158, 11, 0.28);
+}
+
+.mobile-menu-button {
+  display: none;
+}
+
+.site-header-menu {
+  display: contents;
 }
 
 .site-nav {
@@ -327,7 +340,8 @@
 .nav-link:focus-visible,
 .dropdown-toggle:focus-visible,
 .dropdown-menu a:focus-visible,
-.site-auth-button:focus-visible {
+.site-auth-button:focus-visible,
+.mobile-menu-button:focus-visible {
   outline: 2px solid #2563eb;
   outline-offset: 2px;
 }
@@ -335,101 +349,240 @@
 @media (max-width: 1024px) {
   .site-header-inner {
     grid-template-columns: auto 1fr;
-    align-items: start;
+    align-items: center;
   }
 
-  .site-auth-panel {
+  .site-header-menu {
     grid-column: 1 / -1;
-    justify-content: flex-start;
-  }
-}
-
-@media (max-width: 768px) {
-  .site-header-inner {
-    grid-template-columns: 1fr;
-    padding: 14px 20px;
-  }
-
-  .site-logo-text {
-    font-size: 1.7rem;
-  }
-
-  .site-logo-number {
-    font-size: 2.3rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
   }
 
   .site-nav {
     justify-content: flex-start;
-    width: 100%;
-    gap: 8px;
   }
 
   .site-auth-panel {
-    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 768px) {
+  .site-header {
+    position: sticky;
+  }
+
+  .site-header-inner {
+    display: flex;
     flex-direction: column;
     align-items: stretch;
+    padding: 10px 14px;
+    gap: 0;
   }
 
-  .site-auth-user-box {
-    align-items: flex-start;
-  }
-
-  .site-auth-user-name {
-    text-align: left;
-  }
-
-  .site-auth-button {
+  .site-header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
     width: 100%;
+  }
+
+  .site-logo-text {
+    font-size: 1.42rem;
+    letter-spacing: -0.8px;
+  }
+
+  .site-logo-number {
+    font-size: 1.95rem;
+  }
+
+  .mobile-menu-button {
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 14px;
+    background: rgba(37, 99, 235, 0.08);
+    color: #1f2937;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    cursor: pointer;
+    box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.12);
+    transition:
+      background 0.2s ease,
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  .mobile-menu-button:hover {
+    background: rgba(37, 99, 235, 0.14);
+    transform: translateY(-1px);
+  }
+
+  .mobile-menu-button.active {
+    background: #2563eb;
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.18);
+  }
+
+  .mobile-menu-line {
+    width: 18px;
+    height: 2px;
+    border-radius: 999px;
+    background: #1f2937;
+    transition:
+      transform 0.2s ease,
+      opacity 0.2s ease,
+      background 0.2s ease;
+  }
+
+  .mobile-menu-button.active .mobile-menu-line {
+    background: #ffffff;
+  }
+
+  .mobile-menu-button.active .mobile-menu-line:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+
+  .mobile-menu-button.active .mobile-menu-line:nth-child(2) {
+    opacity: 0;
+  }
+
+  .mobile-menu-button.active .mobile-menu-line:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  .site-header-menu {
+    display: none;
+    width: 100%;
+    padding-top: 12px;
+  }
+
+  .site-header.mobile-menu-open .site-header-menu {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .site-nav {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .nav-link {
+    width: 100%;
+    min-height: 42px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    font-size: 0.92rem;
+    line-height: 1.25;
   }
 
   .dropdown {
-    width: auto;
+    width: 100%;
   }
 
   .dropdown-trigger-group {
-    width: auto;
-    max-width: 100%;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 42px;
+    gap: 6px;
+    padding: 0;
+  }
+
+  .dropdown-main-link {
+    padding-right: 12px;
+  }
+
+  .dropdown-toggle {
+    min-width: 42px;
+    height: 42px;
+    border-radius: 14px;
   }
 
   .dropdown-menu {
     left: 0;
-    right: auto;
-    min-width: 230px;
+    right: 0;
+    top: calc(100% + 8px);
+    min-width: 100%;
+    max-height: min(62vh, 440px);
+    border-radius: 16px;
   }
 
   .dropdown-group-title {
-    font-size: 0.96rem;
+    font-size: 0.92rem;
   }
 
   .dropdown-menu a {
-    font-size: 0.95rem;
+    font-size: 0.92rem;
+    padding: 11px 12px;
+  }
+
+  .site-auth-panel {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .site-auth-user-box {
+    align-items: flex-start;
+    padding: 9px 11px;
+    border-radius: 14px;
+  }
+
+  .site-auth-user-name {
+    text-align: left;
+    font-size: 0.86rem;
+  }
+
+  .site-auth-button {
+    min-height: 44px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    white-space: nowrap;
   }
 }
 
 @media (max-width: 560px) {
   .site-header-inner {
-    padding: 14px 18px;
+    padding: 8px 12px;
   }
 
   .site-logo-text {
-    font-size: 1.5rem;
+    font-size: 1.28rem;
   }
 
   .site-logo-number {
-    font-size: 2.05rem;
+    font-size: 1.78rem;
+  }
+
+  .mobile-menu-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 13px;
   }
 
   .site-nav {
-    align-items: stretch;
+    grid-template-columns: 1fr;
   }
 
   .nav-link {
-    padding: 11px 14px;
-    font-size: 0.98rem;
+    min-height: 40px;
+    font-size: 0.9rem;
+    padding: 9px 12px;
   }
 
-  .dropdown-main-link {
-    padding-right: 8px;
+  .dropdown-trigger-group {
+    grid-template-columns: 1fr 40px;
   }
 
   .dropdown-toggle {
@@ -437,18 +590,15 @@
     height: 40px;
   }
 
-  .dropdown-menu {
-    min-width: 208px;
+  .site-auth-panel {
+    grid-template-columns: 1fr;
   }
 
-  .dropdown-group-title {
-    font-size: 0.94rem;
-    min-height: 30px;
-    padding: 5px 11px;
+  .site-auth-user-box {
+    display: none;
   }
 
-  .dropdown-menu a {
-    font-size: 0.94rem;
-    padding: 12px 13px;
+  .site-auth-button {
+    width: 100%;
   }
 }
