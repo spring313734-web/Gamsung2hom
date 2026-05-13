@@ -4,6 +4,7 @@
 // - 명함 QR / 홈페이지 첫 방문자를 위한 간단 랜딩 화면
 // - 큰 대표 이미지와 핵심 설명을 먼저 보여줌
 // - 아래에는 짧은 안내 카드만 배치해서 너무 길지 않게 구성
+// - 문의하기 이동은 제거하고 제휴문의는 /partner 안에서 처리
 // - 자세한 설명은 감성여행2 소개 / 감성배달 소개 / 이벤트 / 제휴문의 페이지로 이동
 // ========================================
 
@@ -99,8 +100,8 @@ export default function HomePage() {
               이벤트 허브 보기
             </Link>
 
-            <Link to="/contact" className="hub-secondary-link">
-              문의하기
+            <Link to="/partner" className="hub-secondary-link">
+              입점·제휴 문의
             </Link>
           </div>
         </div>
