@@ -4,12 +4,10 @@
 // - 왼쪽 로고는 홈으로 이동
 // - 감성여행2 소개 / 감성배달 소개 / 제휴문의 메뉴를 각각 분리
 // - 이벤트 지역 드롭다운 유지
-// - AuthContext 기반 로그인 사용자 상태 표시
-// - demo 로그인 / 로그아웃 전환 버튼 포함
+// - 공개 홈페이지용으로 demo_user / 현재 사용자 / 로그아웃 표시 제거
 // - 모바일에서는 로고 + 메뉴 버튼만 먼저 보이고, 메뉴는 펼침 방식으로 표시
 // - 모바일 메뉴 안에 PC버전 보기 / 모바일버전 보기 전환 버튼 추가
 // - localStorage에 PC버전 보기 상태 저장
-// - /app QR 안내 페이지에서 모바일 화면이 헤더 때문에 밀리지 않도록 반응형 구조 개선
 // - 바깥 클릭 및 ESC 입력 시 드롭다운 / 모바일 메뉴 닫힘 처리
 // ========================================
 
@@ -17,7 +15,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import "./Header.css";
 import { getAllRegions } from "../data/regionEvents";
-import { useAuth } from "../contect/AuthContext";
 
 const REGION_GROUP_LABELS = {
   special_city: "특별시",
@@ -33,30 +30,7 @@ const REGION_GROUP_ORDER = [
   "province",
 ];
 
-const DEMO_LOGIN_USER = {
-  id: "demo_user",
-  nickname: "감성여행2사용자",
-  isLoggedIn: true,
-};
-
 const DESKTOP_VIEW_STORAGE_KEY = "gamsung2_force_desktop_view";
-
-function toSafeText(value, fallback = "") {
-  return typeof value === "string" && value.trim().length > 0
-    ? value.trim()
-    : fallback;
-}
-
-function getUserDisplayName(user) {
-  const nickname = toSafeText(user?.nickname, "");
-  const userId = toSafeText(user?.id, "");
-
-  if (nickname && userId && nickname !== userId) {
-    return `${nickname} (${userId})`;
-  }
-
-  return nickname || userId || "비로그인";
-}
 
 function readDesktopViewPreference() {
   if (typeof window === "undefined") return false;
@@ -71,7 +45,6 @@ export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDesktopView, setIsDesktopView] = useState(readDesktopViewPreference);
-  const { currentUser, isLoggedIn, login, logout } = useAuth();
 
   const regions = useMemo(() => {
     try {
@@ -96,17 +69,6 @@ export default function Header() {
     location.pathname === "/events" ||
     location.pathname.startsWith("/events/") ||
     location.pathname.startsWith("/event-hub");
-
-  const currentUserLabel = getUserDisplayName(currentUser);
-
-  function handleToggleDemoLogin() {
-    if (isLoggedIn) {
-      logout();
-      return;
-    }
-
-    login(DEMO_LOGIN_USER);
-  }
 
   function closeAllMenus() {
     setIsOpen(false);
@@ -301,25 +263,6 @@ export default function Header() {
               {isDesktopView ? "모바일버전으로 보기" : "PC버전으로 보기"}
             </button>
           </nav>
-
-          <div className="site-auth-panel">
-            <div className="site-auth-user-box">
-              <span className="site-auth-user-label">
-                {isLoggedIn ? "현재 사용자" : "로그인 상태"}
-              </span>
-              <strong className="site-auth-user-name">{currentUserLabel}</strong>
-            </div>
-
-            <button
-              type="button"
-              className={`site-auth-button ${
-                isLoggedIn ? "is-logout" : "is-login"
-              }`}
-              onClick={handleToggleDemoLogin}
-            >
-              {isLoggedIn ? "로그아웃" : "demo 로그인"}
-            </button>
-          </div>
         </div>
       </div>
     </header>
