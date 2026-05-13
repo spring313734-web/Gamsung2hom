@@ -2,7 +2,8 @@
 // ========================================
 // 📌 감성여행2 공용 상단 헤더 컴포넌트
 // - 왼쪽 로고는 홈으로 이동
-// - 감성여행2 소개 / 감성배달 소개 / 제휴문의 메뉴를 각각 분리
+// - 감성여행2 소개 / 감성배달 소개 / 이벤트 / 제휴문의 메뉴 표시
+// - 문의하기 메뉴는 제거하고 오른쪽 아래 감성문의 쪽지 버튼으로 대체
 // - 이벤트 지역 드롭다운 유지
 // - 공개 홈페이지용으로 demo_user / 현재 사용자 / 로그아웃 표시 제거
 // - 모바일에서는 로고 + 메뉴 버튼만 먼저 보이고, 메뉴는 펼침 방식으로 표시
@@ -104,6 +105,7 @@ export default function Header() {
   useEffect(() => {
     function handleClickOutside(event) {
       if (!headerRef.current) return;
+
       if (!headerRef.current.contains(event.target)) {
         closeAllMenus();
       }
@@ -242,15 +244,6 @@ export default function Header() {
               }
             >
               제휴문의
-            </NavLink>
-
-            <NavLink
-              to="/contact"
-              className={({ isActive }) =>
-                isActive ? "nav-link active" : "nav-link"
-              }
-            >
-              문의하기
             </NavLink>
 
             <button
