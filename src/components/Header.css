@@ -4,8 +4,8 @@
    - 상단 로고 / 메뉴 / 드롭다운 레이아웃 정리
    - 왼쪽 브랜드 로고를 PNG 이미지 파일로 표시
    - 로고 파일 위치: public/logo-gamsung2-header.png
-   - 로고 이미지 안쪽 여백을 줄여 더 크게 보이도록 object-fit: cover 적용
    - 로고 박스에 은은한 크림/살구/하늘빛 배경을 넣어 존재감 강화
+   - object-fit: contain 적용으로 로고 글자/그림이 잘리지 않게 수정
    - 로고와 메뉴가 너무 멀어 보이지 않도록 중앙 묶음형 배치 적용
    - 문의하기 메뉴 제거 후 감성여행2 소개 / 감성배달 소개 / 이벤트 / 제휴문의 중심 구성
    - 모바일에서는 로고 + 메뉴 버튼만 우선 표시
@@ -30,11 +30,11 @@
   z-index: 2;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 12px 24px;
+  padding: 10px 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 44px;
+  gap: 40px;
 }
 
 .site-header-top {
@@ -61,19 +61,19 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 62px;
-  padding: 4px 12px;
-  border-radius: 20px;
+  min-height: 72px;
+  padding: 5px 14px;
+  border-radius: 22px;
   text-decoration: none;
   white-space: nowrap;
   background:
-    radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.95), transparent 34%),
+    radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.96), transparent 34%),
     linear-gradient(135deg, #fff3e5 0%, #ffffff 48%, #eef7ff 100%);
-  border: 1px solid rgba(245, 158, 11, 0.42);
+  border: 1px solid rgba(245, 158, 11, 0.46);
   box-shadow:
-    0 15px 32px rgba(245, 158, 11, 0.14),
+    0 16px 34px rgba(245, 158, 11, 0.16),
     0 7px 18px rgba(15, 23, 42, 0.065),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.82);
+    inset 0 0 0 1px rgba(255, 255, 255, 0.86);
   overflow: hidden;
   transition:
     transform 0.2s ease,
@@ -89,15 +89,15 @@
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(circle at 18% 50%, rgba(255, 122, 89, 0.12), transparent 34%),
-    radial-gradient(circle at 92% 50%, rgba(37, 99, 235, 0.11), transparent 34%);
+    radial-gradient(circle at 18% 50%, rgba(255, 122, 89, 0.13), transparent 34%),
+    radial-gradient(circle at 92% 50%, rgba(37, 99, 235, 0.12), transparent 34%);
 }
 
 .site-logo:hover {
   transform: translateY(-2px);
-  border-color: rgba(245, 158, 11, 0.58);
+  border-color: rgba(245, 158, 11, 0.6);
   box-shadow:
-    0 18px 38px rgba(245, 158, 11, 0.2),
+    0 19px 40px rgba(245, 158, 11, 0.22),
     0 9px 24px rgba(15, 23, 42, 0.08);
 }
 
@@ -105,9 +105,9 @@
   position: relative;
   z-index: 1;
   display: block;
-  width: 268px;
-  height: 56px;
-  object-fit: cover;
+  width: 310px;
+  height: 62px;
+  object-fit: contain;
   object-position: center;
 }
 
@@ -457,7 +457,7 @@ html.gamsung-force-desktop .site-header-inner {
 
 @media (max-width: 1024px) {
   .site-header-inner {
-    gap: 30px;
+    gap: 28px;
     padding-left: 20px;
     padding-right: 20px;
     flex-wrap: wrap;
@@ -475,9 +475,15 @@ html.gamsung-force-desktop .site-header-inner {
     justify-content: flex-end;
   }
 
+  .site-logo {
+    min-height: 68px;
+  }
+
   .site-logo-image {
-    width: 244px;
-    height: 52px;
+    width: 286px;
+    height: 58px;
+    object-fit: contain;
+    object-position: center;
   }
 }
 
@@ -508,15 +514,15 @@ html.gamsung-force-desktop .site-header-inner {
   }
 
   .site-logo {
-    min-height: 50px;
+    min-height: 52px;
     padding: 4px 9px;
     border-radius: 17px;
   }
 
   .site-logo-image {
-    width: 198px;
-    height: 40px;
-    object-fit: cover;
+    width: 212px;
+    height: 42px;
+    object-fit: contain;
     object-position: center;
   }
 
@@ -695,8 +701,8 @@ html.gamsung-force-desktop .site-header-inner {
     justify-content: center;
     flex-direction: row;
     flex-wrap: nowrap;
-    padding: 12px 24px;
-    gap: 44px;
+    padding: 10px 24px;
+    gap: 40px;
   }
 
   html.gamsung-force-desktop .site-header-top {
@@ -716,15 +722,15 @@ html.gamsung-force-desktop .site-header-inner {
   }
 
   html.gamsung-force-desktop .site-logo {
-    min-height: 62px;
-    padding: 4px 12px;
-    border-radius: 20px;
+    min-height: 72px;
+    padding: 5px 14px;
+    border-radius: 22px;
   }
 
   html.gamsung-force-desktop .site-logo-image {
-    width: 268px;
-    height: 56px;
-    object-fit: cover;
+    width: 310px;
+    height: 62px;
+    object-fit: contain;
     object-position: center;
   }
 
@@ -797,15 +803,15 @@ html.gamsung-force-desktop .site-header-inner {
   }
 
   .site-logo {
-    min-height: 44px;
+    min-height: 46px;
     padding: 4px 8px;
     border-radius: 16px;
   }
 
   .site-logo-image {
-    width: 166px;
-    height: 34px;
-    object-fit: cover;
+    width: 176px;
+    height: 36px;
+    object-fit: contain;
     object-position: center;
   }
 
