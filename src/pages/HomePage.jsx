@@ -1,201 +1,270 @@
-// 파일 경로: src/pages/HomePage.jsx
+// 파일 경로: src/components/Header.jsx
 // ========================================
-// 📌 감성여행2 홈페이지 메인 홈 화면
-// - 명함 QR / 첫 방문자가 감성여행2의 핵심을 바로 이해할 수 있도록 구성
-// - 감성여행2 = 여행 / 감성친구 / 지역축제 / 관광이벤트 / 상권 / 감성배달 연결 플랫폼으로 설명
-// - 주요 이동 버튼과 이벤트 허브 진입 섹션 제공
-// - 대표 지역 빠른 진입 카드로 /events 흐름을 자연스럽게 연결
+// 📌 감성여행2 공용 상단 헤더 컴포넌트
+// - 왼쪽 로고는 홈으로 이동
+// - 감성여행2 소개 / 감성배달 소개 / 제휴문의 메뉴를 각각 분리
+// - 이벤트 지역 드롭다운 유지
+// - 공개 홈페이지용으로 demo_user / 현재 사용자 / 로그아웃 표시 제거
+// - 모바일에서는 로고 + 메뉴 버튼만 먼저 보이고, 메뉴는 펼침 방식으로 표시
+// - 모바일 메뉴 안에 PC버전 보기 / 모바일버전 보기 전환 버튼 추가
+// - localStorage에 PC버전 보기 상태 저장
+// - 바깥 클릭 및 ESC 입력 시 드롭다운 / 모바일 메뉴 닫힘 처리
 // ========================================
 
-import { Link } from "react-router-dom";
-import "./HomePage.css";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, NavLink, useLocation } from "react-router-dom";
+import "./Header.css";
+import { getAllRegions } from "../data/regionEvents";
 
-const FEATURED_REGIONS = [
-  {
-    slug: "seoul",
-    name: "서울",
-    badge: "특별시",
-    description: "전시, 야시장, 도심 산책 이벤트를 한 번에 이어서 보는 감성 허브",
-  },
-  {
-    slug: "busan",
-    name: "부산",
-    badge: "광역시",
-    description: "바다, 야경, 공연 중심의 대표 지역 이벤트를 빠르게 확인하는 허브",
-  },
-  {
-    slug: "jeju",
-    name: "제주",
-    badge: "도",
-    description: "바다, 힐링, 감성 산책 흐름으로 이어지는 제주 대표 이벤트 허브",
-  },
-  {
-    slug: "sejong",
-    name: "세종",
-    badge: "특별자치시",
-    description: "호수공원과 가족형 이벤트를 중심으로 보는 도심형 감성 허브",
-  },
+const REGION_GROUP_LABELS = {
+  special_city: "특별시",
+  metropolitan_city: "광역시",
+  special_self_governing_city: "특별자치시",
+  province: "도",
+};
+
+const REGION_GROUP_ORDER = [
+  "special_city",
+  "metropolitan_city",
+  "special_self_governing_city",
+  "province",
 ];
 
-const PLATFORM_POINTS = [
-  {
-    title: "여행을 장보듯이 담는 구조",
-    description:
-      "관광지, 축제, 이벤트, 주변 상권을 마음에 드는 순서대로 나만의 여행과 버킷에 담아 코스를 만들 수 있습니다.",
-  },
-  {
-    title: "감성친구와 함께하는 여행",
-    description:
-      "가족, 친구, 연인, 회사동료, 직접 만든 그룹과 여행·버킷·앨범·위치공유를 관계에 맞게 나눌 수 있습니다.",
-  },
-  {
-    title: "지역축제와 관광이벤트 연결",
-    description:
-      "내 주변 또는 선택한 지역의 축제와 관광이벤트를 확인하고, 관심 있는 장소를 여행 계획으로 이어갈 수 있습니다.",
-  },
-  {
-    title: "지도에서 상권까지 함께 확인",
-    description:
-      "지도를 열면 주변 여행지와 상권을 함께 볼 수 있고, 향후 가입 소상공인의 미니홈피와 예약 정보까지 연결됩니다.",
-  },
-];
+const DESKTOP_VIEW_STORAGE_KEY = "gamsung2_force_desktop_view";
 
-export default function HomePage() {
+function readDesktopViewPreference() {
+  if (typeof window === "undefined") return false;
+
+  return window.localStorage.getItem(DESKTOP_VIEW_STORAGE_KEY) === "true";
+}
+
+export default function Header() {
+  const location = useLocation();
+  const headerRef = useRef(null);
+  const dropdownRef = useRef(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isDesktopView, setIsDesktopView] = useState(readDesktopViewPreference);
+
+  const regions = useMemo(() => {
+    try {
+      return getAllRegions();
+    } catch (error) {
+      console.error("지역 데이터 로딩 실패:", error);
+      return [];
+    }
+  }, []);
+
+  const groupedRegions = useMemo(() => {
+    const groups = REGION_GROUP_ORDER.map((type) => ({
+      type,
+      label: REGION_GROUP_LABELS[type],
+      items: regions.filter((region) => region.regionType === type),
+    }));
+
+    return groups.filter((group) => group.items.length > 0);
+  }, [regions]);
+
+  const isEventsActive =
+    location.pathname === "/events" ||
+    location.pathname.startsWith("/events/") ||
+    location.pathname.startsWith("/event-hub");
+
+  function closeAllMenus() {
+    setIsOpen(false);
+    setIsMobileMenuOpen(false);
+  }
+
+  function handleMobileMenuToggle() {
+    setIsMobileMenuOpen((prev) => !prev);
+    setIsOpen(false);
+  }
+
+  function handleToggleDesktopView() {
+    setIsDesktopView((prev) => !prev);
+    setIsOpen(false);
+  }
+
+  useEffect(() => {
+    const root = document.documentElement;
+
+    if (isDesktopView) {
+      root.classList.add("gamsung-force-desktop");
+      window.localStorage.setItem(DESKTOP_VIEW_STORAGE_KEY, "true");
+    } else {
+      root.classList.remove("gamsung-force-desktop");
+      window.localStorage.setItem(DESKTOP_VIEW_STORAGE_KEY, "false");
+    }
+
+    return () => {
+      root.classList.remove("gamsung-force-desktop");
+    };
+  }, [isDesktopView]);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (!headerRef.current) return;
+      if (!headerRef.current.contains(event.target)) {
+        closeAllMenus();
+      }
+    }
+
+    function handleEscape(event) {
+      if (event.key === "Escape") {
+        closeAllMenus();
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
+
+  useEffect(() => {
+    closeAllMenus();
+  }, [location.pathname]);
+
   return (
-    <div className="page home-page">
-      <section className="hero-section">
-        <div className="hero-darken">
-          <div className="hero-inner">
-            <p className="hero-badge">여행 · 친구 · 지역상권을 잇는 플랫폼</p>
+    <header
+      ref={headerRef}
+      className={`site-header ${isMobileMenuOpen ? "mobile-menu-open" : ""} ${
+        isDesktopView ? "desktop-view-enabled" : ""
+      }`}
+    >
+      <div className="site-header-inner">
+        <div className="site-header-top">
+          <Link
+            to="/"
+            className="site-logo"
+            aria-label="감성여행2 홈으로 이동"
+            onClick={closeAllMenus}
+          >
+            <span className="site-logo-text">감성여행</span>
+            <span className="site-logo-number">2</span>
+          </Link>
 
-            <h1 className="hero-title">
-              <span className="hero-title-brand">
-                <span className="hero-title-text">감성여행</span>
-                <span className="hero-title-number">2</span>
-              </span>
-              <br />
-              여행을 데이터로, 지역을 기회로, 사람을 연결로
-            </h1>
-
-            <p className="hero-description">
-              감성여행2는 단순히 관광지를 보여주는 앱이 아닙니다. 내 주변
-              여행지, 지역축제, 관광이벤트, 나만의 여행코스, 버킷리스트,
-              감성친구, 지역상권, 감성배달까지 하나로 연결하는 지역상생 여행
-              플랫폼입니다.
-            </p>
-
-            <div className="hero-actions">
-              <Link to="/about" className="primary-btn">
-                감성여행2 알아보기
-              </Link>
-              <Link to="/delivery-about" className="secondary-btn">
-                감성배달 보기
-              </Link>
-              <Link to="/partner" className="secondary-btn">
-                입점·제휴 문의
-              </Link>
-            </div>
-          </div>
+          <button
+            type="button"
+            className={`mobile-menu-button ${
+              isMobileMenuOpen ? "active" : ""
+            }`}
+            aria-label={isMobileMenuOpen ? "메뉴 닫기" : "메뉴 열기"}
+            aria-expanded={isMobileMenuOpen}
+            onClick={handleMobileMenuToggle}
+          >
+            <span className="mobile-menu-line" />
+            <span className="mobile-menu-line" />
+            <span className="mobile-menu-line" />
+          </button>
         </div>
-      </section>
 
-      <section className="home-platform-section">
-        <div className="home-platform-inner">
-          <div className="home-section-head">
-            <p className="home-section-label">GAMSUNG TRAVEL 2</p>
-            <h2>여행자, 가족과 친구, 지역상권을 한 흐름으로 연결합니다</h2>
-            <p>
-              사용자는 여행지를 찾고, 친구와 공유하고, 지역축제와 관광이벤트를
-              확인하고, 주변 상권과 감성배달까지 이어서 이용할 수 있습니다.
-              소상공인과 지자체는 사용자의 관심과 참여 데이터를 통해 지역의
-              가능성을 더 선명하게 확인할 수 있습니다.
-            </p>
-          </div>
+        <div className="site-header-menu">
+          <nav className="site-nav" aria-label="주요 메뉴">
+            <NavLink
+              to="/about"
+              className={({ isActive }) =>
+                isActive ? "nav-link active" : "nav-link"
+              }
+            >
+              감성여행2 소개
+            </NavLink>
 
-          <div className="home-platform-grid">
-            {PLATFORM_POINTS.map((point) => (
-              <article key={point.title} className="home-platform-card">
-                <div className="home-platform-icon">✦</div>
-                <h3>{point.title}</h3>
-                <p>{point.description}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
+            <NavLink
+              to="/delivery-about"
+              className={({ isActive }) =>
+                isActive ? "nav-link active" : "nav-link"
+              }
+            >
+              감성배달 소개
+            </NavLink>
 
-      <section className="home-flow-section">
-        <div className="home-flow-inner">
-          <div className="home-section-head">
-            <p className="home-section-label">SERVICE FLOW</p>
-            <h2>감성여행2는 이렇게 사용합니다</h2>
-            <p>
-              내 주변 또는 전국 지역을 선택하고, 테마를 고른 뒤, 마음에 드는
-              장소를 나만의 여행이나 버킷에 담습니다. 여행 중 필요한 안전정보,
-              사진, 번역, 예약현황, 감성배달 이동까지 한 흐름으로 이어집니다.
-            </p>
-          </div>
+            <div
+              ref={dropdownRef}
+              className={`dropdown ${isOpen ? "open" : ""}`}
+            >
+              <div className="dropdown-trigger-group">
+                <NavLink
+                  to="/events"
+                  className={
+                    isEventsActive
+                      ? "nav-link active dropdown-main-link"
+                      : "nav-link dropdown-main-link"
+                  }
+                >
+                  이벤트
+                </NavLink>
 
-          <div className="home-flow-row">
-            <div className="home-flow-item">내 주변 / 지역 선택</div>
-            <div className="home-flow-arrow">→</div>
-            <div className="home-flow-item">테마 선택</div>
-            <div className="home-flow-arrow">→</div>
-            <div className="home-flow-item">여행지·이벤트 담기</div>
-            <div className="home-flow-arrow">→</div>
-            <div className="home-flow-item">나만의 여행 / 버킷</div>
-            <div className="home-flow-arrow">→</div>
-            <div className="home-flow-item">지도·예약·감성배달 연결</div>
-          </div>
-        </div>
-      </section>
+                <button
+                  type="button"
+                  className={`dropdown-toggle ${isOpen ? "active" : ""}`}
+                  aria-label="지역 이벤트 메뉴 열기"
+                  aria-expanded={isOpen}
+                  aria-haspopup="true"
+                  onClick={() => setIsOpen((prev) => !prev)}
+                >
+                  <span className="dropdown-arrow">▼</span>
+                </button>
+              </div>
 
-      <section className="home-event-hub-section">
-        <div className="home-event-hub-inner">
-          <div className="home-event-hub-head">
-            <p className="home-event-hub-label">EVENT HUB</p>
-            <h2>내 주변 또는 원하는 지역의 이벤트를 바로 확인하세요</h2>
-            <p>
-              지역축제와 관광이벤트는 사용자가 직접 찾아보는 ‘내 주변 이벤트’와
-              관심 지역·테마에 맞춰 알려주는 ‘알림 기능’으로 확장될 수 있습니다.
-              지금은 홈페이지에서 대표 지역 이벤트 허브를 먼저 확인할 수 있습니다.
-            </p>
+              {isOpen ? (
+                <div className="dropdown-menu">
+                  {groupedRegions.map((group) => (
+                    <div key={group.type} className="dropdown-group">
+                      <div className="dropdown-group-head">
+                        <p className="dropdown-group-title">{group.label}</p>
+                      </div>
 
-            <div className="home-event-hub-actions">
-              <Link to="/events" className="hub-primary-link">
-                전체 이벤트 허브 보러가기
-              </Link>
-              <Link to="/partner" className="hub-secondary-link">
-                지역 제휴 문의하기
-              </Link>
-            </div>
-          </div>
-
-          <div className="home-featured-region-grid">
-            {FEATURED_REGIONS.map((region) => (
-              <Link
-                key={region.slug}
-                to={`/events/region/${region.slug}`}
-                className="home-featured-region-card"
-                aria-label={`${region.name} 이벤트 허브로 이동`}
-              >
-                <div className="home-featured-region-top">
-                  <span className="home-featured-region-badge">
-                    {region.badge}
-                  </span>
+                      <div className="dropdown-group-items">
+                        {group.items.map((region) => (
+                          <Link
+                            key={region.slug}
+                            to={`/events/region/${region.slug}`}
+                            onClick={closeAllMenus}
+                          >
+                            {region.name}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
+              ) : null}
+            </div>
 
-                <h3>{region.name}</h3>
-                <p>{region.description}</p>
+            <NavLink
+              to="/partner"
+              className={({ isActive }) =>
+                isActive ? "nav-link active" : "nav-link"
+              }
+            >
+              제휴문의
+            </NavLink>
 
-                <span className="home-featured-region-link">
-                  지역 상세 허브 보기 →
-                </span>
-              </Link>
-            ))}
-          </div>
+            <NavLink
+              to="/contact"
+              className={({ isActive }) =>
+                isActive ? "nav-link active" : "nav-link"
+              }
+            >
+              문의하기
+            </NavLink>
+
+            <button
+              type="button"
+              className={`desktop-view-toggle ${
+                isDesktopView ? "active" : ""
+              }`}
+              onClick={handleToggleDesktopView}
+            >
+              {isDesktopView ? "모바일버전으로 보기" : "PC버전으로 보기"}
+            </button>
+          </nav>
         </div>
-      </section>
-    </div>
+      </div>
+    </header>
   );
 }

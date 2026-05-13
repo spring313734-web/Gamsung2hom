@@ -8,13 +8,14 @@
 // - 지역별 이벤트 허브 상세 페이지 라우트 연결
 // - 지역별 후기 / 참여글 전용 페이지 라우트 연결
 // - 지역별 후기 상세 페이지 라우트 연결
-// - 명함 QR코드 연결용 /app 앱 안내 페이지 라우트 추가
-// - AuthProvider로 홈페이지 전체 공용 로그인 사용자 상태 제공
-// - 실제 폴더 경로(src/context/AuthContext.jsx)에 맞춰 import 경로 정리
+// - 명함 QR코드 연결용 /app 앱 안내 페이지 라우트 연결
+// - 홈페이지 전체에서 감성문의 쪽지 위젯 표시
+// - AuthProvider로 홈페이지 전체 공용 상태 제공
 // ========================================
 
 import { Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
+import InquiryMemoWidget from "./components/InquiryMemoWidget";
 import HomePage from "./pages/HomePage";
 import AboutPage from "./pages/AboutPage";
 import PartnerPage from "./pages/PartnerPage";
@@ -42,8 +43,6 @@ export default function App() {
             <Route path="/partner" element={<PartnershipPage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/events" element={<EventsPage />} />
-
-            {/* 명함 QR코드 연결용 앱 안내 페이지 */}
             <Route path="/app" element={<AppDownloadPage />} />
 
             <Route
@@ -60,6 +59,8 @@ export default function App() {
             />
           </Routes>
         </main>
+
+        <InquiryMemoWidget />
       </div>
     </AuthProvider>
   );

@@ -1,10 +1,10 @@
 // 파일 경로: src/pages/ContactPage.jsx
 // ========================================
 // 📌 감성여행2 문의하기 페이지
-// - 상단 큰 배너 없이 카드형 소개 레이아웃으로 구성
-// - 일반 문의 / 제휴 안내 / 서비스 확장 방향을 카드로 정리
+// - 홈페이지 오른쪽 아래 감성문의 쪽지 사용 안내
+// - 소상공인 입점 / 지자체 제휴 / 일반 문의 / 서비스 이용 문의를 구분
+// - 이메일 문의와 감성문의 쪽지 흐름을 함께 안내
 // - 제휴문의 페이지와 구분되도록 일반 문의 중심 문구 사용
-// - ContactPage.css와 연결되는 전용 스타일 적용
 // ========================================
 
 import { Link } from "react-router-dom";
@@ -12,24 +12,24 @@ import "./ContactPage.css";
 
 const contactTopics = [
   {
+    title: "소상공인 입점 문의",
+    description:
+      "가게 소개, 메뉴, 이벤트, 미니홈피, 지역상권 노출, 감성배달 연결에 관심 있는 소상공인 문의를 받습니다.",
+  },
+  {
+    title: "지자체 제휴 문의",
+    description:
+      "지역축제, 관광이벤트, 지역상권 활성화, 시범 운영, 데이터 기반 관광정책 협력 문의를 남길 수 있습니다.",
+  },
+  {
     title: "일반 문의",
     description:
-      "서비스 내용, 이용 방향, 페이지 구성, 향후 기능 확장 등 감성여행2 전반에 대한 문의를 남길 수 있습니다.",
+      "감성여행2 서비스 방향, 앱 출시 준비, 홈페이지 내용, 이용 방법 등에 대한 문의를 남길 수 있습니다.",
   },
   {
-    title: "제휴 및 협업 문의",
+    title: "서비스 이용 문의",
     description:
-      "지역 상점, 체험, 숙소, 행사, 특산물, 관광 콘텐츠 등 함께 연결할 수 있는 다양한 협업 제안을 문의할 수 있습니다.",
-  },
-  {
-    title: "사업자 소개 및 참여",
-    description:
-      "사업자 소개, 미니홈피, 예약 연결, 향후 입점 구조와 관련된 방향성도 단계적으로 안내할 수 있도록 준비하고 있습니다.",
-  },
-  {
-    title: "향후 기능 확장 안내",
-    description:
-      "앞으로 앱 연결, 로그인, 제휴 신청, 고객문의, 사업자 관리 기능까지 순차적으로 확장될 수 있도록 준비 중입니다.",
+      "나만의 여행, 버킷, 감성친구, 이벤트 허브, 감성배달 연결 등 기능 이용과 관련된 문의를 남길 수 있습니다.",
   },
 ];
 
@@ -39,20 +39,20 @@ export default function ContactPage() {
       <section className="contact-hero">
         <div className="contact-hero-inner">
           <p className="contact-badge">CONTACT</p>
-          <h1>문의하기</h1>
+          <h1>감성문의</h1>
           <p className="contact-hero-text">
-            감성여행2는 여행자, 지역, 가게, 지역사회가 더 따뜻하게 연결될 수
-            있도록 문의 또한 하나의 시작점이 되기를 바랍니다.
+            감성여행2에 관심을 가져주셔서 감사합니다.
             <br />
-            궁금한 점이나 함께하고 싶은 방향이 있다면 편하게 남겨주세요.
+            소상공인 입점, 지자체 제휴, 서비스 이용 문의는 홈페이지 오른쪽 아래
+            <strong> 감성문의 쪽지</strong>를 통해 편하게 남겨주세요.
           </p>
 
           <div className="contact-hero-actions">
-            <Link to="/partner" className="contact-primary-button">
-              제휴문의 페이지 보기
-            </Link>
-            <Link to="/" className="contact-secondary-button">
-              홈으로 이동
+            <a href="mailto:info@gamsung2.com" className="contact-primary-button">
+              이메일 문의하기
+            </a>
+            <Link to="/partner" className="contact-secondary-button">
+              제휴문의 보기
             </Link>
           </div>
         </div>
@@ -61,10 +61,10 @@ export default function ContactPage() {
       <section className="contact-section">
         <div className="contact-section-head">
           <p className="contact-section-eyebrow">CONTACT GUIDE</p>
-          <h2>어떤 문의를 할 수 있나요?</h2>
+          <h2>어떤 문의를 남길 수 있나요?</h2>
           <p>
-            현재 감성여행2 홈페이지는 시작 단계이지만, 앞으로 더 다양한 연결이
-            가능하도록 순차적으로 확장할 수 있는 구조를 준비하고 있습니다.
+            현재 감성여행2와 감성배달은 정식 출시를 준비 중이며, 초기 참여
+            소상공인과 협력 지자체를 우선 모집하고 있습니다.
           </p>
         </div>
 
@@ -82,29 +82,33 @@ export default function ContactPage() {
       <section className="contact-info-section">
         <div className="contact-info-grid">
           <article className="contact-info-card contact-info-card-wide">
-            <p className="contact-info-label">ABOUT GAMSUNG TRAVEL 2</p>
-            <h2>감성여행2는 이런 방향을 생각하고 있습니다</h2>
+            <p className="contact-info-label">MESSAGE</p>
+            <h2>오른쪽 아래 감성문의 버튼을 눌러주세요</h2>
             <p>
-              감성여행2는 여행과 지역, 사람과 상권을 감성적으로 연결하는 여행
-              플랫폼을 목표로 합니다. 단순히 정보를 나열하는 것이 아니라,
-              사람들의 기억에 남는 여행 경험과 지역의 따뜻한 연결을 함께
-              만들어가는 방향을 지향합니다.
+              홈페이지 어디서든 오른쪽 아래의 감성문의 버튼을 누르면 간단한
+              쪽지창이 열립니다. 문의 유형, 성함 또는 상호명, 연락처, 이메일,
+              문의 내용을 남기면 확인 후 연락드릴 수 있도록 준비하겠습니다.
             </p>
           </article>
 
           <article className="contact-info-card">
             <p className="contact-info-label">EMAIL</p>
-            <h3>문의 이메일</h3>
-            <p>contact@gamsung2.com</p>
+            <h3>이메일 문의</h3>
+            <p>
+              info@gamsung2.com
+              <br />
+              공식 제안서, 지자체 제휴, 문서 전달이 필요한 경우 이메일을
+              이용해주세요.
+            </p>
           </article>
 
           <article className="contact-info-card">
-            <p className="contact-info-label">PARTNERSHIP</p>
-            <h3>연결 가능한 분야</h3>
+            <p className="contact-info-label">NOTICE</p>
+            <h3>현재 준비 단계입니다</h3>
             <p>
-              카페, 음식점, 숙소, 체험장, 특산물 판매처, 지역 행사, 관광 관련
-              협업 등 지역과 여행을 함께 살릴 수 있는 다양한 제안을 열어두고
-              있습니다.
+              감성문의 쪽지는 먼저 홈페이지 문의 접수용으로 제공됩니다. 이후
+              Supabase 저장, 관리자 확인, 답변 상태 관리 기능으로 확장할
+              예정입니다.
             </p>
           </article>
 
@@ -112,10 +116,9 @@ export default function ContactPage() {
             <p className="contact-info-label">TOGETHER</p>
             <h2>문의도 하나의 연결이 될 수 있습니다</h2>
             <p>
-              감성여행2는 혼자 떠나는 여행도 결국 지역과 사람, 공간과 이야기의
-              연결 속에서 더 깊어질 수 있다고 생각합니다. 문의와 제휴 또한 그
-              연결의 시작점이 될 수 있도록, 앞으로 더 자연스럽고 편안한 흐름으로
-              발전시켜 나가고자 합니다.
+              감성여행2는 여행과 지역, 사람과 상권을 연결하는 플랫폼을 목표로
+              합니다. 작은 문의 하나가 지역 소상공인, 지자체, 여행자 모두에게
+              도움이 되는 시작점이 될 수 있습니다.
             </p>
           </article>
         </div>
@@ -123,17 +126,17 @@ export default function ContactPage() {
 
       <section className="contact-cta-section">
         <div className="contact-cta-card">
-          <p className="contact-section-eyebrow">LET&apos;S TALK</p>
-          <h2>원하는 방향이 있다면 편하게 이야기해주세요</h2>
+          <p className="contact-section-eyebrow">LET&apos;S CONNECT</p>
+          <h2>우리 지역에서 먼저 시작해보고 싶으신가요?</h2>
           <p>
-            일반 문의부터 협업 제안까지, 감성여행2와 함께 만들고 싶은 방향이
-            있다면 남겨주세요. 앞으로 더 좋은 연결로 이어질 수 있도록 준비해
-            나가겠습니다.
+            소상공인 입점, 지자체 시범 운영, 지역축제와 관광이벤트 연결,
+            감성배달 상권 연계에 관심이 있다면 감성문의 쪽지 또는 이메일로
+            남겨주세요.
           </p>
 
           <div className="contact-hero-actions">
             <Link to="/partner" className="contact-primary-button">
-              제휴문의로 이동
+              제휴문의 페이지로 이동
             </Link>
             <Link to="/about" className="contact-secondary-button">
               감성여행2 소개 보기

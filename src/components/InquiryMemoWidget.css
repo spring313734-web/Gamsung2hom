@@ -1,0 +1,245 @@
+/* 파일 경로: src/components/InquiryMemoWidget.css */
+/* ========================================
+   📌 감성문의 쪽지 위젯 스타일
+   - 홈페이지 오른쪽 아래 고정 버튼
+   - 작은 쪽지창 형태의 문의 입력 UI
+   - 모바일에서는 화면 하단에 맞춰 보기 좋게 표시
+   ======================================== */
+
+.inquiry-widget {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 7000;
+  font-family: inherit;
+}
+
+.inquiry-floating-button {
+  min-height: 54px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #2563eb, #f59e0b);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 18px 38px rgba(37, 99, 235, 0.28);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.inquiry-floating-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 22px 46px rgba(37, 99, 235, 0.34);
+}
+
+.inquiry-floating-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.inquiry-floating-text {
+  font-size: 0.98rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.inquiry-panel {
+  position: absolute;
+  right: 0;
+  bottom: 70px;
+  width: min(390px, calc(100vw - 32px));
+  max-height: min(76vh, 680px);
+  overflow-y: auto;
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.22);
+  padding: 22px;
+}
+
+.inquiry-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.inquiry-kicker {
+  margin: 0 0 7px;
+  color: #2563eb;
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.inquiry-panel-head h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.45rem;
+  line-height: 1.25;
+  font-weight: 900;
+}
+
+.inquiry-close-button {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 13px;
+  background: rgba(15, 23, 42, 0.06);
+  color: #334155;
+  font-size: 1.55rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+
+.inquiry-close-button:hover {
+  background: rgba(15, 23, 42, 0.1);
+  transform: translateY(-1px);
+}
+
+.inquiry-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.inquiry-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.inquiry-form label span {
+  color: #334155;
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+
+.inquiry-form input,
+.inquiry-form select,
+.inquiry-form textarea {
+  width: 100%;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 15px;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  padding: 12px 13px;
+  outline: none;
+  font-family: inherit;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.inquiry-form textarea {
+  resize: vertical;
+  min-height: 110px;
+}
+
+.inquiry-form input:focus,
+.inquiry-form select:focus,
+.inquiry-form textarea:focus {
+  border-color: rgba(37, 99, 235, 0.5);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+.inquiry-help-text {
+  margin: 2px 0 0;
+  padding: 12px 13px;
+  border-radius: 15px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.inquiry-primary-button {
+  min-height: 48px;
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  font-size: 0.96rem;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.2);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.inquiry-primary-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 30px rgba(37, 99, 235, 0.24);
+}
+
+.inquiry-success {
+  text-align: center;
+  padding: 20px 4px 4px;
+}
+
+.inquiry-success-icon {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 16px;
+  border-radius: 22px;
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: 900;
+}
+
+.inquiry-success h3 {
+  margin: 0 0 10px;
+  color: #0f172a;
+  font-size: 1.22rem;
+  font-weight: 900;
+}
+
+.inquiry-success p {
+  margin: 0 0 20px;
+  color: #475569;
+  font-size: 0.95rem;
+  line-height: 1.75;
+}
+
+@media (max-width: 640px) {
+  .inquiry-widget {
+    right: 14px;
+    bottom: 14px;
+  }
+
+  .inquiry-floating-button {
+    min-height: 50px;
+    padding: 0 17px;
+  }
+
+  .inquiry-panel {
+    right: 0;
+    bottom: 64px;
+    width: calc(100vw - 28px);
+    max-height: 74vh;
+    padding: 18px;
+    border-radius: 22px;
+  }
+
+  .inquiry-floating-text {
+    font-size: 0.92rem;
+  }
+}
