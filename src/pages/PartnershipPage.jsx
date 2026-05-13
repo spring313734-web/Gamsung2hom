@@ -2,8 +2,9 @@
 // ========================================
 // 📌 감성여행2 제휴문의 전용 페이지
 // - 소비자 / 소상공인 / 지자체 문의를 한 페이지 안에서 선택
+// - 상단 중복 버튼 제거
+// - 아래 선택 카드 3개만 보여주고 선택 시 문의 입력 섹션으로 이동
 // - 제휴문의에서 문의하기 페이지로 이동하지 않도록 /contact 연결 제거
-// - 선택한 문의 유형에 맞는 입력 섹션을 바로 표시
 // - 현재 단계에서는 서버 저장 없이 접수 완료 안내만 표시
 // - 다음 단계에서 Supabase inquiries 테이블 저장 기능 연결 예정
 // ========================================
@@ -140,33 +141,14 @@ export default function PartnershipPage() {
     <div className="partnership-page">
       <section className="partnership-hero">
         <div className="partnership-hero-inner">
-          <p className="partnership-badge">Partnership</p>
+          <p className="partnership-badge">PARTNERSHIP</p>
           <h1>감성여행2 제휴문의</h1>
           <p className="partnership-hero-text">
             소비자, 소상공인, 지자체 문의를 한 페이지에서 선택하고 바로 남길 수
             있도록 정리했습니다.
             <br />
-            감성여행2는 여행자와 지역상권, 지자체를 함께 연결하는 지역상생
-            플랫폼을 준비하고 있습니다.
+            아래 문의 유형 3개 중 해당되는 항목을 선택해주세요.
           </p>
-
-          <div className="partnership-hero-actions">
-            <button
-              type="button"
-              className="partnership-primary-button"
-              onClick={() => handleSelect("store")}
-            >
-              소상공인 입점 문의
-            </button>
-
-            <button
-              type="button"
-              className="partnership-secondary-button"
-              onClick={() => handleSelect("local")}
-            >
-              지자체 제휴 문의
-            </button>
-          </div>
         </div>
       </section>
 
