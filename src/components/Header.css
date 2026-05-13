@@ -4,6 +4,8 @@
    - 상단 로고 / 메뉴 / 드롭다운 레이아웃 정리
    - 왼쪽 브랜드 로고를 PNG 이미지 파일로 표시
    - 로고 파일 위치: public/logo-gamsung2-header.png
+   - 로고 이미지 안쪽 여백을 줄여 더 크게 보이도록 object-fit: cover 적용
+   - 로고 박스에 은은한 크림/살구/하늘빛 배경을 넣어 존재감 강화
    - 로고와 메뉴가 너무 멀어 보이지 않도록 중앙 묶음형 배치 적용
    - 문의하기 메뉴 제거 후 감성여행2 소개 / 감성배달 소개 / 이벤트 / 제휴문의 중심 구성
    - 모바일에서는 로고 + 메뉴 버튼만 우선 표시
@@ -32,7 +34,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 58px;
+  gap: 44px;
 }
 
 .site-header-top {
@@ -55,25 +57,23 @@
 
 .site-logo {
   position: relative;
+  isolation: isolate;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: 62px;
-  padding: 6px 12px;
+  padding: 4px 12px;
   border-radius: 20px;
   text-decoration: none;
   white-space: nowrap;
   background:
-    linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.98),
-      rgba(255, 247, 237, 0.96)
-    ),
-    #ffffff;
-  border: 1px solid rgba(245, 158, 11, 0.22);
+    radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.95), transparent 34%),
+    linear-gradient(135deg, #fff3e5 0%, #ffffff 48%, #eef7ff 100%);
+  border: 1px solid rgba(245, 158, 11, 0.42);
   box-shadow:
-    0 12px 28px rgba(15, 23, 42, 0.075),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.72);
+    0 15px 32px rgba(245, 158, 11, 0.14),
+    0 7px 18px rgba(15, 23, 42, 0.065),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.82);
   overflow: hidden;
   transition:
     transform 0.2s ease,
@@ -82,20 +82,33 @@
     background 0.2s ease;
 }
 
+.site-logo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 50%, rgba(255, 122, 89, 0.12), transparent 34%),
+    radial-gradient(circle at 92% 50%, rgba(37, 99, 235, 0.11), transparent 34%);
+}
+
 .site-logo:hover {
   transform: translateY(-2px);
-  border-color: rgba(245, 158, 11, 0.4);
+  border-color: rgba(245, 158, 11, 0.58);
   box-shadow:
-    0 16px 34px rgba(15, 23, 42, 0.1),
-    0 8px 24px rgba(245, 158, 11, 0.15);
+    0 18px 38px rgba(245, 158, 11, 0.2),
+    0 9px 24px rgba(15, 23, 42, 0.08);
 }
 
 .site-logo-image {
+  position: relative;
+  z-index: 1;
   display: block;
-  width: auto;
-  height: 64px;
-  max-width: 300px;
-  object-fit: contain;
+  width: 268px;
+  height: 56px;
+  object-fit: cover;
+  object-position: center;
 }
 
 /* 기존 텍스트 로고 클래스는 혹시 남아 있는 화면 호환용으로만 유지 */
@@ -444,7 +457,7 @@ html.gamsung-force-desktop .site-header-inner {
 
 @media (max-width: 1024px) {
   .site-header-inner {
-    gap: 34px;
+    gap: 30px;
     padding-left: 20px;
     padding-right: 20px;
     flex-wrap: wrap;
@@ -460,6 +473,11 @@ html.gamsung-force-desktop .site-header-inner {
 
   .site-auth-panel {
     justify-content: flex-end;
+  }
+
+  .site-logo-image {
+    width: 244px;
+    height: 52px;
   }
 }
 
@@ -491,13 +509,15 @@ html.gamsung-force-desktop .site-header-inner {
 
   .site-logo {
     min-height: 50px;
-    padding: 5px 9px;
+    padding: 4px 9px;
     border-radius: 17px;
   }
 
   .site-logo-image {
+    width: 198px;
     height: 40px;
-    max-width: 210px;
+    object-fit: cover;
+    object-position: center;
   }
 
   .mobile-menu-button {
@@ -676,7 +696,7 @@ html.gamsung-force-desktop .site-header-inner {
     flex-direction: row;
     flex-wrap: nowrap;
     padding: 12px 24px;
-    gap: 58px;
+    gap: 44px;
   }
 
   html.gamsung-force-desktop .site-header-top {
@@ -697,13 +717,15 @@ html.gamsung-force-desktop .site-header-inner {
 
   html.gamsung-force-desktop .site-logo {
     min-height: 62px;
-    padding: 6px 12px;
+    padding: 4px 12px;
     border-radius: 20px;
   }
 
   html.gamsung-force-desktop .site-logo-image {
-    height: 50px;
-    max-width: 260px;
+    width: 268px;
+    height: 56px;
+    object-fit: cover;
+    object-position: center;
   }
 
   html.gamsung-force-desktop .site-nav {
@@ -781,8 +803,10 @@ html.gamsung-force-desktop .site-header-inner {
   }
 
   .site-logo-image {
-    height: 35px;
-    max-width: 176px;
+    width: 166px;
+    height: 34px;
+    object-fit: cover;
+    object-position: center;
   }
 
   .mobile-menu-button {
