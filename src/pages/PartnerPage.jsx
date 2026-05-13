@@ -1,54 +1,77 @@
 // 파일 경로: src/pages/PartnerPage.jsx
 // ========================================
 // 📌 감성배달 소개 페이지
-// - 감성배달 서비스 방향과 핵심 기능을 카드형으로 정리
-// - 감성여행2와의 연결 구조를 보기 쉽게 설명
-// - 사업자 / 사용자 관점의 기능 흐름을 함께 안내
-// - PartnerPage.css와 연결되는 전용 레이아웃 적용
+// - 감성배달을 음식 배달만이 아닌 지역상권 / 생활서비스 플랫폼으로 설명
+// - 이벤트, 주문, 생활서비스, 미니홈피, 소상공인 운영 흐름 정리
+// - 감성여행2와 역할 구분 안내
+// - 예약은 감성여행2 중심, 배달과 주문은 감성배달 중심이라는 문구 반영
 // ========================================
 
 import "./PartnerPage.css";
 
 const features = [
   {
-    title: "빠른 생활형 이벤트",
+    title: "지역 상권 중심 배달",
     description:
-      "오늘만, 지금만, 신규 오픈, 긴급 할인처럼 즉시 반응이 필요한 이벤트를 첫 화면에서 빠르게 확인할 수 있도록 구성됩니다.",
+      "감성배달은 단순 음식 배달을 넘어 지역 소상공인의 먹거리, 생활서비스, 이벤트, 할인 정보를 함께 연결하는 지역상권 플랫폼입니다.",
   },
   {
-    title: "근처 업체 찾기",
+    title: "이벤트별 빠른 노출",
     description:
-      "현재 위치를 기준으로 근처 가게, 생활서비스, 지역 업체를 찾고 필요한 곳을 빠르게 연결할 수 있습니다.",
+      "오늘만, 지금만, 신규 오픈, 할인, 체험, 리뷰 이벤트처럼 소상공인이 직접 등록한 생활형 이벤트를 사용자에게 빠르게 보여줄 수 있습니다.",
   },
   {
-    title: "업체 직접 등록 이벤트",
+    title: "근처 가게 / 생활서비스 찾기",
     description:
-      "감성배달의 이벤트는 업체가 직접 등록하는 생활형 이벤트 구조입니다. 오늘의 이벤트, 이주의 이벤트, 할인, 체험, 상담 같은 흐름으로 확장할 수 있습니다.",
+      "사용자는 현재 위치를 기준으로 주변 가게, 생활서비스, 지역 업체를 확인하고 필요한 서비스를 바로 찾을 수 있습니다.",
   },
   {
-    title: "사업자 대시보드",
+    title: "메뉴 / 상품 선택과 주문",
     description:
-      "사업자는 관리자 화면에서 매출, 주문수, 판매수량, 인기 메뉴 같은 운영 정보를 한눈에 확인할 수 있습니다.",
+      "사용자는 가게 상세 화면에서 메뉴와 상품을 확인하고 장바구니에 담아 주문할 수 있습니다. 누구나 익숙한 선택 후 주문 흐름을 기준으로 구성됩니다.",
   },
   {
-    title: "가게 프로필 관리",
+    title: "소상공인 미니홈피",
     description:
-      "상호명, 대표자, 사업자 정보, 업종 카테고리, 연락처, 소개 문구 등 기본 정보를 직접 관리할 수 있습니다.",
+      "향후 가입한 소상공인은 가게 소개, 메뉴, 사진, 이벤트, 위치, 연락처를 보여주는 미니홈피를 가질 수 있습니다.",
   },
   {
-    title: "상품 / 메뉴 / 사진 관리",
+    title: "사업자 운영 관리",
     description:
-      "상품 추가, 수정, 삭제, 사진 등록, 갤러리 관리, 메뉴 노출 여부 설정 등 실제 운영에 필요한 기능을 담을 수 있습니다.",
+      "사업자는 가게 정보, 메뉴, 상품 사진, 이벤트, 휴무, 할인, 주문 흐름을 직접 관리할 수 있는 구조로 확장됩니다.",
   },
   {
-    title: "예약 · 할인 · 휴무 설정",
+    title: "감성여행2와 연결",
     description:
-      "예약 관리, 할인 이벤트, 리뷰 이벤트, 휴무 설정까지 사업자가 직접 운영할 수 있는 구조로 확장할 수 있습니다.",
+      "감성여행2 지도에서는 주변 상권과 미니홈피를 확인하고, 배달 주문과 생활서비스 이용은 감성배달에서 진행하는 구조로 연결됩니다.",
   },
   {
-    title: "AI 촬영 · 편집 스튜디오",
+    title: "지역 단골 고객 만들기",
     description:
-      "가게 홍보 사진을 더 보기 좋게 정리하고 메뉴나 매장 이미지를 더 깔끔하게 보여줄 수 있는 보정형 도구로 활용할 수 있습니다.",
+      "가게는 이벤트와 미니홈피를 통해 단순 주문 고객을 넘어 지역 단골 고객과 여행자를 함께 만날 수 있습니다.",
+  },
+];
+
+const eventTypes = [
+  {
+    title: "오늘의 이벤트",
+    description:
+      "오늘 방문하거나 주문하면 받을 수 있는 할인, 서비스, 한정 메뉴를 빠르게 보여줍니다.",
+  },
+  {
+    title: "신규 오픈 이벤트",
+    description:
+      "새롭게 문을 연 가게를 지역 주민과 여행자에게 알리는 홍보 공간으로 활용할 수 있습니다.",
+  },
+  {
+    title: "리뷰 / 단골 이벤트",
+    description:
+      "리뷰 작성, 재방문, 단골 등록 등 고객과 지속적으로 이어지는 이벤트로 확장할 수 있습니다.",
+  },
+  {
+    title: "지역 연계 이벤트",
+    description:
+      "지역축제나 관광이벤트와 함께 주변 가게 할인, 체험, 쿠폰을 연결할 수 있습니다.",
   },
 ];
 
@@ -59,10 +82,10 @@ export default function PartnerPage() {
         <div className="partner-hero-badge">GAMSUNG DELIVERY</div>
         <h1 className="partner-hero-title">감성배달 소개</h1>
         <p className="partner-hero-description">
-          감성배달은 음식 배달만을 위한 앱이 아니라, 생활형 서비스와 지역 상점,
-          빠른 연결 이벤트, 사업자 운영 기능까지 담는 지역 밀착형 서비스입니다.
-          감성여행2가 여행자의 흐름을 담당한다면, 감성배달은 지역 생활과 빠른
-          연결을 맡는 구조로 함께 움직입니다.
+          감성배달은 음식 배달만을 위한 앱이 아닙니다. 지역 소상공인의 먹거리,
+          생활서비스, 이벤트, 할인, 미니홈피를 연결하는 지역상권 플랫폼입니다.
+          감성여행2가 여행자와 지역을 연결한다면, 감성배달은 지역 상권과
+          고객을 연결합니다.
         </p>
       </section>
 
@@ -80,31 +103,32 @@ export default function PartnerPage() {
 
         <article className="partner-overview-card">
           <p className="partner-overview-label">FOR STORE OWNERS</p>
-          <h2>사업자는 무엇을 할 수 있나요?</h2>
+          <h2>소상공인은 무엇을 할 수 있나요?</h2>
           <p>
-            사업자는 매장 소개, 메뉴 등록, 이벤트 등록, 사진 관리, 예약 설정,
-            운영 정보 확인까지 직접 관리할 수 있습니다. 단순 입점이 아니라
-            스스로 운영 흐름을 조절할 수 있는 구조로 확장할 수 있습니다.
+            소상공인은 가게 정보, 메뉴, 상품 사진, 이벤트, 할인, 휴무, 연락처,
+            위치 정보를 직접 관리할 수 있습니다. 향후 미니홈피를 통해 가게만의
+            매력과 소식을 더 자세히 보여줄 수 있습니다.
           </p>
         </article>
 
         <article className="partner-overview-card partner-overview-card-wide">
           <p className="partner-overview-label">HOW IT CONNECTS</p>
-          <h2>감성여행2와는 이렇게 연결됩니다</h2>
+          <h2>감성여행2와 감성배달은 역할이 다릅니다</h2>
           <p>
-            감성여행2 지도에서는 미니홈피가 노출될 수 있지만, 그 공간은 예약
-            중심입니다. 배달 주문, 생활서비스 이용, 빠른 이벤트 확인, 사업자
-            운영 기능은 감성배달 앱에서 별도로 사용하는 구조로 분리됩니다.
+            감성여행2에서는 여행, 관광, 버킷리스트, 코스짜기, 예약현황을 확인할
+            수 있습니다. 배달 주문과 생활서비스 이용은 감성배달에서 진행합니다.
+            예약 기능은 감성여행2를 중심으로 연결하고, 배달과 주문은 감성배달을
+            이용하는 구조입니다.
           </p>
 
           <div className="partner-flow-row">
             <div className="partner-flow-item">감성여행2 탐색</div>
             <div className="partner-flow-arrow">→</div>
-            <div className="partner-flow-item">미니홈피 확인</div>
+            <div className="partner-flow-item">지도 / 미니홈피 확인</div>
             <div className="partner-flow-arrow">→</div>
-            <div className="partner-flow-item">예약 중심 연결</div>
+            <div className="partner-flow-item">예약은 감성여행2</div>
             <div className="partner-flow-arrow">→</div>
-            <div className="partner-flow-item">감성배달 이용</div>
+            <div className="partner-flow-item">주문은 감성배달</div>
           </div>
         </article>
       </section>
@@ -114,7 +138,7 @@ export default function PartnerPage() {
           <p className="partner-section-eyebrow">CORE FEATURES</p>
           <h2>감성배달 핵심 기능</h2>
           <p>
-            사용자에게는 빠른 연결을, 사업자에게는 직접 운영 흐름을 제공하는
+            사용자에게는 빠른 연결을, 소상공인에게는 직접 운영 흐름을 제공하는
             핵심 기능을 보기 쉽게 정리했습니다.
           </p>
         </div>
@@ -130,14 +154,34 @@ export default function PartnerPage() {
         </div>
       </section>
 
+      <section className="partner-section">
+        <div className="partner-section-header">
+          <p className="partner-section-eyebrow">EVENT TYPES</p>
+          <h2>감성배달 이벤트 예시</h2>
+          <p>
+            감성배달의 이벤트는 소상공인이 직접 고객에게 알리고 싶은 소식과
+            혜택을 빠르게 보여주는 생활형 이벤트 구조입니다.
+          </p>
+        </div>
+
+        <div className="partner-feature-grid">
+          {eventTypes.map((event) => (
+            <article key={event.title} className="partner-feature-card">
+              <div className="partner-feature-icon">◆</div>
+              <h3>{event.title}</h3>
+              <p>{event.description}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <section className="partner-highlight-box">
         <p className="partner-highlight-label">서비스 연결 안내</p>
-        <h2>감성여행2와 감성배달은 역할이 다릅니다</h2>
+        <h2>예약은 감성여행2, 주문은 감성배달</h2>
         <p>
           감성여행2는 여행자 중심으로 코스, 이벤트, 관광 정보, 예약 흐름을
           담고, 감성배달은 음식, 생활서비스, 지역 업체 운영, 빠른 이벤트 기능을
-          담당합니다. 두 서비스는 분리되어 있지만 필요한 순간 자연스럽게
-          이어지도록 설계됩니다.
+          담당합니다. 감성여행2에서 배달이 필요할 때는 감성배달을 이용해 주세요.
         </p>
       </section>
     </div>

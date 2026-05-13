@@ -5,7 +5,7 @@
 /* - 메인 비주얼 배경 및 오버레이 구성
 /* - 브랜드 타이틀과 소개 문구 강조
 /* - 주요 이동 버튼 스타일 정리
-/* - 이벤트 허브 연결 섹션과 대표 지역 카드 추가
+/* - 플랫폼 핵심 설명 / 사용 흐름 / 이벤트 허브 섹션 추가
 /* - 반응형 레이아웃 대응
 /* ======================================== */
 
@@ -27,9 +27,9 @@
   min-height: calc(100vh - 96px);
   background: linear-gradient(
     135deg,
+    rgba(17, 24, 39, 0.42),
     rgba(17, 24, 39, 0.28),
-    rgba(17, 24, 39, 0.18),
-    rgba(17, 24, 39, 0.12)
+    rgba(17, 24, 39, 0.16)
   );
   display: flex;
   align-items: center;
@@ -58,7 +58,7 @@
 
 .hero-title {
   margin: 0 0 22px;
-  max-width: 940px;
+  max-width: 980px;
   font-size: 3.5rem;
   line-height: 1.16;
   letter-spacing: -0.04em;
@@ -81,11 +81,11 @@
 }
 
 .hero-description {
-  max-width: 760px;
+  max-width: 820px;
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1.12rem;
   line-height: 1.95;
-  color: rgba(255, 255, 255, 0.95);
+  color: rgba(255, 255, 255, 0.96);
   text-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
 }
 
@@ -140,20 +140,25 @@
   background: rgba(255, 255, 255, 0.22);
 }
 
-.home-event-hub-section {
-  background: #f8fafc;
+.home-platform-section {
+  background:
+    radial-gradient(circle at top left, rgba(245, 158, 11, 0.12), transparent 32%),
+    linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
 }
 
+.home-platform-inner,
+.home-flow-inner,
 .home-event-hub-inner {
   max-width: 1200px;
   margin: 0 auto;
   padding: 76px 24px 92px;
 }
 
-.home-event-hub-head {
-  margin-bottom: 30px;
+.home-section-head {
+  margin-bottom: 32px;
 }
 
+.home-section-label,
 .home-event-hub-label {
   margin: 0 0 10px;
   color: #2563eb;
@@ -162,19 +167,120 @@
   letter-spacing: 0.08em;
 }
 
+.home-section-head h2,
 .home-event-hub-head h2 {
   margin: 0 0 14px;
   color: #0f172a;
   font-size: 2.2rem;
   line-height: 1.25;
+  letter-spacing: -0.03em;
 }
 
+.home-section-head p,
 .home-event-hub-head p {
-  max-width: 860px;
+  max-width: 880px;
   margin: 0;
   color: #475569;
   font-size: 1.02rem;
   line-height: 1.85;
+}
+
+.home-platform-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.home-platform-card {
+  min-height: 250px;
+  padding: 26px 22px;
+  border-radius: 24px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+}
+
+.home-platform-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 16px;
+  border-radius: 16px;
+  background: rgba(245, 158, 11, 0.14);
+  color: #d97706;
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+.home-platform-card h3 {
+  margin: 0 0 12px;
+  color: #0f172a;
+  font-size: 1.18rem;
+  line-height: 1.35;
+}
+
+.home-platform-card p {
+  margin: 0;
+  color: #475569;
+  font-size: 0.96rem;
+  line-height: 1.75;
+}
+
+.home-flow-section {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.home-flow-section .home-section-label {
+  color: #fbbf24;
+}
+
+.home-flow-section .home-section-head h2 {
+  color: #ffffff;
+}
+
+.home-flow-section .home-section-head p {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.home-flow-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 24px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.home-flow-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 12px 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.13);
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.home-flow-arrow {
+  color: #fbbf24;
+  font-size: 1.2rem;
+  font-weight: 900;
+}
+
+.home-event-hub-section {
+  background: #f8fafc;
+}
+
+.home-event-hub-head {
+  margin-bottom: 30px;
 }
 
 .home-event-hub-actions {
@@ -276,6 +382,7 @@
 }
 
 @media (max-width: 1100px) {
+  .home-platform-grid,
   .home-featured-region-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -294,10 +401,13 @@
     font-size: 1.02rem;
   }
 
+  .home-platform-inner,
+  .home-flow-inner,
   .home-event-hub-inner {
     padding: 64px 20px 78px;
   }
 
+  .home-section-head h2,
   .home-event-hub-head h2 {
     font-size: 1.95rem;
   }
@@ -336,27 +446,49 @@
     width: 100%;
   }
 
+  .home-platform-inner,
+  .home-flow-inner,
   .home-event-hub-inner {
     padding: 52px 16px 62px;
   }
 
+  .home-section-head h2,
   .home-event-hub-head h2 {
     font-size: 1.65rem;
   }
 
+  .home-section-head p,
   .home-event-hub-head p {
     font-size: 0.96rem;
     line-height: 1.78;
   }
 
+  .home-platform-grid,
   .home-featured-region-grid {
     grid-template-columns: 1fr;
     gap: 18px;
   }
 
+  .home-platform-card,
   .home-featured-region-card {
     min-height: auto;
     padding: 20px 18px;
+  }
+
+  .home-flow-row {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 18px;
+  }
+
+  .home-flow-item {
+    width: 100%;
+    border-radius: 16px;
+  }
+
+  .home-flow-arrow {
+    text-align: center;
+    transform: rotate(90deg);
   }
 
   .home-featured-region-card h3 {
