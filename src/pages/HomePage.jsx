@@ -13,7 +13,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import "./Header.css";
+import "./HomePage.css";
 import { getAllRegions } from "../data/regionEvents";
 
 const REGION_GROUP_LABELS = {
