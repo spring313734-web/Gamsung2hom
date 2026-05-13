@@ -78,8 +78,8 @@
 .site-logo-image {
   display: block;
   width: auto;
-  height: 50px;
-  max-width: 260px;
+  height: 64px;
+  max-width: 300px;
   object-fit: contain;
 }
 
