@@ -10,10 +10,12 @@
 // - 지역별 후기 상세 페이지 라우트 연결
 // - 명함 QR코드 연결용 /app 앱 안내 페이지 라우트 연결
 // - 홈페이지 전체에서 감성문의 쪽지 위젯 표시
+// - 관리자 문의함 /admin/inquiries 라우트 추가
+// - 관리자 페이지에서는 오른쪽 아래 감성문의 버튼을 숨김
 // - AuthProvider로 홈페이지 전체 공용 상태 제공
 // ========================================
 
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import Header from "./components/Header";
 import InquiryMemoWidget from "./components/InquiryMemoWidget";
 import HomePage from "./pages/HomePage";
@@ -23,6 +25,7 @@ import PartnershipPage from "./pages/PartnershipPage";
 import ContactPage from "./pages/ContactPage";
 import EventsPage from "./pages/EventsPage";
 import AppDownloadPage from "./pages/AppDownloadPage";
+import AdminInquiriesPage from "./pages/AdminInquiriesPage";
 import RegionEventHubDetailPage from "./pages/RegionEventHubDetailPage";
 import RegionEventPostsPage from "./pages/RegionEventPostsPage";
 import RegionEventPostDetailPage from "./pages/RegionEventPostDetailPage";
@@ -30,6 +33,9 @@ import { AuthProvider } from "./contect/AuthContext";
 import "./App.css";
 
 export default function App() {
+  const location = useLocation();
+  const isAdminPage = location.pathname.startsWith("/admin");
+
   return (
     <AuthProvider>
       <div className="app-shell">
@@ -44,6 +50,7 @@ export default function App() {
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/events" element={<EventsPage />} />
             <Route path="/app" element={<AppDownloadPage />} />
+            <Route path="/admin/inquiries" element={<AdminInquiriesPage />} />
 
             <Route
               path="/events/region/:slug"
@@ -60,7 +67,7 @@ export default function App() {
           </Routes>
         </main>
 
-        <InquiryMemoWidget />
+        {!isAdminPage ? <InquiryMemoWidget /> : null}
       </div>
     </AuthProvider>
   );
