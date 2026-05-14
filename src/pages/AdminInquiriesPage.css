@@ -4,6 +4,8 @@
    - 관리자 로그인 화면
    - 문의 목록 카드형 쪽지함 UI
    - 문의 상태 / 관리자 메모 관리 영역
+   - 이메일 답장 / 쪽지 답장 작성 영역
+   - 답장 기록 카드 UI
    - 모바일에서도 한 줄씩 보기 좋게 정리
    ======================================== */
 
@@ -91,7 +93,8 @@
 .admin-inquiries-actions button,
 .admin-inquiries-home-link,
 .admin-login-form button,
-.admin-inquiry-memo button {
+.admin-inquiry-memo button,
+.admin-reply-box button {
   min-height: 44px;
   border: none;
   border-radius: 15px;
@@ -106,14 +109,16 @@
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease,
-    background 0.18s ease;
+    background 0.18s ease,
+    opacity 0.18s ease;
 }
 
 .admin-inquiries-hero-actions button:hover,
 .admin-inquiries-actions button:hover,
 .admin-inquiries-home-link:hover,
 .admin-login-form button:hover,
-.admin-inquiry-memo button:hover {
+.admin-inquiry-memo button:hover,
+.admin-reply-box button:hover {
   transform: translateY(-1px);
   background: #1d4ed8;
   box-shadow: 0 16px 30px rgba(37, 99, 235, 0.2);
@@ -141,7 +146,8 @@
 
 .admin-login-form label,
 .admin-inquiry-controls label,
-.admin-inquiry-memo label {
+.admin-inquiry-memo label,
+.admin-reply-box label {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -149,7 +155,8 @@
 
 .admin-login-form span,
 .admin-inquiry-controls span,
-.admin-inquiry-memo span {
+.admin-inquiry-memo span,
+.admin-reply-box label span {
   color: #334155;
   font-size: 0.9rem;
   font-weight: 900;
@@ -157,7 +164,9 @@
 
 .admin-login-form input,
 .admin-inquiry-controls select,
-.admin-inquiry-memo textarea {
+.admin-inquiry-memo textarea,
+.admin-reply-box input,
+.admin-reply-box textarea {
   width: 100%;
   border: 1px solid rgba(15, 23, 42, 0.12);
   border-radius: 15px;
@@ -175,7 +184,9 @@
 
 .admin-login-form input:focus,
 .admin-inquiry-controls select:focus,
-.admin-inquiry-memo textarea:focus {
+.admin-inquiry-memo textarea:focus,
+.admin-reply-box input:focus,
+.admin-reply-box textarea:focus {
   border-color: rgba(37, 99, 235, 0.5);
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
@@ -420,23 +431,248 @@
   transform: translateY(-1px);
 }
 
-.admin-inquiry-memo {
+.admin-reply-section {
+  margin: 18px 0;
+  padding: 18px;
+  border-radius: 22px;
+  background:
+    linear-gradient(135deg, rgba(37, 99, 235, 0.055), rgba(245, 158, 11, 0.06)),
+    #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.admin-reply-section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.admin-reply-section-head span {
+  display: block;
+  margin-bottom: 5px;
+  color: #2563eb;
+  font-size: 0.76rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+}
+
+.admin-reply-section-head h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.22rem;
+  font-weight: 950;
+}
+
+.admin-reply-section-head p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.86rem;
+  line-height: 1.6;
+  font-weight: 750;
+}
+
+.admin-reply-grid {
   display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: end;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.admin-reply-box {
+  display: flex;
+  flex-direction: column;
   gap: 12px;
+  padding: 16px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(15, 23, 42, 0.08);
 }
 
-.admin-inquiry-memo textarea {
-  min-height: 92px;
+.admin-reply-box-title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-reply-box-title strong {
+  color: #0f172a;
+  font-size: 1.02rem;
+  font-weight: 950;
+}
+
+.admin-reply-box-title span {
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 850;
+}
+
+.admin-reply-box textarea {
   resize: vertical;
+  min-height: 120px;
 }
 
+.admin-reply-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-reply-actions button {
+  flex: 1;
+}
+
+.admin-reply-mail-button {
+  background: #f59e0b !important;
+  box-shadow: 0 12px 24px rgba(245, 158, 11, 0.16) !important;
+}
+
+.admin-reply-mail-button:hover {
+  background: #d97706 !important;
+  box-shadow: 0 16px 30px rgba(245, 158, 11, 0.22) !important;
+}
+
+.admin-reply-box button:disabled,
 .admin-inquiry-memo button:disabled,
 .admin-login-form button:disabled {
   cursor: not-allowed;
   opacity: 0.65;
   transform: none;
+}
+
+.admin-reply-history {
+  margin: 18px 0;
+  padding: 18px;
+  border-radius: 22px;
+  background: #f8fafc;
+  border: 1px solid rgba(15, 23, 42, 0.07);
+}
+
+.admin-reply-history-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.admin-reply-history-head span {
+  color: #334155;
+  font-size: 0.92rem;
+  font-weight: 950;
+}
+
+.admin-reply-history-head strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+  font-size: 0.86rem;
+  font-weight: 950;
+}
+
+.admin-reply-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-reply-history-card {
+  padding: 15px;
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.07);
+}
+
+.admin-reply-history-card.email {
+  border-left: 5px solid #f59e0b;
+}
+
+.admin-reply-history-card.message {
+  border-left: 5px solid #2563eb;
+}
+
+.admin-reply-history-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.admin-reply-history-card-head span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 25px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+  font-size: 0.76rem;
+  font-weight: 950;
+}
+
+.admin-reply-history-card.email .admin-reply-history-card-head span {
+  background: rgba(245, 158, 11, 0.14);
+  color: #b45309;
+}
+
+.admin-reply-history-card-head time {
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.admin-reply-history-card h4 {
+  margin: 0 0 8px;
+  color: #0f172a;
+  font-size: 0.98rem;
+  font-weight: 950;
+}
+
+.admin-reply-history-card p {
+  margin: 0;
+  color: #334155;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.admin-reply-history-meta {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-reply-history-meta span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 850;
+}
+
+.admin-inquiry-memo {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.admin-inquiry-memo textarea {
+  min-height: 92px;
+  resize: vertical;
 }
 
 @media (max-width: 900px) {
@@ -449,7 +685,8 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .admin-inquiry-grid {
+  .admin-inquiry-grid,
+  .admin-reply-grid {
     grid-template-columns: 1fr;
   }
 
@@ -462,6 +699,11 @@
 
   .admin-inquiry-controls label {
     max-width: none;
+  }
+
+  .admin-reply-section-head {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
 
@@ -498,7 +740,8 @@
   }
 
   .admin-inquiries-hero-actions,
-  .admin-inquiries-actions {
+  .admin-inquiries-actions,
+  .admin-reply-actions {
     width: 100%;
     flex-direction: column;
     align-items: stretch;
@@ -508,7 +751,19 @@
   .admin-inquiries-actions button,
   .admin-inquiries-home-link,
   .admin-login-form button,
-  .admin-inquiry-memo button {
+  .admin-inquiry-memo button,
+  .admin-reply-box button {
     width: 100%;
+  }
+
+  .admin-reply-section,
+  .admin-reply-history {
+    padding: 14px;
+    border-radius: 20px;
+  }
+
+  .admin-reply-history-card-head {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
