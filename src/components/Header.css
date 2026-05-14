@@ -4,7 +4,8 @@
    - 상단 로고 / 메뉴 / 드롭다운 레이아웃 정리
    - 왼쪽 브랜드 로고를 PNG 이미지 파일로 표시
    - 로고 파일 위치: public/logo-gamsung2-header.png
-   - 로고 박스는 과하지 않게 유지하고, 로고 이미지만 살짝 더 크게 표시
+   - 로고 박스는 과하지 않게 유지하고, 로고 이미지만 살짝 크게 표시
+   - 이번 수정: PC 로고가 조금 커 보여서 약 5% 축소
    - 로고와 메뉴 간격을 줄여 한 묶음처럼 보이게 조정
    - 문의하기 메뉴 제거 후 감성여행2 소개 / 감성배달 소개 / 이벤트 / 제휴문의 중심 구성
    - 모바일에서는 로고 + 메뉴 버튼만 우선 표시
@@ -52,7 +53,7 @@
 /* ========================================
    📌 브랜드 로고 이미지
    - 배경 박스 느낌은 줄이고
-   - 로고 이미지만 살짝 더 크게 보여주도록 조정
+   - 로고 이미지만 메뉴와 균형 맞게 표시
    ======================================== */
 
 .site-logo {
@@ -92,7 +93,7 @@
   height: 54px;
   object-fit: contain;
   object-position: center;
-  transform: scale(1.52);
+  transform: scale(1.45);
   transform-origin: center center;
 }
 
@@ -470,7 +471,7 @@ html.gamsung-force-desktop .site-header-inner {
     height: 52px;
     object-fit: contain;
     object-position: center;
-    transform: scale(1.46);
+    transform: scale(1.42);
     transform-origin: center center;
   }
 }
@@ -724,7 +725,7 @@ html.gamsung-force-desktop .site-header-inner {
     height: 54px;
     object-fit: contain;
     object-position: center;
-    transform: scale(1.52);
+    transform: scale(1.45);
     transform-origin: center center;
   }
 
