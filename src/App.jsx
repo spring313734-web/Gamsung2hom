@@ -6,6 +6,7 @@
 // - 감성배달 소개와 제휴문의 페이지를 분리
 // - 제휴문의는 PartnershipPage 전용 화면으로 연결
 // - 회원가입 유형 선택 페이지 /signup 라우트 추가
+// - 일반회원 가입 페이지 /signup/user 라우트 추가
 // - 지역별 이벤트 허브 상세 페이지 라우트 연결
 // - 지역별 후기 / 참여글 전용 페이지 라우트 연결
 // - 지역별 후기 상세 페이지 라우트 연결
@@ -28,6 +29,7 @@ import EventsPage from "./pages/EventsPage";
 import AppDownloadPage from "./pages/AppDownloadPage";
 import AdminInquiriesPage from "./pages/AdminInquiriesPage";
 import SignupPage from "./pages/SignupPage";
+import UserSignupPage from "./pages/UserSignupPage";
 import RegionEventHubDetailPage from "./pages/RegionEventHubDetailPage";
 import RegionEventPostsPage from "./pages/RegionEventPostsPage";
 import RegionEventPostDetailPage from "./pages/RegionEventPostDetailPage";
@@ -53,6 +55,7 @@ export default function App() {
             <Route path="/events" element={<EventsPage />} />
             <Route path="/app" element={<AppDownloadPage />} />
             <Route path="/signup" element={<SignupPage />} />
+            <Route path="/signup/user" element={<UserSignupPage />} />
             <Route path="/admin/inquiries" element={<AdminInquiriesPage />} />
 
             <Route

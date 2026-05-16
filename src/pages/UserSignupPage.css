@@ -1,0 +1,429 @@
+/* 파일 경로: src/pages/UserSignupPage.css */
+/* ========================================
+   📌 감성여행2 홈페이지 일반회원 가입 페이지 스타일
+   - 감성여행2 앱 회원가입 구조를 홈페이지 PC/모바일 화면에 맞게 정리
+   - 카드형 입력 구조, 선택 버튼, 공개 설정 토글 구성
+   - 모바일에서도 한 줄 입력이 깨지지 않도록 반응형 처리
+   ======================================== */
+
+.user-signup-page {
+  width: 100%;
+  min-height: 100vh;
+  padding: 92px 18px 90px;
+  background:
+    radial-gradient(circle at top left, rgba(255, 167, 92, 0.2), transparent 34%),
+    linear-gradient(180deg, #fffaf4 0%, #ffffff 46%, #fff7ed 100%);
+  color: #30261f;
+}
+
+.user-signup-container {
+  width: min(920px, 100%);
+  margin: 0 auto;
+}
+
+.user-signup-head {
+  margin-bottom: 26px;
+  text-align: center;
+}
+
+.signup-back-link {
+  display: inline-flex;
+  margin-bottom: 18px;
+  color: #8b5bd6;
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.signup-small-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 0 14px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(255, 142, 60, 0.16);
+  color: #c26417;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.user-signup-head h1 {
+  margin: 0;
+  font-size: clamp(30px, 4.8vw, 48px);
+  line-height: 1.18;
+  letter-spacing: -0.04em;
+  font-weight: 950;
+}
+
+.user-signup-head p {
+  max-width: 720px;
+  margin: 16px auto 0;
+  color: #6d5a49;
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.user-signup-card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.signup-section {
+  padding: 28px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(136, 91, 48, 0.16);
+  box-shadow: 0 16px 42px rgba(82, 48, 18, 0.09);
+}
+
+.signup-section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.signup-section-title-row h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 950;
+  letter-spacing: -0.03em;
+}
+
+.signup-section-title-row span {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #fff1df;
+  color: #bd651b;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.social-signup-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.social-button {
+  min-height: 52px;
+  border: 0;
+  border-radius: 16px;
+  font-size: 15px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.social-button.kakao {
+  background: #fee500;
+  color: #2d251d;
+}
+
+.social-button.google {
+  background: #ffffff;
+  color: #2d251d;
+  border: 1px solid rgba(60, 60, 60, 0.18);
+}
+
+.social-button.naver {
+  background: #03c75a;
+  color: #ffffff;
+}
+
+.signup-divider {
+  position: relative;
+  margin: 24px 0 0;
+  text-align: center;
+}
+
+.signup-divider::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(90, 70, 52, 0.16);
+}
+
+.signup-divider span {
+  position: relative;
+  display: inline-flex;
+  padding: 0 14px;
+  background: white;
+  color: #8a7866;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.choice-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.choice-grid.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.choice {
+  min-height: 52px;
+  border: 1px solid rgba(107, 82, 62, 0.22);
+  border-radius: 16px;
+  background: #fffaf4;
+  color: #5c4b3c;
+  font-size: 15px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.choice.active {
+  border-color: #7d55c7;
+  background: rgba(125, 85, 199, 0.1);
+  color: #6f43bc;
+  box-shadow: inset 0 0 0 1px rgba(125, 85, 199, 0.4);
+}
+
+.signup-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.signup-field + .signup-field,
+.field-with-button + .signup-field,
+.public-name-box + .signup-field {
+  margin-top: 16px;
+}
+
+.signup-field span {
+  color: #5a493a;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.signup-field input,
+.signup-field select,
+.birth-grid select {
+  width: 100%;
+  min-height: 56px;
+  padding: 0 16px;
+  border: 1px solid rgba(88, 70, 54, 0.28);
+  border-radius: 16px;
+  background: #fffdf9;
+  color: #30261f;
+  font-size: 15px;
+  outline: none;
+}
+
+.signup-field input:focus,
+.signup-field select:focus,
+.birth-grid select:focus {
+  border-color: #7d55c7;
+  box-shadow: 0 0 0 3px rgba(125, 85, 199, 0.12);
+}
+
+.field-with-button {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 132px;
+  gap: 10px;
+  align-items: end;
+}
+
+.field-with-button button {
+  min-height: 56px;
+  border: 1px solid rgba(125, 85, 199, 0.44);
+  border-radius: 16px;
+  background: #fbf8ff;
+  color: #6f43bc;
+  font-size: 14px;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.field-help {
+  margin: 8px 0 0;
+  color: #7b6a5a;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.field-help.success {
+  color: #187344;
+  font-weight: 800;
+}
+
+.field-help.warning {
+  color: #c0392b;
+  font-weight: 800;
+}
+
+.public-name-box {
+  margin-top: 18px;
+  padding: 20px;
+  border-radius: 22px;
+  background: #fff8ee;
+  border: 1px solid rgba(242, 139, 47, 0.2);
+}
+
+.public-name-box p {
+  margin: 0 0 12px;
+  color: #5a493a;
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.public-preview {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: white;
+  color: #6d5a49;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.public-preview strong {
+  color: #6f43bc;
+}
+
+.birth-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 18px 0;
+  padding: 18px;
+  border-radius: 20px;
+  background: #fbf7f1;
+  border: 1px solid rgba(90, 70, 52, 0.12);
+}
+
+.toggle-row strong {
+  display: block;
+  color: #3a2e25;
+  font-size: 15px;
+  font-weight: 950;
+}
+
+.toggle-row p {
+  margin: 5px 0 0;
+  color: #7b6a5a;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.switch {
+  flex: 0 0 auto;
+  width: 60px;
+  height: 34px;
+  padding: 4px;
+  border: 0;
+  border-radius: 999px;
+  background: #d7cec7;
+  cursor: pointer;
+}
+
+.switch span {
+  display: block;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: white;
+  transition: transform 0.18s ease;
+}
+
+.switch.active {
+  background: #7651bd;
+}
+
+.switch.active span {
+  transform: translateX(26px);
+}
+
+.signup-submit-box {
+  padding: 26px;
+  border-radius: 28px;
+  background: #30261f;
+  color: white;
+  box-shadow: 0 18px 42px rgba(48, 38, 31, 0.16);
+}
+
+.signup-submit-button {
+  width: 100%;
+  min-height: 58px;
+  border: 0;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #ff8a2a, #ff5e3a);
+  color: white;
+  font-size: 17px;
+  font-weight: 950;
+  cursor: pointer;
+  box-shadow: 0 12px 26px rgba(255, 111, 45, 0.26);
+}
+
+.signup-submit-button:disabled {
+  background: #bdb3ad;
+  color: rgba(255, 255, 255, 0.72);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.signup-submit-box p {
+  margin: 14px 0 0;
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+@media (max-width: 720px) {
+  .user-signup-page {
+    padding: 72px 14px 70px;
+  }
+
+  .user-signup-head {
+    text-align: left;
+  }
+
+  .user-signup-head p {
+    margin-left: 0;
+  }
+
+  .signup-section {
+    padding: 22px 18px;
+    border-radius: 24px;
+  }
+
+  .social-signup-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .field-with-button {
+    grid-template-columns: 1fr;
+  }
+
+  .field-with-button button {
+    width: 100%;
+  }
+
+  .birth-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .choice-grid.two {
+    grid-template-columns: 1fr;
+  }
+
+  .toggle-row {
+    align-items: flex-start;
+  }
+}
