@@ -17,7 +17,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../contect/AuthContext";
 import { getAllRegions } from "../data/regionEvents";
 import "./Header.css";
 
