@@ -6,6 +6,7 @@
    - 로고 파일 위치: public/logo-gamsung2-header.png
    - 로그인 전에는 회원가입 버튼 표시
    - 로그인 후에는 감성회원 이름 / 로그아웃 버튼 표시
+   - PC에서는 로고 / 메뉴 / 로그인 영역이 한 줄에 유지되도록 구성
    - 모바일에서는 로고 + 메뉴 버튼만 우선 표시
    - 모바일 메뉴 안에 PC버전 보기 / 모바일버전 보기 버튼 유지
    ======================================== */
@@ -25,13 +26,14 @@
 .site-header-inner {
   position: relative;
   z-index: 2;
-  max-width: 1140px;
+  width: min(1320px, 100%);
   margin: 0 auto;
   padding: 8px 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 22px;
+  gap: 28px;
+  flex-wrap: nowrap;
 }
 
 .site-header-top {
@@ -39,6 +41,7 @@
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
+  min-width: 0;
 }
 
 .site-header-menu {
@@ -46,6 +49,7 @@
   align-items: center;
   justify-content: center;
   flex: 0 1 auto;
+  min-width: 0;
 }
 
 .site-logo {
@@ -53,7 +57,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 318px;
+  width: 292px;
   min-height: 60px;
   padding: 0;
   border-radius: 16px;
@@ -81,11 +85,11 @@
   position: relative;
   z-index: 1;
   display: block;
-  width: 298px;
+  width: 274px;
   height: 54px;
   object-fit: contain;
   object-position: center;
-  transform: scale(1.45);
+  transform: scale(1.42);
   transform-origin: center center;
 }
 
@@ -102,8 +106,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 10px;
+  flex-wrap: nowrap;
+  min-width: 0;
 }
 
 .nav-link {
@@ -112,16 +117,17 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 46px;
+  min-height: 44px;
   border: none;
   background: rgba(255, 255, 255, 0.86);
   color: #243041;
-  font-size: 1.02rem;
+  font-size: 0.98rem;
   font-weight: 850;
   text-decoration: none;
   cursor: pointer;
-  padding: 12px 18px;
+  padding: 10px 15px;
   border-radius: 16px;
+  white-space: nowrap;
   box-shadow:
     inset 0 0 0 1px rgba(37, 99, 235, 0.08),
     0 6px 16px rgba(15, 23, 42, 0.035);
@@ -173,6 +179,7 @@
   display: flex;
   align-items: center;
   z-index: 10;
+  flex: 0 0 auto;
 }
 
 .dropdown-trigger-group {
@@ -182,6 +189,7 @@
   padding: 4px;
   border-radius: 18px;
   transition: background 0.2s ease;
+  flex-wrap: nowrap;
 }
 
 .dropdown.open .dropdown-trigger-group {
@@ -196,8 +204,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 42px;
-  height: 42px;
+  min-width: 40px;
+  height: 40px;
   border: none;
   background: rgba(255, 255, 255, 0.86);
   color: #243041;
@@ -226,7 +234,7 @@
 }
 
 .dropdown-arrow {
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   line-height: 1;
   transition: transform 0.2s ease;
 }
@@ -306,20 +314,23 @@
 }
 
 .site-auth-panel {
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 8px;
   min-width: 0;
+  white-space: nowrap;
 }
 
 .site-auth-user-box {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  justify-content: center;
   min-width: 0;
-  max-width: 190px;
-  padding: 8px 12px;
+  max-width: 150px;
+  padding: 7px 11px;
   border-radius: 16px;
   background:
     linear-gradient(135deg, rgba(255, 248, 238, 0.96), rgba(239, 246, 255, 0.96)),
@@ -334,18 +345,18 @@
 
 .site-auth-user-label {
   color: #64748b;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 850;
-  line-height: 1.3;
+  line-height: 1.25;
 }
 
 .site-auth-user-name {
   color: #0f172a;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   font-weight: 950;
-  line-height: 1.45;
+  line-height: 1.28;
   text-align: right;
-  word-break: break-all;
+  word-break: keep-all;
   overflow-wrap: anywhere;
 }
 
@@ -353,10 +364,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
-  padding: 10px 15px;
+  min-height: 42px;
+  padding: 9px 14px;
   border-radius: 14px;
-  font-size: 0.92rem;
+  font-size: 0.9rem;
   font-weight: 900;
   cursor: pointer;
   border: none;
@@ -421,41 +432,76 @@ html.gamsung-force-desktop #root {
 }
 
 html.gamsung-force-desktop .site-header-inner {
-  max-width: 1140px;
+  width: min(1320px, 100%);
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1180px) {
   .site-header-inner {
-    gap: 20px;
-    padding-left: 20px;
-    padding-right: 20px;
-    flex-wrap: wrap;
-  }
-
-  .site-header-menu {
-    justify-content: center;
-  }
-
-  .site-nav {
-    justify-content: center;
-  }
-
-  .site-auth-panel {
-    justify-content: flex-end;
+    gap: 18px;
+    padding-left: 18px;
+    padding-right: 18px;
   }
 
   .site-logo {
-    width: 300px;
-    min-height: 58px;
+    width: 252px;
   }
 
   .site-logo-image {
-    width: 282px;
-    height: 52px;
-    object-fit: contain;
-    object-position: center;
-    transform: scale(1.42);
-    transform-origin: center center;
+    width: 238px;
+    transform: scale(1.34);
+  }
+
+  .site-nav {
+    gap: 8px;
+  }
+
+  .nav-link {
+    min-height: 42px;
+    padding: 9px 12px;
+    font-size: 0.92rem;
+  }
+
+  .dropdown-toggle {
+    min-width: 38px;
+    height: 38px;
+  }
+
+  .site-auth-user-box {
+    max-width: 132px;
+    padding: 6px 10px;
+  }
+
+  .site-auth-button {
+    min-height: 40px;
+    padding: 8px 12px;
+    font-size: 0.86rem;
+  }
+}
+
+@media (max-width: 960px) {
+  .site-header-inner {
+    gap: 14px;
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .site-logo {
+    width: 220px;
+  }
+
+  .site-logo-image {
+    width: 206px;
+    transform: scale(1.28);
+  }
+
+  .nav-link {
+    padding-left: 10px;
+    padding-right: 10px;
+    font-size: 0.88rem;
+  }
+
+  .site-auth-user-box {
+    max-width: 118px;
   }
 }
 
@@ -465,6 +511,7 @@ html.gamsung-force-desktop .site-header-inner {
   }
 
   .site-header-inner {
+    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -669,13 +716,14 @@ html.gamsung-force-desktop .site-header-inner {
   }
 
   html.gamsung-force-desktop .site-header-inner {
+    width: min(1320px, 100%);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-direction: row;
     flex-wrap: nowrap;
     padding: 8px 24px;
-    gap: 22px;
+    gap: 28px;
   }
 
   html.gamsung-force-desktop .site-header-top {
@@ -695,18 +743,18 @@ html.gamsung-force-desktop .site-header-inner {
   }
 
   html.gamsung-force-desktop .site-logo {
-    width: 318px;
+    width: 292px;
     min-height: 60px;
     padding: 0;
     border-radius: 16px;
   }
 
   html.gamsung-force-desktop .site-logo-image {
-    width: 298px;
+    width: 274px;
     height: 54px;
     object-fit: contain;
     object-position: center;
-    transform: scale(1.45);
+    transform: scale(1.42);
     transform-origin: center center;
   }
 
@@ -715,24 +763,25 @@ html.gamsung-force-desktop .site-header-inner {
     width: auto;
     grid-template-columns: none;
     justify-content: center;
-    gap: 12px;
+    gap: 10px;
+    flex-wrap: nowrap;
   }
 
   html.gamsung-force-desktop .nav-link {
     width: auto;
-    min-height: 46px;
-    padding: 12px 18px;
+    min-height: 44px;
+    padding: 10px 15px;
     border-radius: 16px;
-    font-size: 1.02rem;
+    font-size: 0.98rem;
   }
 
   html.gamsung-force-desktop .desktop-view-toggle {
     display: inline-flex;
     width: auto;
-    min-height: 46px;
-    padding: 12px 18px;
+    min-height: 44px;
+    padding: 10px 15px;
     border-radius: 16px;
-    font-size: 1.02rem;
+    font-size: 0.98rem;
   }
 
   html.gamsung-force-desktop .dropdown {
@@ -748,20 +797,21 @@ html.gamsung-force-desktop .site-header-inner {
   }
 
   html.gamsung-force-desktop .dropdown-toggle {
-    min-width: 42px;
-    height: 42px;
+    min-width: 40px;
+    height: 40px;
   }
 
   html.gamsung-force-desktop .site-auth-panel {
     width: auto;
-    display: flex;
+    display: inline-flex;
     grid-template-columns: none;
-    justify-content: flex-end;
+    justify-content: center;
   }
 
   html.gamsung-force-desktop .site-auth-user-box {
     display: flex;
     align-items: flex-end;
+    max-width: 150px;
   }
 
   html.gamsung-force-desktop .site-auth-button {
