@@ -13,6 +13,7 @@
 // - 모바일 메뉴 안에 PC버전 보기 / 모바일버전 보기 전환 버튼 추가
 // - localStorage에 PC버전 보기 상태 저장
 // - 바깥 클릭 및 ESC 입력 시 드롭다운 / 모바일 메뉴 닫힘 처리
+// - 현재 프로젝트 폴더명이 contect 이므로 ../contect/AuthContext 사용
 // ========================================
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -301,7 +302,9 @@ export default function Header() {
               <NavLink
                 to="/signup"
                 className={({ isActive }) =>
-                  isActive ? "nav-link active signup-nav-link" : "nav-link signup-nav-link"
+                  isActive
+                    ? "nav-link active signup-nav-link"
+                    : "nav-link signup-nav-link"
                 }
               >
                 회원가입

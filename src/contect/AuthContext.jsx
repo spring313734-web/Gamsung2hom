@@ -1,4 +1,4 @@
-// 파일 경로: src/context/AuthContext.jsx
+// 파일 경로: src/contect/AuthContext.jsx
 // ========================================
 // 📌 감성여행2 공용 로그인 사용자 컨텍스트
 // - 홈페이지 전체에서 Supabase 로그인 세션을 공유
@@ -6,6 +6,7 @@
 // - public.profiles에서 내 회원 정보를 불러와 별명 / 아이디 / 공개 이름 설정 반영
 // - Header에서 회원가입 버튼 대신 로그인 사용자 이름을 표시할 수 있도록 제공
 // - 기존 demo_user 구조 제거
+// - 현재 프로젝트 폴더명이 contect 이므로 이 경로를 기준으로 사용
 // ========================================
 
 import {
@@ -257,5 +258,5 @@ export function useAuth() {
     throw new Error("useAuth는 AuthProvider 내부에서만 사용할 수 있습니다.");
   }
 
-  return contect;
+  return context;
 }
