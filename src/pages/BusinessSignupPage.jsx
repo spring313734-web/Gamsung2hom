@@ -10,6 +10,7 @@
 // - owner_profiles 저장은 테이블 구조가 맞으면 함께 시도
 // - owner_subscriptions는 가입 단계에서 저장하지 않고, 나중에 결제 완료 시 저장
 // - 크롬 자동완성 오입력 방지를 위해 input name / autoComplete / inputMode를 명확히 지정
+// - 가입 완료 후 홈이 아니라 소상공인 내 가게 관리 준비 화면으로 이동
 // ========================================
 
 import { useMemo, useState } from "react";
@@ -291,11 +292,11 @@ export default function BusinessSignupPage() {
       await trySaveOwnerProfile(createdUser.id);
 
       setResultMessage(
-        "소상공인 무료 가입이 완료되었습니다. 홈 화면으로 이동합니다."
+        "소상공인 무료 가입이 완료되었습니다. 내 가게 관리 화면으로 이동합니다."
       );
 
       window.setTimeout(() => {
-        navigate("/");
+        navigate("/business/dashboard");
       }, 900);
     } catch (error) {
       const message = getSignupErrorMessage(error);
@@ -341,6 +342,7 @@ export default function BusinessSignupPage() {
                   <span className="business-step">STEP 1</span>
                   <h2>필수 정보</h2>
                 </div>
+
                 <strong>필수</strong>
               </div>
 
@@ -465,6 +467,7 @@ export default function BusinessSignupPage() {
                   <span className="business-step">STEP 2</span>
                   <h2>입점 이용 안내</h2>
                 </div>
+
                 <strong>무료 가입</strong>
               </div>
 
@@ -506,6 +509,7 @@ export default function BusinessSignupPage() {
                 <span className="business-step">STEP 3</span>
                 <h2>선택 정보</h2>
               </div>
+
               <strong>선택</strong>
             </div>
 
@@ -594,6 +598,7 @@ export default function BusinessSignupPage() {
           <section className="business-submit-card">
             <div>
               <h2>입점 정보 미리보기</h2>
+
               <dl>
                 <div>
                   <dt>가게명</dt>

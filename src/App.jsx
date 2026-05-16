@@ -8,6 +8,7 @@
 // - 회원가입 유형 선택 페이지 /signup 라우트 추가
 // - 일반회원 가입 페이지 /signup/user 라우트 추가
 // - 소상공인 간편 입점 페이지 /signup/business 라우트 추가
+// - 소상공인 내 가게 관리 준비 화면 /business/dashboard 라우트 추가
 // - 지역별 이벤트 허브 상세 페이지 라우트 연결
 // - 지역별 후기 / 참여글 전용 페이지 라우트 연결
 // - 지역별 후기 상세 페이지 라우트 연결
@@ -32,6 +33,7 @@ import AdminInquiriesPage from "./pages/AdminInquiriesPage";
 import SignupPage from "./pages/SignupPage";
 import UserSignupPage from "./pages/UserSignupPage";
 import BusinessSignupPage from "./pages/BusinessSignupPage";
+import BusinessDashboardPage from "./pages/BusinessDashboardPage";
 import RegionEventHubDetailPage from "./pages/RegionEventHubDetailPage";
 import RegionEventPostsPage from "./pages/RegionEventPostsPage";
 import RegionEventPostDetailPage from "./pages/RegionEventPostDetailPage";
@@ -59,6 +61,10 @@ export default function App() {
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/signup/user" element={<UserSignupPage />} />
             <Route path="/signup/business" element={<BusinessSignupPage />} />
+            <Route
+              path="/business/dashboard"
+              element={<BusinessDashboardPage />}
+            />
             <Route path="/admin/inquiries" element={<AdminInquiriesPage />} />
 
             <Route
