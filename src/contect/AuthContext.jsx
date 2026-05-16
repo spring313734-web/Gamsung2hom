@@ -5,7 +5,7 @@
 // - auth.users.id를 감성여행2 / 감성배달 / 홈페이지 공통 user_id 기준으로 사용
 // - public.profiles에서 내 회원 정보를 불러와 별명 / 아이디 / 공개 이름 설정 반영
 // - Header에서 회원가입 버튼 대신 로그인 사용자 이름을 표시할 수 있도록 제공
-// - 기존 demo_user 구조 제거
+// - 세션 확인이 지연되어도 Header가 "로그인 확인 중"에 멈추지 않도록 안전 처리
 // - 현재 프로젝트 폴더명이 contect 이므로 이 경로를 기준으로 사용
 // ========================================
 
@@ -123,21 +123,26 @@ export function AuthProvider({ children }) {
 
     setSession(nextSession);
 
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", authUser.id)
-      .maybeSingle();
+    try {
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", authUser.id)
+        .maybeSingle();
 
-    if (error) {
-      console.error("[AuthContext] profiles 조회 실패:", error);
+      if (error) {
+        console.error("[AuthContext] profiles 조회 실패:", error);
+        setCurrentUser(normalizeUserFromSession(nextSession, null));
+        return;
+      }
+
+      setCurrentUser(normalizeUserFromSession(nextSession, profile));
+    } catch (error) {
+      console.error("[AuthContext] profiles 조회 중 예외 발생:", error);
       setCurrentUser(normalizeUserFromSession(nextSession, null));
+    } finally {
       setLoading(false);
-      return;
     }
-
-    setCurrentUser(normalizeUserFromSession(nextSession, profile));
-    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -146,28 +151,42 @@ export function AuthProvider({ children }) {
     async function initAuth() {
       setLoading(true);
 
-      const { data, error } = await supabase.auth.getSession();
+      try {
+        const { data, error } = await supabase.auth.getSession();
 
-      if (!mounted) return;
+        if (!mounted) return;
 
-      if (error) {
-        console.error("[AuthContext] 세션 확인 실패:", error);
+        if (error) {
+          console.error("[AuthContext] 세션 확인 실패:", error);
+          setSession(null);
+          setCurrentUser(EMPTY_USER);
+          setLoading(false);
+          return;
+        }
+
+        await loadProfileForSession(data?.session || null);
+      } catch (error) {
+        if (!mounted) return;
+
+        console.error("[AuthContext] 세션 확인 중 예외 발생:", error);
         setSession(null);
         setCurrentUser(EMPTY_USER);
         setLoading(false);
-        return;
       }
-
-      await loadProfileForSession(data?.session || null);
     }
 
     initAuth();
 
     const { data: listener } = supabase.auth.onAuthStateChange(
-      async (_event, nextSession) => {
+      (_event, nextSession) => {
         if (!mounted) return;
+
         setLoading(true);
-        await loadProfileForSession(nextSession);
+
+        window.setTimeout(() => {
+          if (!mounted) return;
+          loadProfileForSession(nextSession);
+        }, 0);
       }
     );
 
@@ -183,10 +202,15 @@ export function AuthProvider({ children }) {
   }
 
   async function logout() {
-    await supabase.auth.signOut();
-    setSession(null);
-    setCurrentUser(EMPTY_USER);
-    setLoading(false);
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error("[AuthContext] 로그아웃 실패:", error);
+    } finally {
+      setSession(null);
+      setCurrentUser(EMPTY_USER);
+      setLoading(false);
+    }
   }
 
   function login(userInfo) {
@@ -209,6 +233,7 @@ export function AuthProvider({ children }) {
       });
 
     setCurrentUser(fallbackUser);
+    setLoading(false);
   }
 
   function updateProfile(profile) {
