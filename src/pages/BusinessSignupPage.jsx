@@ -1,13 +1,14 @@
 // 파일 경로: src/pages/BusinessSignupPage.jsx
 // ========================================
-// 📌 감성여행2 홈페이지 소상공인 간편 입점 페이지
+// 📌 감성여행2 홈페이지 소상공인 무료 간편 가입 페이지
 // - 감성배달 앱의 "소상공인 간편 입점" 흐름을 홈페이지에 맞게 구성
+// - 가입은 무료로 가능하게 하고, 미니홈피 공개 / 운영 시작 시 결제하도록 안내
 // - 사업자번호를 로그인 아이디(username)로 사용
 // - 필수 정보: 가게명 / 대표자명 / 사업자번호 / 휴대폰 / 비밀번호
 // - 선택 정보: 주소 / 업종 / 대표 전화 / 이메일 / 한 줄 소개
-// - 입점 이용권: 365일 / 100,000원 / 카드결제 또는 계좌이체 선택
 // - Supabase Auth 계정 생성 후 public.profiles에 공통 회원 정보 저장
-// - owner_profiles / owner_subscriptions 저장은 테이블 구조가 맞으면 함께 시도
+// - owner_profiles 저장은 테이블 구조가 맞으면 함께 시도
+// - owner_subscriptions는 가입 단계에서 저장하지 않고, 나중에 결제 완료 시 저장
 // ========================================
 
 import { useMemo, useState } from "react";
@@ -67,20 +68,13 @@ function getSignupErrorMessage(error) {
     return "비밀번호 조건을 다시 확인해주세요.";
   }
 
-  return message || "소상공인 입점 처리 중 문제가 발생했습니다.";
-}
-
-function getExpiresAt() {
-  const date = new Date();
-  date.setDate(date.getDate() + SUBSCRIPTION_DAYS);
-  return date.toISOString();
+  return message || "소상공인 가입 처리 중 문제가 발생했습니다.";
 }
 
 export default function BusinessSignupPage() {
   const navigate = useNavigate();
 
   const [form, setForm] = useState(INITIAL_FORM);
-  const [paymentMethod, setPaymentMethod] = useState("card");
   const [submitting, setSubmitting] = useState(false);
   const [resultMessage, setResultMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -112,11 +106,9 @@ export default function BusinessSignupPage() {
   );
 
   const submitLabel = useMemo(() => {
-    if (submitting) return "입점 처리 중...";
-    return paymentMethod === "card"
-      ? "카드결제하고 365일 입점 시작"
-      : "계좌이체로 365일 입점 신청";
-  }, [submitting, paymentMethod]);
+    if (submitting) return "소상공인 계정 생성 중...";
+    return "무료로 소상공인 계정 만들기";
+  }, [submitting]);
 
   function updateForm(key, value) {
     const nextValue =
@@ -199,30 +191,6 @@ export default function BusinessSignupPage() {
     return true;
   }
 
-  async function trySaveOwnerSubscription(userId) {
-    const payload = {
-      user_id: userId,
-      price: SUBSCRIPTION_PRICE,
-      payment_method: paymentMethod,
-      status: "active",
-      started_at: new Date().toISOString(),
-      expires_at: getExpiresAt(),
-      created_at: new Date().toISOString(),
-    };
-
-    const { error } = await supabase.from("owner_subscriptions").insert(payload);
-
-    if (error) {
-      console.warn(
-        "[소상공인 가입] owner_subscriptions 저장 확인 필요:",
-        error
-      );
-      return false;
-    }
-
-    return true;
-  }
-
   async function handleSubmit(event) {
     event.preventDefault();
 
@@ -297,19 +265,11 @@ export default function BusinessSignupPage() {
       }
 
       await saveCommonProfile(createdUser.id);
+      await trySaveOwnerProfile(createdUser.id);
 
-      const ownerSaved = await trySaveOwnerProfile(createdUser.id);
-      const subscriptionSaved = await trySaveOwnerSubscription(createdUser.id);
-
-      if (ownerSaved && subscriptionSaved) {
-        setResultMessage(
-          "소상공인 입점 가입이 완료되었습니다. 홈 화면으로 이동합니다."
-        );
-      } else {
-        setResultMessage(
-          "공통 계정은 저장되었습니다. 소상공인 전용 테이블은 구조 확인 후 추가 조정이 필요할 수 있습니다."
-        );
-      }
+      setResultMessage(
+        "소상공인 무료 가입이 완료되었습니다. 홈 화면으로 이동합니다."
+      );
 
       window.setTimeout(() => {
         navigate("/");
@@ -334,14 +294,15 @@ export default function BusinessSignupPage() {
           <p className="business-signup-badge">감성배달 · 감성여행2 입점</p>
 
           <h1>
-            소상공인 1분 간편 입점
+            소상공인 무료 간편 가입
             <br />
-            필수 정보만 입력하고 365일 이용을 시작하세요
+            먼저 가입하고 내 가게 미니홈피를 둘러보세요
           </h1>
 
           <p className="business-signup-desc">
-            사업자번호가 로그인 아이디로 사용됩니다. 주소, 업종, 사진,
-            메뉴는 가입 후 내 가게 관리에서 천천히 수정해도 됩니다.
+            가입과 둘러보기는 무료입니다. 사업자번호가 로그인 아이디로
+            사용되며, 미니홈피 공개 또는 가게 운영 시작 시 365일 입점
+            이용권 결제가 진행됩니다.
           </p>
         </div>
 
@@ -455,44 +416,39 @@ export default function BusinessSignupPage() {
               <div className="business-card-head">
                 <div>
                   <span className="business-step">STEP 2</span>
-                  <h2>입점 이용권</h2>
+                  <h2>입점 이용 안내</h2>
                 </div>
-                <strong>365일</strong>
+                <strong>무료 가입</strong>
+              </div>
+
+              <div className="free-notice-box">
+                <p>가입과 둘러보기</p>
+                <strong>무료</strong>
+                <span>
+                  먼저 계정을 만들고 내 가게 관리 화면과 미니홈피 구조를
+                  확인할 수 있습니다.
+                </span>
               </div>
 
               <div className="pass-price-box">
-                <p>이용기간</p>
-                <strong>결제 완료 후 {SUBSCRIPTION_DAYS}일</strong>
+                <p>미니홈피 공개 / 운영 시작 시</p>
+                <strong>{SUBSCRIPTION_DAYS}일 이용권</strong>
               </div>
 
               <div className="pass-price-box highlight">
-                <p>가입비</p>
+                <p>이용권 금액</p>
                 <strong>{formatPrice(SUBSCRIPTION_PRICE)}원</strong>
               </div>
 
               <p className="pass-desc">
-                현재 단계에서는 실제 PG 결제 대신 테스트 결제 완료로 처리합니다.
-                저장되는 결제/이용권 정보는 Supabase에 기록됩니다.
+                결제는 지금 진행하지 않습니다. 가입 후 미니홈피 공개 버튼이나
+                가게 운영 시작 버튼을 누르는 순간 결제 안내창으로 이동하는
+                구조로 연결할 예정입니다.
               </p>
 
-              <div className="payment-toggle">
-                <button
-                  type="button"
-                  className={paymentMethod === "card" ? "active" : ""}
-                  onClick={() => setPaymentMethod("card")}
-                  disabled={submitting}
-                >
-                  ✓ 카드결제
-                </button>
-
-                <button
-                  type="button"
-                  className={paymentMethod === "bank" ? "active" : ""}
-                  onClick={() => setPaymentMethod("bank")}
-                  disabled={submitting}
-                >
-                  계좌이체
-                </button>
+              <div className="payment-later-box">
+                <span>결제 시점</span>
+                <strong>미니홈피 공개 또는 운영 시작할 때</strong>
               </div>
             </aside>
           </div>
@@ -555,7 +511,10 @@ export default function BusinessSignupPage() {
                   placeholder="비우면 사업자번호 기반 내부 이메일 사용"
                   disabled={submitting}
                 />
-                <small>비워두면 {safeBusinessNumber || "사업자번호"} 기반 내부 이메일로 가입됩니다.</small>
+                <small>
+                  비워두면 {safeBusinessNumber || "사업자번호"} 기반 내부
+                  이메일로 가입됩니다.
+                </small>
               </label>
             </div>
 
@@ -590,8 +549,8 @@ export default function BusinessSignupPage() {
                 </div>
 
                 <div>
-                  <dt>결제 방식</dt>
-                  <dd>{paymentMethod === "card" ? "카드결제" : "계좌이체"}</dd>
+                  <dt>가입 상태</dt>
+                  <dd>무료 가입 / 입점 준비중</dd>
                 </div>
               </dl>
             </div>
@@ -606,7 +565,11 @@ export default function BusinessSignupPage() {
               <p className="business-result success">{resultMessage}</p>
             ) : null}
 
-            <button type="submit" className="business-submit-btn" disabled={!canSubmit}>
+            <button
+              type="submit"
+              className="business-submit-btn"
+              disabled={!canSubmit}
+            >
               {submitLabel}
             </button>
 

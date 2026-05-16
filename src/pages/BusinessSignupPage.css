@@ -1,8 +1,8 @@
 /* 파일 경로: src/pages/BusinessSignupPage.css */
 /* ========================================
-   📌 감성여행2 홈페이지 소상공인 간편 입점 페이지 스타일
-   - 감성배달 앱의 소상공인 간편 입점 흐름을 홈페이지용 카드 UI로 구성
-   - PC에서는 필수 정보와 입점 이용권을 좌우 배치
+   📌 감성여행2 홈페이지 소상공인 무료 간편 가입 페이지 스타일
+   - 가입은 무료, 미니홈피 공개 / 운영 시작 시 결제 안내 흐름으로 구성
+   - PC에서는 필수 정보와 입점 이용 안내를 좌우 배치
    - 모바일에서는 자연스럽게 세로 배치
    ======================================== */
 
@@ -63,7 +63,7 @@
 }
 
 .business-signup-desc {
-  max-width: 680px;
+  max-width: 700px;
   margin: 18px auto 0;
   color: #6c5a4a;
   font-size: 1rem;
@@ -223,6 +223,38 @@
   border-color: rgba(124, 84, 201, 0.22);
 }
 
+.free-notice-box {
+  padding: 18px;
+  border-radius: 20px;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.18);
+  margin-bottom: 12px;
+}
+
+.free-notice-box p {
+  margin: 0 0 6px;
+  color: #166534;
+  font-size: 0.88rem;
+  font-weight: 900;
+}
+
+.free-notice-box strong {
+  display: block;
+  color: #15803d;
+  font-size: 1.55rem;
+  font-weight: 950;
+  line-height: 1.25;
+}
+
+.free-notice-box span {
+  display: block;
+  margin-top: 9px;
+  color: #36523d;
+  font-size: 0.9rem;
+  line-height: 1.65;
+  word-break: keep-all;
+}
+
 .pass-price-box {
   padding: 16px;
   border-radius: 18px;
@@ -257,33 +289,28 @@
   word-break: keep-all;
 }
 
-.payment-toggle {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  border: 1px solid rgba(47, 38, 31, 0.28);
-  border-radius: 999px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.72);
+.payment-later-box {
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(124, 84, 201, 0.1);
+  border: 1px solid rgba(124, 84, 201, 0.18);
 }
 
-.payment-toggle button {
-  min-height: 50px;
-  border: none;
-  background: transparent;
-  color: #3d3128;
-  font-family: inherit;
-  font-size: 0.96rem;
+.payment-later-box span {
+  display: block;
+  margin-bottom: 6px;
+  color: #6d46c7;
+  font-size: 0.82rem;
   font-weight: 950;
-  cursor: pointer;
 }
 
-.payment-toggle button + button {
-  border-left: 1px solid rgba(47, 38, 31, 0.18);
-}
-
-.payment-toggle button.active {
-  background: rgba(124, 84, 201, 0.14);
-  color: #5b36b6;
+.payment-later-box strong {
+  display: block;
+  color: #4c2ea3;
+  font-size: 1rem;
+  font-weight: 950;
+  line-height: 1.55;
+  word-break: keep-all;
 }
 
 .optional-card {
@@ -444,13 +471,5 @@
   .business-two-grid,
   .business-submit-card dl {
     grid-template-columns: 1fr;
-  }
-
-  .payment-toggle {
-    border-radius: 18px;
-  }
-
-  .payment-toggle button {
-    min-height: 48px;
   }
 }
