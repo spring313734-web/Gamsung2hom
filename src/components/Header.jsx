@@ -3,10 +3,12 @@
 // 📌 감성여행2 공용 상단 헤더 컴포넌트
 // - 왼쪽 로고는 PNG 이미지 파일로 표시하고 홈으로 이동
 // - 로고 파일 위치: public/logo-gamsung2-header.png
-// - 감성여행2 소개 / 감성배달 소개 / 이벤트 / 제휴문의 / 회원가입 메뉴 표시
-// - 문의하기 메뉴는 제거하고 오른쪽 아래 감성문의 쪽지 버튼으로 대체
+// - 감성여행2 소개 / 감성배달 소개 / 이벤트 / 제휴문의 메뉴 표시
+// - 로그인 전에는 회원가입 버튼 표시
+// - 로그인 후에는 회원가입 버튼 대신 공개 이름 기준 별명/아이디 표시
+// - 공개 이름 선택이 별명이면 별명 우선, 아니면 아이디 우선 표시
+// - 로그아웃 버튼으로 Supabase 세션 종료
 // - 이벤트 지역 드롭다운 유지
-// - 공개 홈페이지용으로 demo_user / 현재 사용자 / 로그아웃 표시 제거
 // - 모바일에서는 로고 + 메뉴 버튼만 먼저 보이고, 메뉴는 펼침 방식으로 표시
 // - 모바일 메뉴 안에 PC버전 보기 / 모바일버전 보기 전환 버튼 추가
 // - localStorage에 PC버전 보기 상태 저장
@@ -15,8 +17,9 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import "./Header.css";
+import { useAuth } from "../context/AuthContext";
 import { getAllRegions } from "../data/regionEvents";
+import "./Header.css";
 
 const REGION_GROUP_LABELS = {
   special_city: "특별시",
@@ -40,6 +43,19 @@ function readDesktopViewPreference() {
   return window.localStorage.getItem(DESKTOP_VIEW_STORAGE_KEY) === "true";
 }
 
+function getUserLabel(currentUser) {
+  if (!currentUser?.isLoggedIn) return "";
+
+  return (
+    currentUser.displayName ||
+    currentUser.nickname ||
+    currentUser.username ||
+    currentUser.name ||
+    currentUser.email ||
+    "회원"
+  );
+}
+
 export default function Header() {
   const location = useLocation();
   const headerRef = useRef(null);
@@ -47,6 +63,10 @@ export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDesktopView, setIsDesktopView] = useState(readDesktopViewPreference);
+
+  const { currentUser, isLoggedIn, loading, logout } = useAuth();
+
+  const userLabel = useMemo(() => getUserLabel(currentUser), [currentUser]);
 
   const regions = useMemo(() => {
     try {
@@ -85,6 +105,11 @@ export default function Header() {
   function handleToggleDesktopView() {
     setIsDesktopView((prev) => !prev);
     setIsOpen(false);
+  }
+
+  async function handleLogout() {
+    await logout();
+    closeAllMenus();
   }
 
   useEffect(() => {
@@ -250,14 +275,38 @@ export default function Header() {
               제휴문의
             </NavLink>
 
-            <NavLink
-              to="/signup"
-              className={({ isActive }) =>
-                isActive ? "nav-link active" : "nav-link"
-              }
-            >
-              회원가입
-            </NavLink>
+            {loading ? (
+              <div className="site-auth-panel">
+                <div className="site-auth-user-box is-loading">
+                  <span className="site-auth-user-label">로그인 확인 중</span>
+                  <span className="site-auth-user-name">잠시만요</span>
+                </div>
+              </div>
+            ) : isLoggedIn ? (
+              <div className="site-auth-panel">
+                <div className="site-auth-user-box">
+                  <span className="site-auth-user-label">감성회원</span>
+                  <span className="site-auth-user-name">{userLabel}님</span>
+                </div>
+
+                <button
+                  type="button"
+                  className="site-auth-button is-logout"
+                  onClick={handleLogout}
+                >
+                  로그아웃
+                </button>
+              </div>
+            ) : (
+              <NavLink
+                to="/signup"
+                className={({ isActive }) =>
+                  isActive ? "nav-link active signup-nav-link" : "nav-link signup-nav-link"
+                }
+              >
+                회원가입
+              </NavLink>
+            )}
 
             <button
               type="button"
