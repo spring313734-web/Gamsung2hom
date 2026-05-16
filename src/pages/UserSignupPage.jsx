@@ -8,7 +8,11 @@
 // - 카카오 / 구글 / 네이버 가입 버튼 자리 포함
 // - 아이디 / 별명 중복 확인을 Supabase profiles 기준으로 검사
 // - 이메일 / 비밀번호로 Supabase Auth 회원가입 처리
-// - 생성된 auth.users.id를 기준으로 public.profiles에 일반회원 정보 저장
+// - 생성된 auth.users.id를 기준으로 public.profiles에 공통 회원 정보 저장
+// - 생성된 auth.users.id를 기준으로 public.user_profiles에 개인회원 전용 정보 저장
+// - profiles.member_type은 개인/소상공인/지자체 구분용이므로 일반회원은 항상 "user"로 저장
+// - 내국인 / 외국인 선택값은 auth metadata에 traveler_type으로 보관
+// - 전화번호 / 이메일 / 주소 자동완성 오입력 방지를 위해 name / autoComplete / inputMode 지정
 // - 감성여행2 / 감성배달 / 홈페이지 공통 user_id 체계 준비
 // ========================================
 
@@ -67,6 +71,14 @@ function normalizeEmail(value) {
   return value.trim().toLowerCase();
 }
 
+function normalizePhoneInput(value) {
+  return value.replace(/[^\d+\-\s()]/g, "").slice(0, 20);
+}
+
+function getPhoneDigits(value) {
+  return value.replace(/\D/g, "");
+}
+
 function normalizePhone(value) {
   return value.trim();
 }
@@ -120,7 +132,11 @@ export default function UserSignupPage() {
   const safeNickname = form.nickname.trim();
   const safeEmail = normalizeEmail(form.email);
   const safePhone = normalizePhone(form.phone);
+  const safePhoneDigits = getPhoneDigits(form.phone);
   const safeAddress = form.address.trim();
+
+  const isPhoneValid =
+    safePhoneDigits.length >= 10 && safePhoneDigits.length <= 11;
 
   const isPasswordValid = form.password.length >= 8;
   const isPasswordSame =
@@ -144,6 +160,7 @@ export default function UserSignupPage() {
       form.ageGroup &&
       form.gender &&
       safePhone &&
+      isPhoneValid &&
       safeEmail &&
       isValidEmail(safeEmail) &&
       isPasswordValid &&
@@ -154,9 +171,11 @@ export default function UserSignupPage() {
   );
 
   function updateForm(key, value) {
+    const nextValue = key === "phone" ? normalizePhoneInput(value) : value;
+
     setForm((prev) => ({
       ...prev,
-      [key]: value,
+      [key]: nextValue,
     }));
 
     setResultMessage("");
@@ -273,7 +292,7 @@ export default function UserSignupPage() {
 
   function buildProfilePayload(userId) {
     return {
-      role: "USER",
+      role: "user",
       name: safeName,
       email: safeEmail,
       phone: safePhone,
@@ -281,7 +300,7 @@ export default function UserSignupPage() {
       nickname: safeNickname,
       address: safeAddress,
       username: safeUserId,
-      member_type: memberType,
+      member_type: "user",
       public_name_type: publicNameType,
       birth_year: form.birthYear,
       birth_month: form.birthMonth,
@@ -295,6 +314,20 @@ export default function UserSignupPage() {
     };
   }
 
+  function buildUserProfilePayload(userId) {
+    return {
+      user_id: userId,
+      display_name: publicPreview,
+      birth_year: form.birthYear,
+      gender: form.gender,
+      phone: safePhone,
+      address: safeAddress,
+      interest_area: null,
+      public_name_type: publicNameType,
+      updated_at: new Date().toISOString(),
+    };
+  }
+
   async function saveProfile(userId) {
     const payload = buildProfilePayload(userId);
 
@@ -304,6 +337,19 @@ export default function UserSignupPage() {
 
     if (error) {
       console.error("[일반회원 가입] profiles 저장 실패:", error);
+      throw error;
+    }
+  }
+
+  async function saveUserProfile(userId) {
+    const payload = buildUserProfilePayload(userId);
+
+    const { error } = await supabase
+      .from("user_profiles")
+      .upsert(payload, { onConflict: "user_id" });
+
+    if (error) {
+      console.error("[일반회원 가입] user_profiles 저장 실패:", error);
       throw error;
     }
   }
@@ -340,13 +386,14 @@ export default function UserSignupPage() {
         options: {
           emailRedirectTo: redirectTo,
           data: {
-            role: "USER",
+            role: "user",
             name: safeName,
             username: safeUserId,
             nickname: safeNickname,
             phone: safePhone,
             address: safeAddress,
-            member_type: memberType,
+            member_type: "user",
+            traveler_type: memberType,
             public_name_type: publicNameType,
             birth_year: form.birthYear,
             birth_month: form.birthMonth,
@@ -375,9 +422,10 @@ export default function UserSignupPage() {
 
       if (hasSession) {
         await saveProfile(createdUser.id);
+        await saveUserProfile(createdUser.id);
 
         setResultMessage(
-          "일반회원 가입이 완료되었습니다. Supabase profiles에 회원 정보가 저장되었습니다."
+          "일반회원 가입이 완료되었습니다. profiles와 user_profiles에 회원 정보가 저장되었습니다."
         );
         alert("일반회원 가입이 완료되었습니다.");
       } else {
@@ -428,7 +476,11 @@ export default function UserSignupPage() {
           </p>
         </div>
 
-        <form className="user-signup-form" onSubmit={handleSubmit}>
+        <form
+          className="user-signup-form"
+          onSubmit={handleSubmit}
+          autoComplete="on"
+        >
           <section className="signup-card">
             <div className="signup-card-head">
               <div>
@@ -474,7 +526,9 @@ export default function UserSignupPage() {
             <div className="choice-row">
               <button
                 type="button"
-                className={memberType === "local" ? "choice-btn active" : "choice-btn"}
+                className={
+                  memberType === "local" ? "choice-btn active" : "choice-btn"
+                }
                 onClick={() => setMemberType("local")}
                 disabled={submitting}
               >
@@ -484,7 +538,9 @@ export default function UserSignupPage() {
               <button
                 type="button"
                 className={
-                  memberType === "foreigner" ? "choice-btn active" : "choice-btn"
+                  memberType === "foreigner"
+                    ? "choice-btn active"
+                    : "choice-btn"
                 }
                 onClick={() => setMemberType("foreigner")}
                 disabled={submitting}
@@ -507,6 +563,9 @@ export default function UserSignupPage() {
               <label className="form-field">
                 <span>이름</span>
                 <input
+                  type="text"
+                  name="fullName"
+                  autoComplete="name"
                   value={form.name}
                   onChange={(event) => updateForm("name", event.target.value)}
                   placeholder="이름을 입력해주세요"
@@ -518,8 +577,13 @@ export default function UserSignupPage() {
                 <label>
                   <span>아이디</span>
                   <input
+                    type="text"
+                    name="username"
+                    autoComplete="username"
                     value={form.userId}
-                    onChange={(event) => updateForm("userId", event.target.value)}
+                    onChange={(event) =>
+                      updateForm("userId", event.target.value)
+                    }
                     placeholder="영문, 숫자, 점, 밑줄 4~20자"
                     disabled={submitting}
                   />
@@ -542,6 +606,9 @@ export default function UserSignupPage() {
                 <label>
                   <span>별명 / 예명</span>
                   <input
+                    type="text"
+                    name="nickname"
+                    autoComplete="nickname"
                     value={form.nickname}
                     onChange={(event) =>
                       updateForm("nickname", event.target.value)
@@ -573,7 +640,9 @@ export default function UserSignupPage() {
                 <button
                   type="button"
                   className={
-                    publicNameType === "userId" ? "choice-btn active" : "choice-btn"
+                    publicNameType === "userId"
+                      ? "choice-btn active"
+                      : "choice-btn"
                   }
                   onClick={() => setPublicNameType("userId")}
                   disabled={submitting}
@@ -611,15 +680,20 @@ export default function UserSignupPage() {
             </div>
 
             <p className="section-help">
-              생년월일은 공개하지 않고, 선택에 따라 연령대만 공개할 수 있습니다.
+              생년월일은 공개하지 않고, 선택에 따라 연령대만 공개할 수
+              있습니다.
             </p>
 
             <div className="birth-grid">
               <label className="form-field">
                 <span>년도</span>
                 <select
+                  name="birthYear"
+                  autoComplete="bday-year"
                   value={form.birthYear}
-                  onChange={(event) => updateForm("birthYear", event.target.value)}
+                  onChange={(event) =>
+                    updateForm("birthYear", event.target.value)
+                  }
                   disabled={submitting}
                 >
                   <option value="">년도 선택</option>
@@ -634,6 +708,8 @@ export default function UserSignupPage() {
               <label className="form-field">
                 <span>월</span>
                 <select
+                  name="birthMonth"
+                  autoComplete="bday-month"
                   value={form.birthMonth}
                   onChange={(event) =>
                     updateForm("birthMonth", event.target.value)
@@ -652,8 +728,12 @@ export default function UserSignupPage() {
               <label className="form-field">
                 <span>일</span>
                 <select
+                  name="birthDay"
+                  autoComplete="bday-day"
                   value={form.birthDay}
-                  onChange={(event) => updateForm("birthDay", event.target.value)}
+                  onChange={(event) =>
+                    updateForm("birthDay", event.target.value)
+                  }
                   disabled={submitting}
                 >
                   <option value="">일 선택</option>
@@ -688,6 +768,8 @@ export default function UserSignupPage() {
                 <label className="form-field">
                   <span>연령대</span>
                   <select
+                    name="ageGroup"
+                    autoComplete="off"
                     value={form.ageGroup}
                     onChange={(event) =>
                       updateForm("ageGroup", event.target.value)
@@ -725,6 +807,8 @@ export default function UserSignupPage() {
                 <label className="form-field">
                   <span>성별</span>
                   <select
+                    name="gender"
+                    autoComplete="sex"
                     value={form.gender}
                     onChange={(event) => updateForm("gender", event.target.value)}
                     disabled={submitting}
@@ -754,17 +838,25 @@ export default function UserSignupPage() {
               <label className="form-field">
                 <span>전화번호</span>
                 <input
+                  type="tel"
+                  name="mobilePhone"
+                  autoComplete="tel-national"
+                  inputMode="tel"
                   value={form.phone}
                   onChange={(event) => updateForm("phone", event.target.value)}
                   placeholder="010-0000-0000"
                   disabled={submitting}
                 />
+                <small>숫자 기준 10~11자리로 입력해주세요.</small>
               </label>
 
               <label className="form-field">
                 <span>이메일</span>
                 <input
                   type="email"
+                  name="email"
+                  autoComplete="email"
+                  inputMode="email"
                   value={form.email}
                   onChange={(event) => updateForm("email", event.target.value)}
                   placeholder="example@email.com"
@@ -775,6 +867,9 @@ export default function UserSignupPage() {
               <label className="form-field">
                 <span>주소</span>
                 <input
+                  type="text"
+                  name="address"
+                  autoComplete="street-address"
                   value={form.address}
                   onChange={(event) => updateForm("address", event.target.value)}
                   placeholder="주소를 입력해주세요"
@@ -798,6 +893,8 @@ export default function UserSignupPage() {
                 <span>비밀번호</span>
                 <input
                   type="password"
+                  name="newPassword"
+                  autoComplete="new-password"
                   value={form.password}
                   onChange={(event) => updateForm("password", event.target.value)}
                   placeholder="8자 이상"
@@ -809,6 +906,8 @@ export default function UserSignupPage() {
                 <span>비밀번호 확인</span>
                 <input
                   type="password"
+                  name="newPasswordConfirm"
+                  autoComplete="new-password"
                   value={form.passwordConfirm}
                   onChange={(event) =>
                     updateForm("passwordConfirm", event.target.value)
@@ -820,7 +919,11 @@ export default function UserSignupPage() {
             </div>
 
             {form.passwordConfirm ? (
-              <p className={isPasswordSame ? "password-help good" : "password-help bad"}>
+              <p
+                className={
+                  isPasswordSame ? "password-help good" : "password-help bad"
+                }
+              >
                 {isPasswordSame
                   ? "비밀번호가 일치합니다."
                   : "비밀번호가 일치하지 않습니다."}
@@ -842,12 +945,16 @@ export default function UserSignupPage() {
 
                 <div>
                   <dt>연령 정보</dt>
-                  <dd>{showAge ? form.ageGroup || "연령대 미선택" : "비공개"}</dd>
+                  <dd>
+                    {showAge ? form.ageGroup || "연령대 미선택" : "비공개"}
+                  </dd>
                 </div>
 
                 <div>
                   <dt>성별 정보</dt>
-                  <dd>{showGender ? form.gender || "성별 미선택" : "비공개"}</dd>
+                  <dd>
+                    {showGender ? form.gender || "성별 미선택" : "비공개"}
+                  </dd>
                 </div>
 
                 <div>
@@ -863,23 +970,15 @@ export default function UserSignupPage() {
               </p>
             ) : null}
 
-            {resultMessage ? (
-              <p className="submit-help">
-                {resultMessage}
-              </p>
-            ) : null}
+            {resultMessage ? <p className="submit-help">{resultMessage}</p> : null}
 
-            <button
-              type="submit"
-              className="submit-btn"
-              disabled={!canSubmit}
-            >
+            <button type="submit" className="submit-btn" disabled={!canSubmit}>
               {submitting ? "가입 처리 중..." : "일반회원 가입하기"}
             </button>
 
             <p className="submit-help">
               필수: 이름 / 아이디 중복 확인 / 별명 중복 확인 / 생년월일 /
-              연령대 / 성별 / 전화번호 / 이메일 / 비밀번호 8자 이상
+              연령대 / 성별 / 전화번호 10~11자리 / 이메일 / 비밀번호 8자 이상
               <br />
               선택: 주소
             </p>

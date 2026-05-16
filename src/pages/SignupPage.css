@@ -1,10 +1,13 @@
 /* 파일 경로: src/pages/SignupPage.css */
 /* ========================================
    📌 감성여행2 회원가입 유형 선택 페이지 스타일
+   - 일반 사용자 / 소상공인 / 지자체·기관 가입 흐름을 카드로 구분
    - PC에서도 너무 넓어지지 않도록 전체 폭 축소
    - 회원가입 유형 카드가 한눈에 들어오도록 가운데 정렬
+   - 소상공인은 무료 가입 후 운영 시작 시 결제 흐름 강조
+   - 지자체·기관은 가입 신청 후 승인 대기 흐름 강조
+   - 공통 아이디 체계와 회원 유형별 저장방 안내 추가
    - 모바일에서도 카드가 자연스럽게 세로 배치되도록 구성
-   - 기존 홈페이지 색감을 크게 해치지 않는 부드러운 카드형 UI
    ======================================== */
 
 .signup-page {
@@ -13,6 +16,7 @@
   padding: 72px 20px 72px;
   background:
     radial-gradient(circle at top left, rgba(255, 173, 96, 0.22), transparent 34%),
+    radial-gradient(circle at top right, rgba(124, 84, 201, 0.12), transparent 34%),
     linear-gradient(180deg, #fffaf3 0%, #ffffff 42%, #fff7ec 100%);
   color: #2f261f;
 }
@@ -45,7 +49,7 @@
 }
 
 .signup-hero-desc {
-  max-width: 640px;
+  max-width: 660px;
   margin: 18px auto 0;
   font-size: 16px;
   line-height: 1.75;
@@ -62,7 +66,7 @@
 }
 
 .signup-type-card {
-  min-height: 390px;
+  min-height: 410px;
   display: flex;
   flex-direction: column;
   padding: 24px 22px;
@@ -82,6 +86,26 @@
   box-shadow: 0 22px 46px rgba(80, 45, 15, 0.13);
 }
 
+.signup-type-card.user-card {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 250, 243, 0.94)),
+    #ffffff;
+}
+
+.signup-type-card.owner-card {
+  background:
+    linear-gradient(180deg, rgba(255, 247, 236, 0.96), rgba(255, 255, 255, 0.94)),
+    #ffffff;
+  border-color: rgba(255, 142, 60, 0.2);
+}
+
+.signup-type-card.gov-card {
+  background:
+    linear-gradient(180deg, rgba(246, 239, 255, 0.96), rgba(255, 255, 255, 0.94)),
+    #ffffff;
+  border-color: rgba(124, 84, 201, 0.2);
+}
+
 .signup-icon {
   width: 52px;
   height: 52px;
@@ -91,6 +115,18 @@
   border-radius: 18px;
   background: #fff3df;
   font-size: 28px;
+}
+
+.user-card .signup-icon {
+  background: #fff3df;
+}
+
+.owner-card .signup-icon {
+  background: #fff0dc;
+}
+
+.gov-card .signup-icon {
+  background: #f0e9ff;
 }
 
 .signup-type-card h2 {
@@ -120,6 +156,10 @@
   color: #f28b2f;
 }
 
+.gov-card li::marker {
+  color: #6d46c7;
+}
+
 .signup-main-button,
 .signup-outline-button {
   margin-top: auto;
@@ -132,6 +172,7 @@
   font-size: 15px;
   font-weight: 950;
   text-decoration: none;
+  text-align: center;
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease,
@@ -150,14 +191,15 @@
 }
 
 .signup-outline-button {
-  color: #c25f14;
-  background: #fff8ee;
-  border: 1px solid rgba(242, 139, 47, 0.34);
+  color: #5b35b1;
+  background: #f5efff;
+  border: 1px solid rgba(124, 84, 201, 0.28);
 }
 
 .signup-outline-button:hover {
   transform: translateY(-1px);
-  background: #fff1dc;
+  background: #eee5ff;
+  box-shadow: 0 14px 24px rgba(124, 84, 201, 0.14);
 }
 
 .signup-info-box {
@@ -184,6 +226,36 @@
   word-break: keep-all;
 }
 
+.signup-room-guide {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.signup-room-guide div {
+  padding: 14px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.signup-room-guide strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.signup-room-guide span {
+  display: block;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 13px;
+  line-height: 1.55;
+  word-break: break-word;
+}
+
 @media (max-width: 960px) {
   .signup-page {
     padding-top: 66px;
@@ -197,6 +269,10 @@
 
   .signup-type-card {
     min-height: auto;
+  }
+
+  .signup-room-guide {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -229,5 +305,9 @@
   .signup-info-box {
     padding: 22px 18px;
     border-radius: 22px;
+  }
+
+  .signup-room-guide div {
+    padding: 13px;
   }
 }
