@@ -1,0 +1,197 @@
+/* 파일 경로: src/pages/SignupPage.css */
+/* ========================================
+   📌 감성여행2 회원가입 유형 선택 페이지 스타일
+   - 모바일에서도 카드가 자연스럽게 세로 배치되도록 구성
+   - 기존 홈페이지 색감을 크게 해치지 않는 부드러운 카드형 UI
+   ======================================== */
+
+.signup-page {
+  width: 100%;
+  min-height: 100vh;
+  padding: 88px 20px 80px;
+  background:
+    radial-gradient(circle at top left, rgba(255, 173, 96, 0.22), transparent 34%),
+    linear-gradient(180deg, #fffaf3 0%, #ffffff 42%, #fff7ec 100%);
+  color: #2f261f;
+}
+
+.signup-hero {
+  max-width: 980px;
+  margin: 0 auto 42px;
+  text-align: center;
+}
+
+.signup-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  margin-bottom: 18px;
+  border-radius: 999px;
+  background: rgba(255, 142, 60, 0.14);
+  color: #c26417;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.signup-hero h1 {
+  margin: 0;
+  font-size: clamp(32px, 5vw, 54px);
+  line-height: 1.18;
+  letter-spacing: -0.04em;
+  font-weight: 900;
+}
+
+.signup-hero-desc {
+  max-width: 720px;
+  margin: 20px auto 0;
+  font-size: 17px;
+  line-height: 1.75;
+  color: #6c5a4a;
+}
+
+.signup-type-section {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.signup-type-card {
+  min-height: 460px;
+  display: flex;
+  flex-direction: column;
+  padding: 30px 26px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(143, 91, 39, 0.14);
+  box-shadow: 0 18px 46px rgba(80, 45, 15, 0.1);
+}
+
+.signup-type-card:hover {
+  transform: translateY(-4px);
+  transition: 0.22s ease;
+  box-shadow: 0 24px 56px rgba(80, 45, 15, 0.14);
+}
+
+.signup-icon {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 18px;
+  border-radius: 20px;
+  background: #fff3df;
+  font-size: 32px;
+}
+
+.signup-type-card h2 {
+  margin: 0 0 12px;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.signup-type-card p {
+  margin: 0;
+  color: #665443;
+  font-size: 15.5px;
+  line-height: 1.7;
+}
+
+.signup-type-card ul {
+  margin: 22px 0 28px;
+  padding-left: 20px;
+  color: #4d4035;
+  font-size: 15px;
+  line-height: 1.9;
+}
+
+.signup-type-card li::marker {
+  color: #f28b2f;
+}
+
+.signup-main-button,
+.signup-outline-button {
+  margin-top: auto;
+  width: 100%;
+  min-height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18px;
+  font-size: 16px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.signup-main-button {
+  color: white;
+  background: linear-gradient(135deg, #ff8a2a, #ff5e3a);
+  box-shadow: 0 12px 24px rgba(255, 111, 45, 0.24);
+}
+
+.signup-outline-button {
+  color: #c25f14;
+  background: #fff8ee;
+  border: 1px solid rgba(242, 139, 47, 0.34);
+}
+
+.signup-info-box {
+  max-width: 980px;
+  margin: 34px auto 0;
+  padding: 28px;
+  border-radius: 26px;
+  background: #2f261f;
+  color: white;
+  box-shadow: 0 18px 42px rgba(47, 38, 31, 0.16);
+}
+
+.signup-info-box h2 {
+  margin: 0 0 10px;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.signup-info-box p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 15.5px;
+  line-height: 1.8;
+}
+
+@media (max-width: 960px) {
+  .signup-page {
+    padding-top: 72px;
+  }
+
+  .signup-type-section {
+    grid-template-columns: 1fr;
+    max-width: 640px;
+  }
+
+  .signup-type-card {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .signup-page {
+    padding: 64px 14px 54px;
+  }
+
+  .signup-hero {
+    margin-bottom: 28px;
+  }
+
+  .signup-type-card {
+    padding: 24px 20px;
+    border-radius: 24px;
+  }
+
+  .signup-info-box {
+    padding: 24px 20px;
+    border-radius: 24px;
+  }
+}

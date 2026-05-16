@@ -3,7 +3,7 @@
 // 📌 감성여행2 공용 상단 헤더 컴포넌트
 // - 왼쪽 로고는 PNG 이미지 파일로 표시하고 홈으로 이동
 // - 로고 파일 위치: public/logo-gamsung2-header.png
-// - 감성여행2 소개 / 감성배달 소개 / 이벤트 / 제휴문의 메뉴 표시
+// - 감성여행2 소개 / 감성배달 소개 / 이벤트 / 제휴문의 / 회원가입 메뉴 표시
 // - 문의하기 메뉴는 제거하고 오른쪽 아래 감성문의 쪽지 버튼으로 대체
 // - 이벤트 지역 드롭다운 유지
 // - 공개 홈페이지용으로 demo_user / 현재 사용자 / 로그아웃 표시 제거
@@ -248,6 +248,15 @@ export default function Header() {
               }
             >
               제휴문의
+            </NavLink>
+
+            <NavLink
+              to="/signup"
+              className={({ isActive }) =>
+                isActive ? "nav-link active" : "nav-link"
+              }
+            >
+              회원가입
             </NavLink>
 
             <button
