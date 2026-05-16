@@ -6,12 +6,15 @@
 // - 생년월일, 연령대 공개 여부, 성별 공개 여부 구성
 // - 전화번호, 이메일, 주소, 비밀번호 입력 구성
 // - 카카오 / 구글 / 네이버 가입 버튼 자리 포함
-// - 현재 단계는 화면 구조와 필수값 검증만 처리
-// - Supabase 실제 회원가입 저장은 다음 단계에서 연결
+// - 아이디 / 별명 중복 확인을 Supabase profiles 기준으로 검사
+// - 이메일 / 비밀번호로 Supabase Auth 회원가입 처리
+// - 생성된 auth.users.id를 기준으로 public.profiles에 일반회원 정보 저장
+// - 감성여행2 / 감성배달 / 홈페이지 공통 user_id 체계 준비
 // ========================================
 
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import "./UserSignupPage.css";
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -56,6 +59,48 @@ const INITIAL_FORM = {
   passwordConfirm: "",
 };
 
+function normalizeUsername(value) {
+  return value.trim().toLowerCase();
+}
+
+function normalizeEmail(value) {
+  return value.trim().toLowerCase();
+}
+
+function normalizePhone(value) {
+  return value.trim();
+}
+
+function isValidUsername(value) {
+  return /^[a-zA-Z0-9._]{4,20}$/.test(value);
+}
+
+function isValidNickname(value) {
+  return value.length >= 2 && value.length <= 20;
+}
+
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function getSignupErrorMessage(error) {
+  const message = error?.message || "";
+
+  if (message.includes("already registered")) {
+    return "이미 가입된 이메일입니다. 다른 이메일을 사용하거나 로그인해주세요.";
+  }
+
+  if (message.includes("duplicate key")) {
+    return "이미 사용 중인 아이디 또는 별명입니다. 중복 확인을 다시 해주세요.";
+  }
+
+  if (message.includes("Password")) {
+    return "비밀번호 조건을 다시 확인해주세요.";
+  }
+
+  return message || "회원가입 처리 중 문제가 발생했습니다.";
+}
+
 export default function UserSignupPage() {
   const [memberType, setMemberType] = useState("local");
   const [publicNameType, setPublicNameType] = useState("userId");
@@ -64,6 +109,18 @@ export default function UserSignupPage() {
   const [form, setForm] = useState(INITIAL_FORM);
   const [idChecked, setIdChecked] = useState(false);
   const [nicknameChecked, setNicknameChecked] = useState(false);
+  const [checkingUserId, setCheckingUserId] = useState(false);
+  const [checkingNickname, setCheckingNickname] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [resultMessage, setResultMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const safeName = form.name.trim();
+  const safeUserId = normalizeUsername(form.userId);
+  const safeNickname = form.nickname.trim();
+  const safeEmail = normalizeEmail(form.email);
+  const safePhone = normalizePhone(form.phone);
+  const safeAddress = form.address.trim();
 
   const isPasswordValid = form.password.length >= 8;
   const isPasswordSame =
@@ -71,33 +128,39 @@ export default function UserSignupPage() {
 
   const publicPreview = useMemo(() => {
     if (publicNameType === "nickname") {
-      return form.nickname.trim() || "별명 미입력";
+      return safeNickname || "별명 미입력";
     }
 
-    return form.userId.trim() || "아이디 미입력";
-  }, [form.nickname, form.userId, publicNameType]);
+    return safeUserId || "아이디 미입력";
+  }, [safeNickname, safeUserId, publicNameType]);
 
-  const canSubmit =
-    form.name.trim() &&
-    form.userId.trim() &&
-    form.nickname.trim() &&
-    form.birthYear &&
-    form.birthMonth &&
-    form.birthDay &&
-    form.ageGroup &&
-    form.gender &&
-    form.phone.trim() &&
-    form.email.trim() &&
-    isPasswordValid &&
-    isPasswordSame &&
-    idChecked &&
-    nicknameChecked;
+  const canSubmit = Boolean(
+    safeName &&
+      safeUserId &&
+      safeNickname &&
+      form.birthYear &&
+      form.birthMonth &&
+      form.birthDay &&
+      form.ageGroup &&
+      form.gender &&
+      safePhone &&
+      safeEmail &&
+      isValidEmail(safeEmail) &&
+      isPasswordValid &&
+      isPasswordSame &&
+      idChecked &&
+      nicknameChecked &&
+      !submitting
+  );
 
   function updateForm(key, value) {
     setForm((prev) => ({
       ...prev,
       [key]: value,
     }));
+
+    setResultMessage("");
+    setErrorMessage("");
 
     if (key === "userId") {
       setIdChecked(false);
@@ -108,56 +171,238 @@ export default function UserSignupPage() {
     }
   }
 
-  function handleCheckUserId() {
-    const safeUserId = form.userId.trim();
-    const isValidUserId = /^[a-zA-Z0-9._]{4,20}$/.test(safeUserId);
+  async function handleCheckUserId() {
+    if (!isSupabaseConfigured) {
+      alert("Supabase 연결 정보가 없습니다. 환경변수를 먼저 확인해주세요.");
+      return;
+    }
 
     if (!safeUserId) {
       alert("아이디를 먼저 입력해주세요.");
       return;
     }
 
-    if (!isValidUserId) {
+    if (!isValidUsername(safeUserId)) {
       alert("아이디는 영문, 숫자, 점, 밑줄만 사용해서 4~20자로 입력해주세요.");
       return;
     }
 
+    setCheckingUserId(true);
+    setErrorMessage("");
+    setResultMessage("");
+
+    const { data, error } = await supabase.rpc(
+      "is_profile_username_available",
+      {
+        target_username: safeUserId,
+      }
+    );
+
+    setCheckingUserId(false);
+
+    if (error) {
+      console.error("[일반회원 가입] 아이디 중복 확인 실패:", error);
+      alert(
+        "아이디 중복 확인에 실패했습니다. Supabase SQL 함수가 생성되어 있는지 확인해주세요."
+      );
+      return;
+    }
+
+    if (!data) {
+      setIdChecked(false);
+      alert("이미 사용 중인 아이디입니다. 다른 아이디를 입력해주세요.");
+      return;
+    }
+
     setIdChecked(true);
-    alert("임시 중복 확인 완료입니다. 다음 단계에서 Supabase 실제 중복 확인으로 연결합니다.");
+    alert("사용 가능한 아이디입니다.");
   }
 
-  function handleCheckNickname() {
-    const safeNickname = form.nickname.trim();
+  async function handleCheckNickname() {
+    if (!isSupabaseConfigured) {
+      alert("Supabase 연결 정보가 없습니다. 환경변수를 먼저 확인해주세요.");
+      return;
+    }
 
     if (!safeNickname) {
       alert("별명 / 예명을 먼저 입력해주세요.");
       return;
     }
 
-    if (safeNickname.length < 2 || safeNickname.length > 20) {
+    if (!isValidNickname(safeNickname)) {
       alert("별명 / 예명은 2~20자로 입력해주세요.");
       return;
     }
 
+    setCheckingNickname(true);
+    setErrorMessage("");
+    setResultMessage("");
+
+    const { data, error } = await supabase.rpc(
+      "is_profile_nickname_available",
+      {
+        target_nickname: safeNickname,
+      }
+    );
+
+    setCheckingNickname(false);
+
+    if (error) {
+      console.error("[일반회원 가입] 별명 중복 확인 실패:", error);
+      alert(
+        "별명 중복 확인에 실패했습니다. Supabase SQL 함수가 생성되어 있는지 확인해주세요."
+      );
+      return;
+    }
+
+    if (!data) {
+      setNicknameChecked(false);
+      alert("이미 사용 중인 별명입니다. 다른 별명을 입력해주세요.");
+      return;
+    }
+
     setNicknameChecked(true);
-    alert("임시 중복 확인 완료입니다. 다음 단계에서 Supabase 실제 중복 확인으로 연결합니다.");
+    alert("사용 가능한 별명입니다.");
   }
 
   function handleSocialSignup(provider) {
     alert(
-      `${provider} 가입은 버튼 자리만 먼저 만들었습니다. 다음 단계에서 Supabase 소셜 로그인으로 연결합니다.`
+      `${provider} 가입은 버튼 자리만 먼저 유지합니다. 이메일 가입 저장을 먼저 완성한 뒤 Supabase 소셜 로그인으로 연결하는 순서가 안전합니다.`
     );
   }
 
-  function handleSubmit(event) {
+  function buildProfilePayload(userId) {
+    return {
+      role: "USER",
+      name: safeName,
+      email: safeEmail,
+      phone: safePhone,
+      user_id: userId,
+      nickname: safeNickname,
+      address: safeAddress,
+      username: safeUserId,
+      member_type: memberType,
+      public_name_type: publicNameType,
+      birth_year: form.birthYear,
+      birth_month: form.birthMonth,
+      birth_day: form.birthDay,
+      age_group: form.ageGroup,
+      gender: form.gender,
+      show_age: showAge,
+      show_gender: showGender,
+      provider: "email",
+      updated_at: new Date().toISOString(),
+    };
+  }
+
+  async function saveProfile(userId) {
+    const payload = buildProfilePayload(userId);
+
+    const { error } = await supabase
+      .from("profiles")
+      .upsert(payload, { onConflict: "user_id" });
+
+    if (error) {
+      console.error("[일반회원 가입] profiles 저장 실패:", error);
+      throw error;
+    }
+  }
+
+  async function handleSubmit(event) {
     event.preventDefault();
 
-    if (!canSubmit) {
-      alert("필수 항목 입력과 중복 확인을 모두 완료해주세요.");
+    if (submitting) return;
+
+    setResultMessage("");
+    setErrorMessage("");
+
+    if (!isSupabaseConfigured) {
+      setErrorMessage("Supabase 연결 정보가 없습니다. 환경변수를 먼저 확인해주세요.");
       return;
     }
 
-    alert("일반회원 가입 화면 검증 완료입니다. 다음 단계에서 Supabase 저장을 연결하면 됩니다.");
+    if (!canSubmit) {
+      setErrorMessage("필수 항목 입력과 중복 확인을 모두 완료해주세요.");
+      return;
+    }
+
+    setSubmitting(true);
+
+    const redirectTo =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/signup/user`
+        : undefined;
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: safeEmail,
+        password: form.password,
+        options: {
+          emailRedirectTo: redirectTo,
+          data: {
+            role: "USER",
+            name: safeName,
+            username: safeUserId,
+            nickname: safeNickname,
+            phone: safePhone,
+            address: safeAddress,
+            member_type: memberType,
+            public_name_type: publicNameType,
+            birth_year: form.birthYear,
+            birth_month: form.birthMonth,
+            birth_day: form.birthDay,
+            age_group: form.ageGroup,
+            gender: form.gender,
+            show_age: showAge,
+            show_gender: showGender,
+            provider: "email",
+          },
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      const createdUser = data?.user;
+
+      if (!createdUser?.id) {
+        throw new Error("회원 ID를 생성하지 못했습니다.");
+      }
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      const hasSession = Boolean(sessionData?.session?.user?.id);
+
+      if (hasSession) {
+        await saveProfile(createdUser.id);
+
+        setResultMessage(
+          "일반회원 가입이 완료되었습니다. Supabase profiles에 회원 정보가 저장되었습니다."
+        );
+        alert("일반회원 가입이 완료되었습니다.");
+      } else {
+        setResultMessage(
+          "회원가입 요청이 완료되었습니다. 이메일 인증이 켜져 있다면 메일 인증 후 로그인해야 합니다."
+        );
+        alert(
+          "회원가입 요청이 완료되었습니다. 이메일 인증 메일이 오면 인증 후 로그인해주세요."
+        );
+      }
+
+      setForm(INITIAL_FORM);
+      setIdChecked(false);
+      setNicknameChecked(false);
+      setMemberType("local");
+      setPublicNameType("userId");
+      setShowAge(true);
+      setShowGender(false);
+    } catch (error) {
+      const message = getSignupErrorMessage(error);
+      setErrorMessage(message);
+      alert(message);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -198,6 +443,7 @@ export default function UserSignupPage() {
                 type="button"
                 className="social-btn kakao"
                 onClick={() => handleSocialSignup("카카오")}
+                disabled={submitting}
               >
                 카카오로 가입
               </button>
@@ -206,6 +452,7 @@ export default function UserSignupPage() {
                 type="button"
                 className="social-btn google"
                 onClick={() => handleSocialSignup("구글")}
+                disabled={submitting}
               >
                 구글로 가입
               </button>
@@ -214,6 +461,7 @@ export default function UserSignupPage() {
                 type="button"
                 className="social-btn naver"
                 onClick={() => handleSocialSignup("네이버")}
+                disabled={submitting}
               >
                 네이버로 가입
               </button>
@@ -228,6 +476,7 @@ export default function UserSignupPage() {
                 type="button"
                 className={memberType === "local" ? "choice-btn active" : "choice-btn"}
                 onClick={() => setMemberType("local")}
+                disabled={submitting}
               >
                 내국인
               </button>
@@ -238,6 +487,7 @@ export default function UserSignupPage() {
                   memberType === "foreigner" ? "choice-btn active" : "choice-btn"
                 }
                 onClick={() => setMemberType("foreigner")}
+                disabled={submitting}
               >
                 외국인
               </button>
@@ -260,6 +510,7 @@ export default function UserSignupPage() {
                   value={form.name}
                   onChange={(event) => updateForm("name", event.target.value)}
                   placeholder="이름을 입력해주세요"
+                  disabled={submitting}
                 />
               </label>
 
@@ -270,11 +521,20 @@ export default function UserSignupPage() {
                     value={form.userId}
                     onChange={(event) => updateForm("userId", event.target.value)}
                     placeholder="영문, 숫자, 점, 밑줄 4~20자"
+                    disabled={submitting}
                   />
                 </label>
 
-                <button type="button" onClick={handleCheckUserId}>
-                  중복 확인
+                <button
+                  type="button"
+                  onClick={handleCheckUserId}
+                  disabled={checkingUserId || submitting}
+                >
+                  {checkingUserId
+                    ? "확인 중..."
+                    : idChecked
+                      ? "확인 완료"
+                      : "중복 확인"}
                 </button>
               </div>
 
@@ -287,11 +547,20 @@ export default function UserSignupPage() {
                       updateForm("nickname", event.target.value)
                     }
                     placeholder="공개 프로필에 사용할 별명"
+                    disabled={submitting}
                   />
                 </label>
 
-                <button type="button" onClick={handleCheckNickname}>
-                  중복 확인
+                <button
+                  type="button"
+                  onClick={handleCheckNickname}
+                  disabled={checkingNickname || submitting}
+                >
+                  {checkingNickname
+                    ? "확인 중..."
+                    : nicknameChecked
+                      ? "확인 완료"
+                      : "중복 확인"}
                 </button>
               </div>
             </div>
@@ -307,6 +576,7 @@ export default function UserSignupPage() {
                     publicNameType === "userId" ? "choice-btn active" : "choice-btn"
                   }
                   onClick={() => setPublicNameType("userId")}
+                  disabled={submitting}
                 >
                   아이디
                 </button>
@@ -319,6 +589,7 @@ export default function UserSignupPage() {
                       : "choice-btn"
                   }
                   onClick={() => setPublicNameType("nickname")}
+                  disabled={submitting}
                 >
                   별명
                 </button>
@@ -349,6 +620,7 @@ export default function UserSignupPage() {
                 <select
                   value={form.birthYear}
                   onChange={(event) => updateForm("birthYear", event.target.value)}
+                  disabled={submitting}
                 >
                   <option value="">년도 선택</option>
                   {YEARS.map((year) => (
@@ -366,6 +638,7 @@ export default function UserSignupPage() {
                   onChange={(event) =>
                     updateForm("birthMonth", event.target.value)
                   }
+                  disabled={submitting}
                 >
                   <option value="">월 선택</option>
                   {MONTHS.map((month) => (
@@ -381,6 +654,7 @@ export default function UserSignupPage() {
                 <select
                   value={form.birthDay}
                   onChange={(event) => updateForm("birthDay", event.target.value)}
+                  disabled={submitting}
                 >
                   <option value="">일 선택</option>
                   {DAYS.map((day) => (
@@ -405,6 +679,7 @@ export default function UserSignupPage() {
                     className={showAge ? "switch active" : "switch"}
                     onClick={() => setShowAge((prev) => !prev)}
                     aria-label="연령대 공개 여부"
+                    disabled={submitting}
                   >
                     <span />
                   </button>
@@ -417,6 +692,7 @@ export default function UserSignupPage() {
                     onChange={(event) =>
                       updateForm("ageGroup", event.target.value)
                     }
+                    disabled={submitting}
                   >
                     <option value="">연령 선택</option>
                     {AGE_GROUPS.map((age) => (
@@ -440,6 +716,7 @@ export default function UserSignupPage() {
                     className={showGender ? "switch active" : "switch"}
                     onClick={() => setShowGender((prev) => !prev)}
                     aria-label="성별 공개 여부"
+                    disabled={submitting}
                   >
                     <span />
                   </button>
@@ -450,6 +727,7 @@ export default function UserSignupPage() {
                   <select
                     value={form.gender}
                     onChange={(event) => updateForm("gender", event.target.value)}
+                    disabled={submitting}
                   >
                     <option value="">성별 선택</option>
                     {GENDERS.map((gender) => (
@@ -479,6 +757,7 @@ export default function UserSignupPage() {
                   value={form.phone}
                   onChange={(event) => updateForm("phone", event.target.value)}
                   placeholder="010-0000-0000"
+                  disabled={submitting}
                 />
               </label>
 
@@ -489,6 +768,7 @@ export default function UserSignupPage() {
                   value={form.email}
                   onChange={(event) => updateForm("email", event.target.value)}
                   placeholder="example@email.com"
+                  disabled={submitting}
                 />
               </label>
 
@@ -498,6 +778,7 @@ export default function UserSignupPage() {
                   value={form.address}
                   onChange={(event) => updateForm("address", event.target.value)}
                   placeholder="주소를 입력해주세요"
+                  disabled={submitting}
                 />
               </label>
             </div>
@@ -520,6 +801,7 @@ export default function UserSignupPage() {
                   value={form.password}
                   onChange={(event) => updateForm("password", event.target.value)}
                   placeholder="8자 이상"
+                  disabled={submitting}
                 />
               </label>
 
@@ -532,6 +814,7 @@ export default function UserSignupPage() {
                     updateForm("passwordConfirm", event.target.value)
                   }
                   placeholder="비밀번호를 다시 입력해주세요"
+                  disabled={submitting}
                 />
               </label>
             </div>
@@ -574,12 +857,24 @@ export default function UserSignupPage() {
               </dl>
             </div>
 
+            {errorMessage ? (
+              <p className="submit-help" role="alert">
+                {errorMessage}
+              </p>
+            ) : null}
+
+            {resultMessage ? (
+              <p className="submit-help">
+                {resultMessage}
+              </p>
+            ) : null}
+
             <button
               type="submit"
               className="submit-btn"
               disabled={!canSubmit}
             >
-              일반회원 가입하기
+              {submitting ? "가입 처리 중..." : "일반회원 가입하기"}
             </button>
 
             <p className="submit-help">
