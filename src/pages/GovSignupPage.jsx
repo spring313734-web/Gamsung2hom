@@ -10,6 +10,8 @@
 // - 지역 이벤트 / 관광 이벤트 / 후기 관리 / 통계 기능은 승인 및 이용료 확인 후 연결 예정
 // - 기관 식별번호와 부서 대표전화도 gov_profiles 기존 컬럼과 새 컬럼에 함께 저장
 // - 앱에서 성공한 Supabase 공용 구조와 동일하게 profiles.gov_profile_id를 연결
+// - Auth 트리거가 실행될 때도 예전 컬럼(org_name/email/manager 등)이 채워지도록 metadata 보강
+// - gov_profiles 저장 후 한 번 더 update하여 새 컬럼과 예전 컬럼 누락을 방지
 // ========================================
 
 import { useMemo, useState } from "react";
@@ -177,22 +179,38 @@ export default function GovSignupPage() {
       manager: safeManagerName,
     };
 
-    const { data, error } = await supabase
+    // 1차 저장: 없으면 insert, 있으면 user_id 기준 갱신
+    const { data: upsertData, error: upsertError } = await supabase
       .from("gov_profiles")
       .upsert(payload, { onConflict: "user_id" })
       .select("id")
       .single();
 
-    if (error) {
-      console.error("[지자체 회원가입] gov_profiles 저장 실패:", error);
-      throw error;
+    if (upsertError) {
+      console.error("[지자체 회원가입] gov_profiles upsert 실패:", upsertError);
+      throw upsertError;
     }
 
-    if (!data?.id) {
+    // 2차 보강: Auth 트리거나 예전 코드가 먼저 만든 행의 빈 컬럼까지 확실히 채움
+    const { data: updateData, error: updateError } = await supabase
+      .from("gov_profiles")
+      .update(payload)
+      .eq("user_id", userId)
+      .select("id")
+      .single();
+
+    if (updateError) {
+      console.error("[지자체 회원가입] gov_profiles 보강 update 실패:", updateError);
+      throw updateError;
+    }
+
+    const govProfileId = updateData?.id || upsertData?.id;
+
+    if (!govProfileId) {
       throw new Error("지자체 / 기관 프로필 ID를 생성하지 못했습니다.");
     }
 
-    return data.id;
+    return govProfileId;
   }
 
   async function saveCommonProfile(userId, govProfileId) {
@@ -281,6 +299,16 @@ export default function GovSignupPage() {
             manager_email: safeManagerEmail,
             region_name: safeRegionName,
             region_code: safeRegionCode,
+
+            // Supabase Auth 트리거가 metadata로 gov_profiles를 만들 때도
+            // 기존 서버 컬럼이 비지 않도록 예전 컬럼명도 함께 전달
+            org_name: safeOrganizationName,
+            biz_no: safeOrganizationNumber,
+            rep_phone: safeDepartmentPhone,
+            address: safeRegionName,
+            email: safeManagerEmail,
+            manager: safeManagerName,
+
             approval_status: GOV_APPROVAL_STATUS,
             payment_method: GOV_PAYMENT_METHOD_LABEL,
             payment_status: GOV_PAYMENT_STATUS,
