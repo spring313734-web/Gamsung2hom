@@ -8,7 +8,8 @@
 // - 가입 직후 approval_status는 pending 상태로 시작
 // - 이용료는 홈페이지 즉시 결제가 아니라 직접 결제 / 계좌이체 / 협약 확인 후 관리자 승인 구조
 // - 지역 이벤트 / 관광 이벤트 / 후기 관리 / 통계 기능은 승인 및 이용료 확인 후 연결 예정
-// - 기관 식별번호와 부서 대표전화는 DB 컬럼 추가 전까지 신청 메모에 함께 보관
+// - 기관 식별번호와 부서 대표전화도 gov_profiles 기존 컬럼과 새 컬럼에 함께 저장
+// - 앱에서 성공한 Supabase 공용 구조와 동일하게 profiles.gov_profile_id를 연결
 // ========================================
 
 import { useMemo, useState } from "react";
@@ -55,9 +56,6 @@ function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
-function getGovUsername(userId) {
-  return `gov-${String(userId || "").slice(0, 8)}`;
-}
 
 function getSignupErrorMessage(error) {
   const message = error?.message || "";
@@ -154,35 +152,11 @@ export default function GovSignupPage() {
     return memoLines.join("\n");
   }
 
-  async function saveCommonProfile(userId) {
-    const payload = {
-      role: "gov",
-      name: safeManagerName,
-      email: safeManagerEmail,
-      phone: safeManagerPhone,
-      user_id: userId,
-      nickname: safeOrganizationName,
-      address: safeRegionName,
-      username: getGovUsername(userId),
-      member_type: "government",
-      public_name_type: "organization",
-      provider: "email",
-      updated_at: new Date().toISOString(),
-    };
-
-    const { error } = await supabase
-      .from("profiles")
-      .upsert(payload, { onConflict: "user_id" });
-
-    if (error) {
-      console.error("[지자체 회원가입] profiles 저장 실패:", error);
-      throw error;
-    }
-  }
-
   async function saveGovProfile(userId) {
     const payload = {
       user_id: userId,
+
+      // 앱과 홈페이지가 함께 쓰는 새 지자체 컬럼
       organization_name: safeOrganizationName,
       department_name: safeDepartmentName,
       manager_name: safeManagerName,
@@ -193,16 +167,69 @@ export default function GovSignupPage() {
       approval_status: GOV_APPROVAL_STATUS,
       memo: buildStoredMemo(),
       updated_at: new Date().toISOString(),
+
+      // 예전 서버 컬럼 호환용
+      org_name: safeOrganizationName,
+      biz_no: safeOrganizationNumber,
+      rep_phone: safeDepartmentPhone || null,
+      address: safeRegionName,
+      email: safeManagerEmail,
+      manager: safeManagerName,
     };
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("gov_profiles")
-      .upsert(payload, { onConflict: "user_id" });
+      .upsert(payload, { onConflict: "user_id" })
+      .select("id")
+      .single();
 
     if (error) {
       console.error("[지자체 회원가입] gov_profiles 저장 실패:", error);
       throw error;
     }
+
+    if (!data?.id) {
+      throw new Error("지자체 / 기관 프로필 ID를 생성하지 못했습니다.");
+    }
+
+    return data.id;
+  }
+
+  async function saveCommonProfile(userId, govProfileId) {
+    const payload = {
+      role: "gov",
+      member_type: "government",
+      name: safeManagerName,
+      email: safeManagerEmail,
+      phone: safeManagerPhone,
+      user_id: userId,
+      nickname: safeOrganizationName,
+      address: safeRegionName,
+      birth_date: "",
+      age_group: "",
+      gender: "",
+      use_nickname_as_public: true,
+      show_gender_public: false,
+      show_age_range_public: false,
+      show_age_group_public: false,
+      public_name_mode: "nickname",
+      owner_profile_id: null,
+      gov_profile_id: govProfileId,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .upsert(payload, { onConflict: "user_id" })
+      .select("id")
+      .single();
+
+    if (error) {
+      console.error("[지자체 회원가입] profiles 저장 실패:", error);
+      throw error;
+    }
+
+    return data?.id || null;
   }
 
   async function handleSubmit(event) {
@@ -278,8 +305,8 @@ export default function GovSignupPage() {
       const hasSession = Boolean(sessionData?.session?.user?.id);
 
       if (hasSession) {
-        await saveCommonProfile(createdUser.id);
-        await saveGovProfile(createdUser.id);
+        const govProfileId = await saveGovProfile(createdUser.id);
+        await saveCommonProfile(createdUser.id, govProfileId);
 
         setResultMessage(
           "지자체 / 기관 회원가입 신청이 완료되었습니다. 담당자 확인 후 직접 결제, 계좌이체 또는 협약 방식으로 이용료를 안내드리고, 관리자 승인 후 지역축제·관광이벤트 관리 기능을 사용할 수 있습니다."
