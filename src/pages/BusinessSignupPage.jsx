@@ -9,6 +9,7 @@
 // - Supabase Auth 계정 생성 후 public.profiles에 공통 회원 정보 저장
 // - owner_profiles 저장은 테이블 구조가 맞으면 함께 시도
 // - owner_subscriptions는 가입 단계에서 저장하지 않고, 나중에 결제 완료 시 저장
+// - 크롬 자동완성 오입력 방지를 위해 input name / autoComplete / inputMode를 명확히 지정
 // ========================================
 
 import { useMemo, useState } from "react";
@@ -35,6 +36,14 @@ const INITIAL_FORM = {
 
 function normalizeBusinessNumber(value) {
   return value.replace(/\D/g, "").slice(0, 10);
+}
+
+function normalizePhoneInput(value) {
+  return value.replace(/[^\d+\-\s()]/g, "").slice(0, 20);
+}
+
+function getPhoneDigits(value) {
+  return value.replace(/\D/g, "");
 }
 
 function normalizePhone(value) {
@@ -83,6 +92,7 @@ export default function BusinessSignupPage() {
   const safeOwnerName = form.ownerName.trim();
   const safeBusinessNumber = normalizeBusinessNumber(form.businessNumber);
   const safePhone = normalizePhone(form.phone);
+  const safePhoneDigits = getPhoneDigits(form.phone);
   const safeAddress = form.address.trim();
   const safeBusinessType = form.businessType.trim();
   const safeStorePhone = normalizePhone(form.storePhone);
@@ -90,6 +100,9 @@ export default function BusinessSignupPage() {
   const safeIntro = form.intro.trim();
 
   const authEmail = safeEmail || getInternalBusinessEmail(safeBusinessNumber);
+
+  const isPhoneValid =
+    safePhoneDigits.length >= 10 && safePhoneDigits.length <= 11;
 
   const isPasswordValid = form.password.length >= 8;
   const isPasswordSame =
@@ -100,6 +113,7 @@ export default function BusinessSignupPage() {
       safeOwnerName &&
       safeBusinessNumber.length === 10 &&
       safePhone &&
+      isPhoneValid &&
       isPasswordValid &&
       isPasswordSame &&
       !submitting
@@ -111,8 +125,15 @@ export default function BusinessSignupPage() {
   }, [submitting]);
 
   function updateForm(key, value) {
-    const nextValue =
-      key === "businessNumber" ? normalizeBusinessNumber(value) : value;
+    let nextValue = value;
+
+    if (key === "businessNumber") {
+      nextValue = normalizeBusinessNumber(value);
+    }
+
+    if (key === "phone" || key === "storePhone") {
+      nextValue = normalizePhoneInput(value);
+    }
 
     setForm((prev) => ({
       ...prev,
@@ -205,7 +226,9 @@ export default function BusinessSignupPage() {
     }
 
     if (!canSubmit) {
-      setErrorMessage("필수 정보를 모두 입력하고 비밀번호를 확인해주세요.");
+      setErrorMessage(
+        "필수 정보를 모두 입력하고 휴대폰 번호와 비밀번호를 확인해주세요."
+      );
       return;
     }
 
@@ -306,7 +329,11 @@ export default function BusinessSignupPage() {
           </p>
         </div>
 
-        <form className="business-signup-form" onSubmit={handleSubmit}>
+        <form
+          className="business-signup-form"
+          onSubmit={handleSubmit}
+          autoComplete="on"
+        >
           <div className="business-signup-grid">
             <section className="business-card required-card">
               <div className="business-card-head">
@@ -321,6 +348,9 @@ export default function BusinessSignupPage() {
                 <label className="business-field">
                   <span>가게명 / 상호명</span>
                   <input
+                    type="text"
+                    name="storeName"
+                    autoComplete="section-store organization"
                     value={form.storeName}
                     onChange={(event) =>
                       updateForm("storeName", event.target.value)
@@ -333,6 +363,9 @@ export default function BusinessSignupPage() {
                 <label className="business-field">
                   <span>대표자명</span>
                   <input
+                    type="text"
+                    name="ownerName"
+                    autoComplete="section-owner name"
                     value={form.ownerName}
                     onChange={(event) =>
                       updateForm("ownerName", event.target.value)
@@ -345,12 +378,17 @@ export default function BusinessSignupPage() {
                 <label className="business-field">
                   <span>사업자번호 10자리</span>
                   <input
+                    type="text"
+                    name="businessNumber"
+                    autoComplete="off"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={10}
                     value={form.businessNumber}
                     onChange={(event) =>
                       updateForm("businessNumber", event.target.value)
                     }
                     placeholder="하이픈 없이 입력"
-                    inputMode="numeric"
                     disabled={submitting}
                   />
                   <small>사업자번호가 로그인 아이디로 사용됩니다.</small>
@@ -359,11 +397,16 @@ export default function BusinessSignupPage() {
                 <label className="business-field">
                   <span>휴대폰 번호</span>
                   <input
+                    type="tel"
+                    name="ownerMobilePhone"
+                    autoComplete="section-owner tel-national"
+                    inputMode="tel"
                     value={form.phone}
                     onChange={(event) => updateForm("phone", event.target.value)}
                     placeholder="010-0000-0000"
                     disabled={submitting}
                   />
+                  <small>숫자 기준 10~11자리로 입력해주세요.</small>
                 </label>
 
                 <div className="business-two-grid">
@@ -371,6 +414,8 @@ export default function BusinessSignupPage() {
                     <span>비밀번호</span>
                     <input
                       type="password"
+                      name="newPassword"
+                      autoComplete="new-password"
                       value={form.password}
                       onChange={(event) =>
                         updateForm("password", event.target.value)
@@ -384,6 +429,8 @@ export default function BusinessSignupPage() {
                     <span>비밀번호 확인</span>
                     <input
                       type="password"
+                      name="newPasswordConfirm"
+                      autoComplete="new-password"
                       value={form.passwordConfirm}
                       onChange={(event) =>
                         updateForm("passwordConfirm", event.target.value)
@@ -471,6 +518,9 @@ export default function BusinessSignupPage() {
               <label className="business-field">
                 <span>주소</span>
                 <input
+                  type="text"
+                  name="storeAddress"
+                  autoComplete="section-store street-address"
                   value={form.address}
                   onChange={(event) => updateForm("address", event.target.value)}
                   placeholder="주소를 입력해주세요"
@@ -481,6 +531,9 @@ export default function BusinessSignupPage() {
               <label className="business-field">
                 <span>업종 / 품목</span>
                 <input
+                  type="text"
+                  name="businessType"
+                  autoComplete="off"
                   value={form.businessType}
                   onChange={(event) =>
                     updateForm("businessType", event.target.value)
@@ -493,6 +546,10 @@ export default function BusinessSignupPage() {
               <label className="business-field">
                 <span>대표 전화</span>
                 <input
+                  type="tel"
+                  name="storePhone"
+                  autoComplete="section-store tel"
+                  inputMode="tel"
                   value={form.storePhone}
                   onChange={(event) =>
                     updateForm("storePhone", event.target.value)
@@ -506,6 +563,9 @@ export default function BusinessSignupPage() {
                 <span>이메일</span>
                 <input
                   type="email"
+                  name="businessEmail"
+                  autoComplete="section-owner email"
+                  inputMode="email"
                   value={form.email}
                   onChange={(event) => updateForm("email", event.target.value)}
                   placeholder="비우면 사업자번호 기반 내부 이메일 사용"
@@ -521,6 +581,8 @@ export default function BusinessSignupPage() {
             <label className="business-field intro-field">
               <span>한 줄 소개</span>
               <textarea
+                name="storeIntro"
+                autoComplete="off"
                 value={form.intro}
                 onChange={(event) => updateForm("intro", event.target.value)}
                 placeholder="예: 함양에서 20년째 운영 중인 따뜻한 한식집입니다."
@@ -574,8 +636,8 @@ export default function BusinessSignupPage() {
             </button>
 
             <p className="business-submit-help">
-              필수: 가게명 / 대표자명 / 사업자번호 10자리 / 휴대폰 번호 /
-              비밀번호 8자 이상
+              필수: 가게명 / 대표자명 / 사업자번호 10자리 / 휴대폰 번호
+              10~11자리 / 비밀번호 8자 이상
             </p>
           </section>
         </form>
