@@ -1,0 +1,456 @@
+/* 파일 경로: src/pages/BusinessSignupPage.css */
+/* ========================================
+   📌 감성여행2 홈페이지 소상공인 간편 입점 페이지 스타일
+   - 감성배달 앱의 소상공인 간편 입점 흐름을 홈페이지용 카드 UI로 구성
+   - PC에서는 필수 정보와 입점 이용권을 좌우 배치
+   - 모바일에서는 자연스럽게 세로 배치
+   ======================================== */
+
+.business-signup-page {
+  width: 100%;
+  min-height: 100vh;
+  padding: 72px 20px 82px;
+  background:
+    radial-gradient(circle at top left, rgba(255, 173, 96, 0.2), transparent 34%),
+    linear-gradient(180deg, #fffaf3 0%, #ffffff 42%, #fff7ec 100%);
+  color: #2f261f;
+}
+
+.business-signup-wrap {
+  width: min(1080px, 100%);
+  margin: 0 auto;
+}
+
+.business-signup-hero {
+  max-width: 760px;
+  margin: 0 auto 34px;
+  text-align: center;
+}
+
+.business-signup-back {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 12px;
+  color: #6d46c7;
+  font-size: 0.94rem;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.business-signup-back:hover {
+  text-decoration: underline;
+}
+
+.business-signup-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 0 16px;
+  padding: 8px 15px;
+  border-radius: 999px;
+  background: rgba(255, 142, 60, 0.16);
+  color: #c26417;
+  font-size: 0.88rem;
+  font-weight: 950;
+}
+
+.business-signup-hero h1 {
+  margin: 0;
+  font-size: clamp(32px, 4vw, 48px);
+  line-height: 1.18;
+  letter-spacing: -0.045em;
+  font-weight: 950;
+}
+
+.business-signup-desc {
+  max-width: 680px;
+  margin: 18px auto 0;
+  color: #6c5a4a;
+  font-size: 1rem;
+  line-height: 1.75;
+  word-break: keep-all;
+}
+
+.business-signup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.business-signup-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.85fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.business-card {
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(143, 91, 39, 0.14);
+  box-shadow: 0 16px 38px rgba(80, 45, 15, 0.09);
+  padding: 26px;
+}
+
+.business-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.business-step {
+  display: block;
+  margin-bottom: 6px;
+  color: #c26417;
+  font-size: 0.82rem;
+  font-weight: 950;
+  letter-spacing: 0.03em;
+}
+
+.business-card-head h2 {
+  margin: 0;
+  color: #2f261f;
+  font-size: 1.45rem;
+  line-height: 1.28;
+  font-weight: 950;
+  letter-spacing: -0.035em;
+}
+
+.business-card-head strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #fff0dc;
+  color: #b95c13;
+  font-size: 0.82rem;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.business-field-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.business-field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.business-two-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.business-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.business-field span {
+  color: #3d3128;
+  font-size: 0.92rem;
+  font-weight: 950;
+}
+
+.business-field input,
+.business-field textarea {
+  width: 100%;
+  min-height: 56px;
+  border: 1px solid rgba(47, 38, 31, 0.24);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.86);
+  color: #2f261f;
+  font-size: 1rem;
+  line-height: 1.5;
+  padding: 14px 16px;
+  outline: none;
+  font-family: inherit;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.business-field textarea {
+  min-height: 116px;
+  resize: vertical;
+}
+
+.business-field input:focus,
+.business-field textarea:focus {
+  border-color: rgba(124, 84, 201, 0.55);
+  box-shadow: 0 0 0 4px rgba(124, 84, 201, 0.1);
+  background: #ffffff;
+}
+
+.business-field small {
+  color: #77685c;
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.business-help {
+  margin: -4px 0 0;
+  color: #7b6b5d;
+  font-size: 0.88rem;
+  font-weight: 850;
+}
+
+.business-help.good {
+  color: #15803d;
+}
+
+.business-help.bad {
+  color: #dc2626;
+}
+
+.pass-card {
+  position: sticky;
+  top: 96px;
+  background:
+    linear-gradient(180deg, rgba(246, 239, 255, 0.95), rgba(255, 247, 236, 0.95)),
+    #ffffff;
+  border-color: rgba(124, 84, 201, 0.22);
+}
+
+.pass-price-box {
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(47, 38, 31, 0.1);
+  margin-bottom: 12px;
+}
+
+.pass-price-box p {
+  margin: 0 0 6px;
+  color: #67594e;
+  font-size: 0.88rem;
+  font-weight: 850;
+}
+
+.pass-price-box strong {
+  color: #2f261f;
+  font-size: 1.18rem;
+  font-weight: 950;
+}
+
+.pass-price-box.highlight strong {
+  color: #6d46c7;
+  font-size: 1.38rem;
+}
+
+.pass-desc {
+  margin: 14px 0 18px;
+  color: #5e5047;
+  font-size: 0.92rem;
+  line-height: 1.7;
+  word-break: keep-all;
+}
+
+.payment-toggle {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border: 1px solid rgba(47, 38, 31, 0.28);
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.payment-toggle button {
+  min-height: 50px;
+  border: none;
+  background: transparent;
+  color: #3d3128;
+  font-family: inherit;
+  font-size: 0.96rem;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.payment-toggle button + button {
+  border-left: 1px solid rgba(47, 38, 31, 0.18);
+}
+
+.payment-toggle button.active {
+  background: rgba(124, 84, 201, 0.14);
+  color: #5b36b6;
+}
+
+.optional-card {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.optional-desc {
+  margin: -8px 0 20px;
+  color: #6c5a4a;
+  font-size: 0.94rem;
+  line-height: 1.7;
+}
+
+.intro-field {
+  margin-top: 16px;
+}
+
+.business-submit-card {
+  border-radius: 28px;
+  background: #2f261f;
+  color: #ffffff;
+  padding: 28px;
+  box-shadow: 0 18px 44px rgba(47, 38, 31, 0.16);
+}
+
+.business-submit-card h2 {
+  margin: 0 0 18px;
+  font-size: 1.35rem;
+  font-weight: 950;
+}
+
+.business-submit-card dl {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 18px;
+}
+
+.business-submit-card dl div {
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.business-submit-card dt {
+  margin-bottom: 5px;
+  color: rgba(255, 255, 255, 0.64);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.business-submit-card dd {
+  margin: 0;
+  color: #ffffff;
+  font-size: 0.98rem;
+  font-weight: 950;
+  word-break: break-all;
+}
+
+.business-submit-btn {
+  width: 100%;
+  min-height: 58px;
+  border: none;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #ff9f1c, #ff6b2c);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 1.02rem;
+  font-weight: 950;
+  cursor: pointer;
+  box-shadow: 0 14px 28px rgba(255, 111, 45, 0.26);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.business-submit-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 34px rgba(255, 111, 45, 0.32);
+}
+
+.business-submit-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+  background: rgba(255, 255, 255, 0.32);
+  box-shadow: none;
+}
+
+.business-submit-help {
+  margin: 14px 0 0;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.86rem;
+  line-height: 1.65;
+}
+
+.business-result {
+  margin: 0 0 14px;
+  padding: 13px 14px;
+  border-radius: 15px;
+  font-size: 0.92rem;
+  font-weight: 850;
+  line-height: 1.6;
+}
+
+.business-result.error {
+  background: rgba(248, 113, 113, 0.16);
+  color: #fecaca;
+}
+
+.business-result.success {
+  background: rgba(34, 197, 94, 0.16);
+  color: #bbf7d0;
+}
+
+@media (max-width: 960px) {
+  .business-signup-page {
+    padding-top: 64px;
+  }
+
+  .business-signup-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pass-card {
+    position: static;
+  }
+
+  .business-submit-card dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .business-signup-page {
+    padding: 54px 14px 64px;
+  }
+
+  .business-card,
+  .business-submit-card {
+    padding: 22px 18px;
+    border-radius: 24px;
+  }
+
+  .business-signup-hero {
+    margin-bottom: 26px;
+  }
+
+  .business-signup-hero h1 {
+    font-size: 30px;
+  }
+
+  .business-signup-desc {
+    font-size: 0.94rem;
+  }
+
+  .business-field-grid,
+  .business-two-grid,
+  .business-submit-card dl {
+    grid-template-columns: 1fr;
+  }
+
+  .payment-toggle {
+    border-radius: 18px;
+  }
+
+  .payment-toggle button {
+    min-height: 48px;
+  }
+}
