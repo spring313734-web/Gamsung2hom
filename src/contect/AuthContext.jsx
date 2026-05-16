@@ -4,6 +4,7 @@
 // - 홈페이지 전체에서 Supabase 로그인 세션을 공유
 // - auth.users.id를 감성여행2 / 감성배달 / 홈페이지 공통 user_id 기준으로 사용
 // - public.profiles에서 내 회원 정보를 불러와 별명 / 아이디 / 공개 이름 설정 반영
+// - public_name_type / public_name_mode 둘 다 읽어 앱과 홈페이지 공용 구조 호환
 // - Header에서 회원가입 버튼 대신 로그인 사용자 이름을 표시할 수 있도록 제공
 // - 세션 확인이 지연되어도 Header가 "로그인 확인 중"에 멈추지 않도록 안전 처리
 // - 현재 프로젝트 폴더명이 contect 이므로 이 경로를 기준으로 사용
@@ -77,11 +78,18 @@ function normalizeUserFromSession(session, profile) {
       ? profile.role.trim()
       : getMetadataValue(authUser, "role") || "USER";
 
-  const publicNameType =
-    typeof profile?.public_name_type === "string" &&
-    profile.public_name_type.trim()
+  const profilePublicNameType =
+    typeof profile?.public_name_type === "string" && profile.public_name_type.trim()
       ? profile.public_name_type.trim()
-      : getMetadataValue(authUser, "public_name_type") || "userId";
+      : typeof profile?.public_name_mode === "string" && profile.public_name_mode.trim()
+        ? profile.public_name_mode.trim()
+        : "";
+
+  const publicNameType =
+    profilePublicNameType ||
+    getMetadataValue(authUser, "public_name_type") ||
+    getMetadataValue(authUser, "public_name_mode") ||
+    "userId";
 
   const displayName = pickDisplayName({
     publicNameType,

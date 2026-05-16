@@ -5,6 +5,7 @@
 // - 홈 / 감성여행2 소개 / 감성배달 소개 / 이벤트 / 문의 라우팅 연결
 // - 감성배달 소개와 제휴문의 페이지를 분리
 // - 제휴문의는 PartnershipPage 전용 화면으로 연결
+// - 로그인 페이지 /login 라우트 추가
 // - 회원가입 유형 선택 페이지 /signup 라우트 추가
 // - 일반회원 가입 페이지 /signup/user 라우트 추가
 // - 소상공인 간편 입점 페이지 /signup/business 라우트 추가
@@ -31,6 +32,7 @@ import ContactPage from "./pages/ContactPage";
 import EventsPage from "./pages/EventsPage";
 import AppDownloadPage from "./pages/AppDownloadPage";
 import AdminInquiriesPage from "./pages/AdminInquiriesPage";
+import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import UserSignupPage from "./pages/UserSignupPage";
 import BusinessSignupPage from "./pages/BusinessSignupPage";
@@ -60,6 +62,7 @@ export default function App() {
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/events" element={<EventsPage />} />
             <Route path="/app" element={<AppDownloadPage />} />
+            <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/signup/user" element={<UserSignupPage />} />
             <Route path="/signup/business" element={<BusinessSignupPage />} />
