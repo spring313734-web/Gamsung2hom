@@ -3,20 +3,11 @@
 // 📌 감성여행2 홈페이지 라우터 메인 구성
 // - 공용 상단 헤더 표시
 // - 홈 / 감성여행2 소개 / 감성배달 소개 / 이벤트 / 문의 라우팅 연결
-// - 감성배달 소개와 제휴문의 페이지를 분리
-// - 제휴문의는 PartnershipPage 전용 화면으로 연결
-// - 로그인 페이지 /login 라우트 연결
-// - 회원가입 유형 선택 페이지 /signup 라우트 연결
-// - 일반회원 가입 페이지 /signup/user 라우트 연결
-// - 소상공인 간편 입점 페이지 /signup/business 라우트 연결
-// - 지자체 / 기관 가입 페이지 /signup/gov 라우트 연결
-// - 소상공인 내 가게 관리 준비 화면 /business/dashboard 라우트 연결
-// - 지자체 관리자 대시보드 /gov/dashboard 라우트 연결
-// - 지역별 이벤트 허브 상세 페이지 라우트 연결
-// - 지역별 후기 / 참여글 전용 페이지 라우트 연결
-// - 지역별 후기 상세 페이지 라우트 연결
-// - 명함 QR코드 연결용 /app 앱 안내 페이지 라우트 연결
-// - 관리자 문의함 /admin/inquiries 라우트 연결
+// - 로그인 / 회원가입 / 권한별 관리 화면 라우팅 연결
+// - 소상공인 내 가게 관리 /business/dashboard 연결
+// - 지자체 관리자 대시보드 /gov/dashboard 연결
+// - 지자체 축제·관광이벤트 등록 /gov/contents/new 연결
+// - 지자체 등록 콘텐츠 관리 /gov/contents 연결
 // - 관리자 / 소상공인 / 지자체 관리 화면에서는 오른쪽 아래 감성문의 버튼 숨김
 // - AuthProvider로 홈페이지 전체 공용 로그인 상태 제공
 // ========================================
@@ -39,6 +30,8 @@ import BusinessSignupPage from "./pages/BusinessSignupPage";
 import BusinessDashboardPage from "./pages/BusinessDashboardPage";
 import GovSignupPage from "./pages/GovSignupPage";
 import GovDashboardPage from "./pages/GovDashboardPage";
+import GovContentFormPage from "./pages/GovContentFormPage";
+import GovContentsListPage from "./pages/GovContentsListPage";
 import RegionEventHubDetailPage from "./pages/RegionEventHubDetailPage";
 import RegionEventPostsPage from "./pages/RegionEventPostsPage";
 import RegionEventPostDetailPage from "./pages/RegionEventPostDetailPage";
@@ -80,6 +73,8 @@ export default function App() {
             />
 
             <Route path="/gov/dashboard" element={<GovDashboardPage />} />
+            <Route path="/gov/contents/new" element={<GovContentFormPage />} />
+            <Route path="/gov/contents" element={<GovContentsListPage />} />
 
             <Route path="/admin/inquiries" element={<AdminInquiriesPage />} />
 
