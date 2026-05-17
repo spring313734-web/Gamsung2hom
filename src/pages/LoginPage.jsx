@@ -1,6 +1,7 @@
 // 파일 경로: src/pages/LoginPage.jsx
 // ========================================
 // 📌 감성여행2 홈페이지 로그인 페이지
+// - 일반회원 / 소상공인 / 지자체 계정 유형 선택 UI 제공
 // - 감성여행2 / 감성배달 / 홈페이지 공통 Supabase Auth 로그인
 // - 로그인 후 profiles(공통 회원 기본정보)
 //   + owner_profiles(소상공인 기본정보)
@@ -9,7 +10,6 @@
 // - 지자체는 /gov/dashboard 이동
 // - 관리자는 /admin/inquiries 이동
 // - 일반회원은 홈으로 이동
-// - AuthContext가 세션과 profiles 정보를 다시 읽을 수 있도록 로그인 후 refreshUserProfile 호출
 // ========================================
 
 import { useMemo, useState } from "react";
@@ -22,6 +22,24 @@ const INITIAL_FORM = {
   email: "",
   password: "",
 };
+
+const ACCOUNT_TYPES = [
+  {
+    key: "user",
+    label: "일반회원",
+    desc: "여행자 / 일반 고객",
+  },
+  {
+    key: "business",
+    label: "소상공인",
+    desc: "가게 / 미니홈피 운영",
+  },
+  {
+    key: "gov",
+    label: "지자체 / 기관",
+    desc: "축제 / 관광이벤트 관리",
+  },
+];
 
 function normalizeEmail(value) {
   return value.trim().toLowerCase();
@@ -61,7 +79,12 @@ function hasRow(row) {
   return Boolean(row && (row.id || row.user_id));
 }
 
-function resolveNextPath(loginProfile, fallbackPath) {
+function getAccountTypeLabel(type) {
+  const found = ACCOUNT_TYPES.find((item) => item.key === type);
+  return found?.label || "회원";
+}
+
+function getActualAccountType(loginProfile) {
   const profile = loginProfile?.profile || null;
   const ownerProfile = loginProfile?.ownerProfile || null;
   const govProfile = loginProfile?.govProfile || null;
@@ -69,18 +92,23 @@ function resolveNextPath(loginProfile, fallbackPath) {
   const role = normalizeText(profile?.role);
   const memberType = normalizeText(profile?.member_type);
 
-  const isAdmin = role === "admin" || memberType === "admin";
+  if (role === "admin" || memberType === "admin") {
+    return "admin";
+  }
 
-  const isBusiness =
+  if (
     hasRow(ownerProfile) ||
     role === "business" ||
     role === "biz" ||
     role === "owner" ||
     memberType === "business" ||
     memberType === "biz" ||
-    memberType === "owner";
+    memberType === "owner"
+  ) {
+    return "business";
+  }
 
-  const isGov =
+  if (
     hasRow(govProfile) ||
     role === "gov" ||
     role === "government" ||
@@ -89,17 +117,24 @@ function resolveNextPath(loginProfile, fallbackPath) {
     memberType === "gov" ||
     memberType === "government" ||
     memberType === "local_government" ||
-    memberType === "agency";
+    memberType === "agency"
+  ) {
+    return "gov";
+  }
 
-  if (isAdmin) {
+  return "user";
+}
+
+function resolveNextPath(accountType, fallbackPath) {
+  if (accountType === "admin") {
     return "/admin/inquiries";
   }
 
-  if (isBusiness) {
+  if (accountType === "business") {
     return "/business/dashboard";
   }
 
-  if (isGov) {
+  if (accountType === "gov") {
     return "/gov/dashboard";
   }
 
@@ -111,6 +146,7 @@ export default function LoginPage() {
   const location = useLocation();
   const { refreshUserProfile } = useAuth();
 
+  const [selectedAccountType, setSelectedAccountType] = useState("user");
   const [form, setForm] = useState(INITIAL_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [resultMessage, setResultMessage] = useState("");
@@ -121,8 +157,8 @@ export default function LoginPage() {
 
   const submitLabel = useMemo(() => {
     if (submitting) return "로그인 중...";
-    return "로그인";
-  }, [submitting]);
+    return `${getAccountTypeLabel(selectedAccountType)} 로그인`;
+  }, [selectedAccountType, submitting]);
 
   function updateForm(key, value) {
     setForm((prev) => ({
@@ -130,6 +166,14 @@ export default function LoginPage() {
       [key]: value,
     }));
 
+    setResultMessage("");
+    setErrorMessage("");
+  }
+
+  function selectAccountType(type) {
+    if (submitting) return;
+
+    setSelectedAccountType(type);
     setResultMessage("");
     setErrorMessage("");
   }
@@ -205,17 +249,31 @@ export default function LoginPage() {
 
       const userId = data?.user?.id || "";
       const loginProfile = await loadLoginProfile(userId);
+      const actualAccountType = getActualAccountType(loginProfile);
 
       await refreshUserProfile();
 
-      setResultMessage("로그인되었습니다.");
+      if (
+        actualAccountType !== "admin" &&
+        selectedAccountType !== actualAccountType
+      ) {
+        setResultMessage(
+          `선택하신 유형은 ${getAccountTypeLabel(
+            selectedAccountType
+          )}이지만, 실제 가입 정보는 ${getAccountTypeLabel(
+            actualAccountType
+          )} 계정으로 확인되었습니다. 해당 화면으로 이동합니다.`
+        );
+      } else {
+        setResultMessage(`${getAccountTypeLabel(actualAccountType)} 계정으로 로그인되었습니다.`);
+      }
 
       const fallbackPath = getSafeFallbackPath(location.state?.from?.pathname);
-      const nextPath = resolveNextPath(loginProfile, fallbackPath);
+      const nextPath = resolveNextPath(actualAccountType, fallbackPath);
 
       window.setTimeout(() => {
         navigate(nextPath);
-      }, 500);
+      }, 600);
     } catch (error) {
       const message = getLoginErrorMessage(error);
       setErrorMessage(message);
@@ -242,12 +300,41 @@ export default function LoginPage() {
           </h1>
 
           <p className="login-desc">
-            일반회원, 소상공인, 지자체 / 기관 계정은 같은 Supabase 회원
-            구조를 사용합니다. 로그인 후 계정 권한에 맞는 화면으로 이동합니다.
+            먼저 계정 유형을 선택한 뒤 로그인해주세요. 로그인 후 실제 가입
+            정보에 맞는 화면으로 이동합니다.
           </p>
         </div>
 
         <form className="login-card" onSubmit={handleSubmit} autoComplete="on">
+          <div className="login-type-box">
+            <p className="login-type-label">계정 유형 선택</p>
+
+            <div className="login-type-grid">
+              {ACCOUNT_TYPES.map((type) => {
+                const active = selectedAccountType === type.key;
+
+                return (
+                  <button
+                    key={type.key}
+                    type="button"
+                    className={active ? "login-type-btn active" : "login-type-btn"}
+                    onClick={() => selectAccountType(type.key)}
+                    disabled={submitting}
+                    aria-pressed={active}
+                  >
+                    <strong>{type.label}</strong>
+                    <span>{type.desc}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <p className="login-type-help">
+              선택한 유형은 안내용입니다. 최종 권한은 Supabase 가입 정보로
+              다시 확인합니다.
+            </p>
+          </div>
+
           <label className="login-field">
             <span>이메일</span>
             <input

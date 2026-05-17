@@ -2,6 +2,7 @@
 /* ========================================
    📌 감성여행2 홈페이지 로그인 페이지 스타일
    - 로그인 폼을 카드형으로 구성
+   - 일반회원 / 소상공인 / 지자체 계정 유형 선택 UI 포함
    - 기존 홈페이지의 둥근 카드 / 연한 배경 분위기와 맞춤
    - 모바일에서도 한 줄 입력이 깨지지 않도록 반응형 처리
    ======================================== */
@@ -74,6 +75,88 @@
   border-radius: 28px;
   background: rgba(255, 255, 255, 0.92);
   box-shadow: 0 24px 70px rgba(31, 41, 55, 0.1);
+}
+
+.login-type-box {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.login-type-label {
+  margin: 0;
+  color: #1f2937;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.login-type-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.login-type-btn {
+  min-height: 76px;
+  padding: 12px 10px;
+  border: 1px solid #dbe3f4;
+  border-radius: 18px;
+  background: #ffffff;
+  color: #334155;
+  cursor: pointer;
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  text-align: center;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.login-type-btn strong {
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.login-type-btn span {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.login-type-btn:hover {
+  transform: translateY(-1px);
+  border-color: #9aaefc;
+  box-shadow: 0 10px 24px rgba(79, 70, 229, 0.12);
+}
+
+.login-type-btn.active {
+  border-color: #6d5dfc;
+  background: linear-gradient(135deg, #f3f0ff, #eef6ff);
+  color: #3b2fc9;
+  box-shadow: 0 12px 28px rgba(109, 93, 252, 0.18);
+}
+
+.login-type-btn.active span {
+  color: #4f46e5;
+}
+
+.login-type-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+  transform: none;
+  box-shadow: none;
+}
+
+.login-type-help {
+  margin: 0;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
 }
 
 .login-field {
@@ -173,5 +256,15 @@
 
   .login-hero h1 {
     font-size: 34px;
+  }
+
+  .login-type-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .login-type-btn {
+    min-height: 64px;
+    text-align: left;
+    align-content: center;
   }
 }
