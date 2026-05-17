@@ -2,6 +2,8 @@
 // ========================================
 // 📌 감성여행2 홈페이지 로그인 페이지
 // - 일반회원 / 소상공인 / 지자체 계정 유형 선택 UI 제공
+// - 아이디 기억하기를 체크했을 때만 이메일을 localStorage에 저장
+// - 체크하지 않으면 이메일/비밀번호가 자동으로 남지 않도록 처리
 // - 감성여행2 / 감성배달 / 홈페이지 공통 Supabase Auth 로그인
 // - 로그인 후 profiles(공통 회원 기본정보)
 //   + owner_profiles(소상공인 기본정보)
@@ -12,11 +14,13 @@
 // - 일반회원은 홈으로 이동
 // ========================================
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contect/AuthContext";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import "./LoginPage.css";
+
+const REMEMBER_EMAIL_STORAGE_KEY = "gamsung2.rememberLoginEmail";
 
 const INITIAL_FORM = {
   email: "",
@@ -47,6 +51,37 @@ function normalizeEmail(value) {
 
 function normalizeText(value) {
   return String(value || "").trim().toLowerCase();
+}
+
+function getRememberedEmail() {
+  if (typeof window === "undefined") return "";
+
+  try {
+    return window.localStorage.getItem(REMEMBER_EMAIL_STORAGE_KEY) || "";
+  } catch (error) {
+    console.warn("[LoginPage] 저장된 이메일 읽기 실패:", error);
+    return "";
+  }
+}
+
+function saveRememberedEmail(email) {
+  if (typeof window === "undefined") return;
+
+  try {
+    window.localStorage.setItem(REMEMBER_EMAIL_STORAGE_KEY, email);
+  } catch (error) {
+    console.warn("[LoginPage] 이메일 저장 실패:", error);
+  }
+}
+
+function clearRememberedEmail() {
+  if (typeof window === "undefined") return;
+
+  try {
+    window.localStorage.removeItem(REMEMBER_EMAIL_STORAGE_KEY);
+  } catch (error) {
+    console.warn("[LoginPage] 저장된 이메일 삭제 실패:", error);
+  }
 }
 
 function getLoginErrorMessage(error) {
@@ -148,6 +183,7 @@ export default function LoginPage() {
 
   const [selectedAccountType, setSelectedAccountType] = useState("user");
   const [form, setForm] = useState(INITIAL_FORM);
+  const [rememberEmail, setRememberEmail] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [resultMessage, setResultMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -159,6 +195,19 @@ export default function LoginPage() {
     if (submitting) return "로그인 중...";
     return `${getAccountTypeLabel(selectedAccountType)} 로그인`;
   }, [selectedAccountType, submitting]);
+
+  useEffect(() => {
+    const rememberedEmail = getRememberedEmail();
+
+    if (!rememberedEmail) return;
+
+    setRememberEmail(true);
+    setForm((prev) => ({
+      ...prev,
+      email: rememberedEmail,
+      password: "",
+    }));
+  }, []);
 
   function updateForm(key, value) {
     setForm((prev) => ({
@@ -176,6 +225,14 @@ export default function LoginPage() {
     setSelectedAccountType(type);
     setResultMessage("");
     setErrorMessage("");
+  }
+
+  function toggleRememberEmail(checked) {
+    setRememberEmail(checked);
+
+    if (!checked) {
+      clearRememberedEmail();
+    }
   }
 
   async function loadTableRow(tableName, userId) {
@@ -247,6 +304,12 @@ export default function LoginPage() {
         throw error;
       }
 
+      if (rememberEmail) {
+        saveRememberedEmail(safeEmail);
+      } else {
+        clearRememberedEmail();
+      }
+
       const userId = data?.user?.id || "";
       const loginProfile = await loadLoginProfile(userId);
       const actualAccountType = getActualAccountType(loginProfile);
@@ -265,7 +328,9 @@ export default function LoginPage() {
           )} 계정으로 확인되었습니다. 해당 화면으로 이동합니다.`
         );
       } else {
-        setResultMessage(`${getAccountTypeLabel(actualAccountType)} 계정으로 로그인되었습니다.`);
+        setResultMessage(
+          `${getAccountTypeLabel(actualAccountType)} 계정으로 로그인되었습니다.`
+        );
       }
 
       const fallbackPath = getSafeFallbackPath(location.state?.from?.pathname);
@@ -305,7 +370,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <form className="login-card" onSubmit={handleSubmit} autoComplete="on">
+        <form className="login-card" onSubmit={handleSubmit} autoComplete="off">
           <div className="login-type-box">
             <p className="login-type-label">계정 유형 선택</p>
 
@@ -339,8 +404,8 @@ export default function LoginPage() {
             <span>이메일</span>
             <input
               type="email"
-              name="email"
-              autoComplete="email"
+              name="gamsung2-login-email"
+              autoComplete="off"
               inputMode="email"
               value={form.email}
               onChange={(event) => updateForm("email", event.target.value)}
@@ -353,14 +418,32 @@ export default function LoginPage() {
             <span>비밀번호</span>
             <input
               type="password"
-              name="password"
-              autoComplete="current-password"
+              name="gamsung2-login-password"
+              autoComplete="new-password"
               value={form.password}
               onChange={(event) => updateForm("password", event.target.value)}
               placeholder="비밀번호를 입력해주세요"
               disabled={submitting}
             />
           </label>
+
+          <div className="login-options">
+            <label className="login-remember">
+              <input
+                type="checkbox"
+                checked={rememberEmail}
+                onChange={(event) => toggleRememberEmail(event.target.checked)}
+                disabled={submitting}
+              />
+              <span>아이디 기억하기</span>
+            </label>
+
+            {rememberEmail ? (
+              <span className="login-remember-note">
+                체크한 경우에만 이메일이 저장됩니다.
+              </span>
+            ) : null}
+          </div>
 
           {errorMessage ? (
             <p className="login-result error" role="alert">
