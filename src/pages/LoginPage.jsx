@@ -2,9 +2,13 @@
 // ========================================
 // 📌 감성여행2 홈페이지 로그인 페이지
 // - 감성여행2 / 감성배달 / 홈페이지 공통 Supabase Auth 로그인
-// - 로그인 후 public.profiles의 role / member_type을 확인해 권한별 화면으로 이동
-// - 소상공인은 /business/dashboard, 관리자는 /admin/inquiries, 일반/지자체는 홈으로 이동
-// - Header의 로그인 버튼에서 /login으로 진입
+// - 로그인 후 profiles(공통 회원 기본정보)
+//   + owner_profiles(소상공인 기본정보)
+//   + gov_profiles(지자체 기본정보)를 함께 확인
+// - 소상공인은 /business/dashboard 이동
+// - 지자체는 /gov/dashboard 이동
+// - 관리자는 /admin/inquiries 이동
+// - 일반회원은 홈으로 이동
 // - AuthContext가 세션과 profiles 정보를 다시 읽을 수 있도록 로그인 후 refreshUserProfile 호출
 // ========================================
 
@@ -21,6 +25,10 @@ const INITIAL_FORM = {
 
 function normalizeEmail(value) {
   return value.trim().toLowerCase();
+}
+
+function normalizeText(value) {
+  return String(value || "").trim().toLowerCase();
 }
 
 function getLoginErrorMessage(error) {
@@ -41,21 +49,58 @@ function getLoginErrorMessage(error) {
   return message || "로그인 처리 중 문제가 발생했습니다.";
 }
 
-function resolveNextPath(profile, fallbackPath) {
-  const role = String(profile?.role || "").toLowerCase();
-  const memberType = String(profile?.member_type || "").toLowerCase();
+function getSafeFallbackPath(pathname) {
+  if (!pathname || pathname === "/login") {
+    return "/";
+  }
 
-  if (role === "admin" || memberType === "admin") {
+  return pathname;
+}
+
+function hasRow(row) {
+  return Boolean(row && (row.id || row.user_id));
+}
+
+function resolveNextPath(loginProfile, fallbackPath) {
+  const profile = loginProfile?.profile || null;
+  const ownerProfile = loginProfile?.ownerProfile || null;
+  const govProfile = loginProfile?.govProfile || null;
+
+  const role = normalizeText(profile?.role);
+  const memberType = normalizeText(profile?.member_type);
+
+  const isAdmin = role === "admin" || memberType === "admin";
+
+  const isBusiness =
+    hasRow(ownerProfile) ||
+    role === "business" ||
+    role === "biz" ||
+    role === "owner" ||
+    memberType === "business" ||
+    memberType === "biz" ||
+    memberType === "owner";
+
+  const isGov =
+    hasRow(govProfile) ||
+    role === "gov" ||
+    role === "government" ||
+    role === "local_government" ||
+    role === "agency" ||
+    memberType === "gov" ||
+    memberType === "government" ||
+    memberType === "local_government" ||
+    memberType === "agency";
+
+  if (isAdmin) {
     return "/admin/inquiries";
   }
 
-  if (
-    role === "business" ||
-    role === "biz" ||
-    memberType === "business" ||
-    memberType === "owner"
-  ) {
+  if (isBusiness) {
     return "/business/dashboard";
+  }
+
+  if (isGov) {
+    return "/gov/dashboard";
   }
 
   return fallbackPath || "/";
@@ -89,21 +134,43 @@ export default function LoginPage() {
     setErrorMessage("");
   }
 
-  async function loadProfile(userId) {
+  async function loadTableRow(tableName, userId) {
     if (!userId) return null;
 
     const { data, error } = await supabase
-      .from("profiles")
+      .from(tableName)
       .select("*")
       .eq("user_id", userId)
       .maybeSingle();
 
     if (error) {
-      console.error("[LoginPage] profiles 조회 실패:", error);
+      console.error(`[LoginPage] ${tableName} 조회 실패:`, error);
       return null;
     }
 
     return data || null;
+  }
+
+  async function loadLoginProfile(userId) {
+    if (!userId) {
+      return {
+        profile: null,
+        ownerProfile: null,
+        govProfile: null,
+      };
+    }
+
+    const [profile, ownerProfile, govProfile] = await Promise.all([
+      loadTableRow("profiles", userId),
+      loadTableRow("owner_profiles", userId),
+      loadTableRow("gov_profiles", userId),
+    ]);
+
+    return {
+      profile,
+      ownerProfile,
+      govProfile,
+    };
   }
 
   async function handleSubmit(event) {
@@ -137,14 +204,14 @@ export default function LoginPage() {
       }
 
       const userId = data?.user?.id || "";
-      const profile = await loadProfile(userId);
+      const loginProfile = await loadLoginProfile(userId);
 
       await refreshUserProfile();
 
       setResultMessage("로그인되었습니다.");
 
-      const fallbackPath = location.state?.from?.pathname || "/";
-      const nextPath = resolveNextPath(profile, fallbackPath);
+      const fallbackPath = getSafeFallbackPath(location.state?.from?.pathname);
+      const nextPath = resolveNextPath(loginProfile, fallbackPath);
 
       window.setTimeout(() => {
         navigate(nextPath);
