@@ -4,6 +4,7 @@
 // - 공용 상단 헤더 표시
 // - 홈 / 감성여행2 소개 / 감성배달 소개 / 이벤트 / 문의 라우팅 연결
 // - 로그인 / 회원가입 / 권한별 관리 화면 라우팅 연결
+// - 권한별 마이페이지 /my 연결
 // - 소상공인 내 가게 관리 /business/dashboard 연결
 // - 공통 소상공인 미니홈피 /store/:storeId 연결
 // - 감성배달형 미니홈피 확인용 /delivery/store/:storeId 연결
@@ -11,7 +12,7 @@
 // - 지자체 축제·관광이벤트 등록 /gov/contents/new 연결
 // - 지자체 등록 콘텐츠 관리 /gov/contents 연결
 // - 관리자 문의함 /admin/inquiries 연결
-// - 관리자 / 소상공인 / 지자체 관리 화면에서는 오른쪽 아래 감성문의 버튼 숨김
+// - 관리자 / 소상공인 / 지자체 / 마이페이지 관리 화면에서는 오른쪽 아래 감성문의 버튼 숨김
 // - AuthProvider로 홈페이지 전체 공용 로그인 상태 제공
 // - ProtectedRoute로 직접 URL 접근 시 로그인 / 권한 분기 보호
 // ========================================
@@ -33,6 +34,7 @@ import UserSignupPage from "./pages/UserSignupPage";
 import BusinessSignupPage from "./pages/BusinessSignupPage";
 import BusinessDashboardPage from "./pages/BusinessDashboardPage";
 import StoreMiniHomePage from "./pages/StoreMiniHomePage";
+import MyPage from "./pages/MyPage";
 import GovSignupPage from "./pages/GovSignupPage";
 import GovDashboardPage from "./pages/GovDashboardPage";
 import GovContentFormPage from "./pages/GovContentFormPage";
@@ -67,7 +69,7 @@ function ProtectedRoute({ allowedAccountTypes = [], children }) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
-  if (!isAdmin && !allowedTypes.includes(accountType)) {
+  if (allowedTypes.length > 0 && !isAdmin && !allowedTypes.includes(accountType)) {
     return <Navigate to="/" replace />;
   }
 
@@ -80,7 +82,8 @@ export default function App() {
   const isManagePage =
     location.pathname.startsWith("/admin") ||
     location.pathname.startsWith("/business") ||
-    location.pathname.startsWith("/gov");
+    location.pathname.startsWith("/gov") ||
+    location.pathname.startsWith("/my");
 
   return (
     <AuthProvider>
@@ -102,6 +105,15 @@ export default function App() {
             <Route path="/signup/user" element={<UserSignupPage />} />
             <Route path="/signup/business" element={<BusinessSignupPage />} />
             <Route path="/signup/gov" element={<GovSignupPage />} />
+
+            <Route
+              path="/my"
+              element={
+                <ProtectedRoute>
+                  <MyPage />
+                </ProtectedRoute>
+              }
+            />
 
             <Route
               path="/store/:storeId"

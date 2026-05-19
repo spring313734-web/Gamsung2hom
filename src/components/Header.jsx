@@ -6,6 +6,7 @@
 // - 감성여행2 소개 / 감성배달 소개 / 이벤트 / 제휴문의 메뉴 표시
 // - 로그인 전에는 로그인 버튼과 회원가입 버튼을 함께 표시
 // - 로그인 후에는 회원가입 버튼 대신 공개 이름 기준 별명/아이디 표시
+// - 로그인 후 마이페이지 버튼 표시
 // - 공개 이름 선택이 별명이면 별명 우선, 아니면 아이디 우선 표시
 // - 로그아웃 버튼으로 Supabase 세션 종료
 // - 이벤트 지역 드롭다운 유지
@@ -285,10 +286,27 @@ export default function Header() {
               </div>
             ) : isLoggedIn ? (
               <div className="site-auth-panel">
-                <div className="site-auth-user-box">
+                <Link
+                  to="/my"
+                  className="site-auth-user-box"
+                  onClick={closeAllMenus}
+                  aria-label="마이페이지로 이동"
+                >
                   <span className="site-auth-user-label">감성회원</span>
                   <span className="site-auth-user-name">{userLabel}님</span>
-                </div>
+                </Link>
+
+                <NavLink
+                  to="/my"
+                  className={({ isActive }) =>
+                    isActive
+                      ? "site-auth-button is-mypage active"
+                      : "site-auth-button is-mypage"
+                  }
+                  onClick={closeAllMenus}
+                >
+                  마이페이지
+                </NavLink>
 
                 <button
                   type="button"
