@@ -3,6 +3,7 @@
    📌 감성여행2 홈페이지 로그인 페이지 스타일
    - 로그인 폼을 카드형으로 구성
    - 일반회원 / 소상공인 / 지자체 계정 유형 선택 UI 포함
+   - 소상공인은 사업자번호 또는 이메일 로그인 안내 표시
    - 아이디 기억하기 UI 포함
    - 기존 홈페이지의 둥근 카드 / 연한 배경 분위기와 맞춤
    - 모바일에서도 한 줄 입력이 깨지지 않도록 반응형 처리
@@ -57,6 +58,7 @@
   font-size: clamp(34px, 5vw, 56px);
   line-height: 1.15;
   letter-spacing: -0.06em;
+  word-break: keep-all;
 }
 
 .login-desc {
@@ -66,6 +68,7 @@
   font-size: 16px;
   font-weight: 700;
   line-height: 1.75;
+  word-break: keep-all;
 }
 
 .login-card {
@@ -158,6 +161,7 @@
   font-size: 12px;
   font-weight: 700;
   line-height: 1.5;
+  word-break: keep-all;
 }
 
 .login-field {
@@ -186,6 +190,17 @@
 .login-field input:focus {
   border-color: #5d6fe8;
   box-shadow: 0 0 0 4px rgba(93, 111, 232, 0.12);
+}
+
+.login-field-help {
+  display: block;
+  margin-top: -2px;
+  color: #64748b;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 750;
+  line-height: 1.5;
+  word-break: keep-all;
 }
 
 .login-options {
@@ -251,6 +266,7 @@
   font-size: 14px;
   font-weight: 800;
   line-height: 1.5;
+  word-break: keep-all;
 }
 
 .login-result.error {

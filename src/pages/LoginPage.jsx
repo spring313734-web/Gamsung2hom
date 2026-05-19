@@ -2,8 +2,10 @@
 // ========================================
 // 📌 감성여행2 홈페이지 로그인 페이지
 // - 일반회원 / 소상공인 / 지자체 계정 유형 선택 UI 제공
-// - 아이디 기억하기를 체크했을 때만 이메일을 localStorage에 저장
-// - 체크하지 않으면 이메일/비밀번호가 자동으로 남지 않도록 처리
+// - 소상공인은 사업자번호 또는 이메일 둘 다 로그인 가능
+// - 사업자번호 입력 시 profiles.username 또는 owner_profiles의 사업자번호에서 실제 로그인 이메일을 찾음
+// - 아이디 기억하기를 체크했을 때만 로그인 아이디를 localStorage에 저장
+// - 체크하지 않으면 아이디/비밀번호가 자동으로 남지 않도록 처리
 // - 감성여행2 / 감성배달 / 홈페이지 공통 Supabase Auth 로그인
 // - 로그인 후 profiles(공통 회원 기본정보)
 //   + owner_profiles(소상공인 기본정보)
@@ -21,10 +23,11 @@ import { useAuth } from "../contect/AuthContext";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import "./LoginPage.css";
 
-const REMEMBER_EMAIL_STORAGE_KEY = "gamsung2.rememberLoginEmail";
+const REMEMBER_LOGIN_ID_STORAGE_KEY = "gamsung2.rememberLoginId";
+const LEGACY_REMEMBER_EMAIL_STORAGE_KEY = "gamsung2.rememberLoginEmail";
 
 const INITIAL_FORM = {
-  email: "",
+  loginId: "",
   password: "",
 };
 
@@ -37,7 +40,7 @@ const ACCOUNT_TYPES = [
   {
     key: "business",
     label: "소상공인",
-    desc: "가게 / 미니홈피 운영",
+    desc: "사업자번호 / 이메일",
   },
   {
     key: "gov",
@@ -47,41 +50,69 @@ const ACCOUNT_TYPES = [
 ];
 
 function normalizeEmail(value) {
-  return value.trim().toLowerCase();
+  return String(value || "").trim().toLowerCase();
+}
+
+function normalizeLoginId(value) {
+  return String(value || "").trim();
 }
 
 function normalizeText(value) {
   return String(value || "").trim().toLowerCase();
 }
 
-function getRememberedEmail() {
+function cleanBusinessNumber(value) {
+  return String(value || "").replace(/[^0-9]/g, "");
+}
+
+function looksLikeEmail(value) {
+  const text = normalizeLoginId(value);
+  return text.includes("@") && text.includes(".");
+}
+
+function looksLikeBusinessNumber(value) {
+  const cleaned = cleanBusinessNumber(value);
+  return cleaned.length >= 8 && cleaned.length <= 13;
+}
+
+function isBusinessAccountType(type) {
+  return type === "business";
+}
+
+function getRememberedLoginId() {
   if (typeof window === "undefined") return "";
 
   try {
-    return window.localStorage.getItem(REMEMBER_EMAIL_STORAGE_KEY) || "";
+    return (
+      window.localStorage.getItem(REMEMBER_LOGIN_ID_STORAGE_KEY) ||
+      window.localStorage.getItem(LEGACY_REMEMBER_EMAIL_STORAGE_KEY) ||
+      ""
+    );
   } catch (error) {
-    console.warn("[LoginPage] 저장된 이메일 읽기 실패:", error);
+    console.warn("[LoginPage] 저장된 로그인 아이디 읽기 실패:", error);
     return "";
   }
 }
 
-function saveRememberedEmail(email) {
+function saveRememberedLoginId(loginId) {
   if (typeof window === "undefined") return;
 
   try {
-    window.localStorage.setItem(REMEMBER_EMAIL_STORAGE_KEY, email);
+    window.localStorage.setItem(REMEMBER_LOGIN_ID_STORAGE_KEY, loginId);
+    window.localStorage.removeItem(LEGACY_REMEMBER_EMAIL_STORAGE_KEY);
   } catch (error) {
-    console.warn("[LoginPage] 이메일 저장 실패:", error);
+    console.warn("[LoginPage] 로그인 아이디 저장 실패:", error);
   }
 }
 
-function clearRememberedEmail() {
+function clearRememberedLoginId() {
   if (typeof window === "undefined") return;
 
   try {
-    window.localStorage.removeItem(REMEMBER_EMAIL_STORAGE_KEY);
+    window.localStorage.removeItem(REMEMBER_LOGIN_ID_STORAGE_KEY);
+    window.localStorage.removeItem(LEGACY_REMEMBER_EMAIL_STORAGE_KEY);
   } catch (error) {
-    console.warn("[LoginPage] 저장된 이메일 삭제 실패:", error);
+    console.warn("[LoginPage] 저장된 로그인 아이디 삭제 실패:", error);
   }
 }
 
@@ -89,7 +120,7 @@ function getLoginErrorMessage(error) {
   const message = error?.message || "";
 
   if (message.includes("Invalid login credentials")) {
-    return "이메일 또는 비밀번호가 올바르지 않습니다.";
+    return "로그인 아이디 또는 비밀번호가 올바르지 않습니다.";
   }
 
   if (message.includes("Email not confirmed")) {
@@ -116,10 +147,14 @@ function hasMeaningfulOwnerProfile(row) {
 
   return Boolean(
     row.store_name ||
+      row.biz_name ||
       row.business_number ||
+      row.biz_no ||
       row.owner_name ||
       row.store_address ||
+      row.address ||
       row.store_phone ||
+      row.mobile_phone ||
       row.business_type ||
       row.intro
   );
@@ -230,6 +265,197 @@ function resolveNextPath(accountType, fallbackPath) {
   return fallbackPath || "/";
 }
 
+function getLoginFieldLabel(accountType) {
+  if (accountType === "business") {
+    return "사업자번호 또는 이메일";
+  }
+
+  if (accountType === "gov") {
+    return "담당자 이메일";
+  }
+
+  return "이메일";
+}
+
+function getLoginFieldPlaceholder(accountType) {
+  if (accountType === "business") {
+    return "사업자번호 또는 이메일을 입력해주세요";
+  }
+
+  if (accountType === "gov") {
+    return "agency@example.com";
+  }
+
+  return "example@email.com";
+}
+
+function getLoginFieldHelp(accountType) {
+  if (accountType === "business") {
+    return "사업자번호는 하이픈 없이 숫자만 입력해도 됩니다. 이메일로도 로그인할 수 있습니다.";
+  }
+
+  if (accountType === "gov") {
+    return "지자체 / 기관 담당자 이메일로 로그인해주세요.";
+  }
+
+  return "일반회원은 가입한 이메일로 로그인해주세요.";
+}
+
+function getProfileEmail(profile) {
+  return (
+    normalizeEmail(profile?.email) ||
+    normalizeEmail(profile?.login_email) ||
+    normalizeEmail(profile?.auth_email)
+  );
+}
+
+function getOwnerProfileEmail(ownerProfile) {
+  return (
+    normalizeEmail(ownerProfile?.email) ||
+    normalizeEmail(ownerProfile?.store_email) ||
+    normalizeEmail(ownerProfile?.login_email) ||
+    normalizeEmail(ownerProfile?.auth_email)
+  );
+}
+
+function buildInternalBusinessEmail(businessNumber) {
+  const safeNumber = cleanBusinessNumber(businessNumber);
+
+  if (!safeNumber) return "";
+
+  return `biz-${safeNumber}@gamsung-biz.com`;
+}
+
+async function loadFirstRowByColumn(tableName, columnName, value) {
+  if (!value) return null;
+
+  const { data, error } = await supabase
+    .from(tableName)
+    .select("*")
+    .eq(columnName, value)
+    .limit(1);
+
+  if (error) {
+    console.warn(`[LoginPage] ${tableName}.${columnName} 조회 확인 필요:`, error);
+    return null;
+  }
+
+  return Array.isArray(data) && data.length > 0 ? data[0] : null;
+}
+
+async function findBusinessLoginEmailByNumber(businessNumber) {
+  const safeBusinessNumber = cleanBusinessNumber(businessNumber);
+
+  if (!safeBusinessNumber) {
+    return "";
+  }
+
+  const profileByUsername = await loadFirstRowByColumn(
+    "profiles",
+    "username",
+    safeBusinessNumber
+  );
+
+  const profileEmail = getProfileEmail(profileByUsername);
+
+  if (profileEmail) {
+    return profileEmail;
+  }
+
+  const ownerByBusinessNumber = await loadFirstRowByColumn(
+    "owner_profiles",
+    "business_number",
+    safeBusinessNumber
+  );
+
+  const ownerBusinessEmail = getOwnerProfileEmail(ownerByBusinessNumber);
+
+  if (ownerBusinessEmail) {
+    return ownerBusinessEmail;
+  }
+
+  if (ownerByBusinessNumber?.user_id) {
+    const ownerProfile = await loadFirstRowByColumn(
+      "profiles",
+      "user_id",
+      ownerByBusinessNumber.user_id
+    );
+
+    const ownerProfileEmail = getProfileEmail(ownerProfile);
+
+    if (ownerProfileEmail) {
+      return ownerProfileEmail;
+    }
+  }
+
+  const ownerByBizNo = await loadFirstRowByColumn(
+    "owner_profiles",
+    "biz_no",
+    safeBusinessNumber
+  );
+
+  const ownerBizNoEmail = getOwnerProfileEmail(ownerByBizNo);
+
+  if (ownerBizNoEmail) {
+    return ownerBizNoEmail;
+  }
+
+  if (ownerByBizNo?.user_id) {
+    const ownerProfile = await loadFirstRowByColumn(
+      "profiles",
+      "user_id",
+      ownerByBizNo.user_id
+    );
+
+    const ownerProfileEmail = getProfileEmail(ownerProfile);
+
+    if (ownerProfileEmail) {
+      return ownerProfileEmail;
+    }
+  }
+
+  return buildInternalBusinessEmail(safeBusinessNumber);
+}
+
+async function resolveAuthEmail(accountType, loginId) {
+  const safeLoginId = normalizeLoginId(loginId);
+
+  if (!safeLoginId) {
+    throw new Error("로그인 아이디를 입력해주세요.");
+  }
+
+  if (looksLikeEmail(safeLoginId)) {
+    return {
+      authEmail: normalizeEmail(safeLoginId),
+      resolvedBy: "email",
+      businessNumber: "",
+    };
+  }
+
+  if (!isBusinessAccountType(accountType)) {
+    throw new Error(`${getAccountTypeLabel(accountType)}은 이메일로 로그인해주세요.`);
+  }
+
+  if (!looksLikeBusinessNumber(safeLoginId)) {
+    throw new Error("사업자번호는 숫자 기준 8~13자리로 입력해주세요.");
+  }
+
+  const businessNumber = cleanBusinessNumber(safeLoginId);
+  const businessEmail = await findBusinessLoginEmailByNumber(businessNumber);
+
+  if (!businessEmail) {
+    throw new Error(
+      "사업자번호와 연결된 로그인 이메일을 찾지 못했습니다. 관리자에게 계정 정보를 확인해주세요."
+    );
+  }
+
+  return {
+    authEmail: businessEmail,
+    resolvedBy: "business_number",
+    businessNumber,
+  };
+}
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -237,13 +463,18 @@ export default function LoginPage() {
 
   const [selectedAccountType, setSelectedAccountType] = useState("user");
   const [form, setForm] = useState(INITIAL_FORM);
-  const [rememberEmail, setRememberEmail] = useState(false);
+  const [rememberLoginId, setRememberLoginId] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [resultMessage, setResultMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const safeEmail = normalizeEmail(form.email);
-  const canSubmit = Boolean(safeEmail && form.password && !submitting);
+  const safeLoginId = normalizeLoginId(form.loginId);
+  const canSubmit = Boolean(safeLoginId && form.password && !submitting);
+
+  const loginFieldLabel = getLoginFieldLabel(selectedAccountType);
+  const loginFieldPlaceholder = getLoginFieldPlaceholder(selectedAccountType);
+  const loginFieldHelp = getLoginFieldHelp(selectedAccountType);
+  const isBusinessLogin = selectedAccountType === "business";
 
   const submitLabel = useMemo(() => {
     if (submitting) return "로그인 중...";
@@ -251,14 +482,14 @@ export default function LoginPage() {
   }, [selectedAccountType, submitting]);
 
   useEffect(() => {
-    const rememberedEmail = getRememberedEmail();
+    const rememberedLoginId = getRememberedLoginId();
 
-    if (!rememberedEmail) return;
+    if (!rememberedLoginId) return;
 
-    setRememberEmail(true);
+    setRememberLoginId(true);
     setForm((prev) => ({
       ...prev,
-      email: rememberedEmail,
+      loginId: rememberedLoginId,
       password: "",
     }));
   }, []);
@@ -281,11 +512,11 @@ export default function LoginPage() {
     setErrorMessage("");
   }
 
-  function toggleRememberEmail(checked) {
-    setRememberEmail(checked);
+  function toggleRememberLoginId(checked) {
+    setRememberLoginId(checked);
 
     if (!checked) {
-      clearRememberedEmail();
+      clearRememberedLoginId();
     }
   }
 
@@ -342,15 +573,20 @@ export default function LoginPage() {
     }
 
     if (!canSubmit) {
-      setErrorMessage("이메일과 비밀번호를 입력해주세요.");
+      setErrorMessage(`${loginFieldLabel}와 비밀번호를 입력해주세요.`);
       return;
     }
 
     setSubmitting(true);
 
     try {
+      const resolvedLogin = await resolveAuthEmail(
+        selectedAccountType,
+        safeLoginId
+      );
+
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: safeEmail,
+        email: resolvedLogin.authEmail,
         password: form.password,
       });
 
@@ -358,10 +594,10 @@ export default function LoginPage() {
         throw error;
       }
 
-      if (rememberEmail) {
-        saveRememberedEmail(safeEmail);
+      if (rememberLoginId) {
+        saveRememberedLoginId(safeLoginId);
       } else {
-        clearRememberedEmail();
+        clearRememberedLoginId();
       }
 
       const userId = data?.user?.id || "";
@@ -370,7 +606,13 @@ export default function LoginPage() {
 
       await refreshUserProfile(data?.session || null);
 
-      if (
+      if (resolvedLogin.resolvedBy === "business_number") {
+        setResultMessage(
+          `사업자번호 ${resolvedLogin.businessNumber} 계정을 확인했습니다. ${getAccountTypeLabel(
+            actualAccountType
+          )} 화면으로 이동합니다.`
+        );
+      } else if (
         actualAccountType !== "admin" &&
         selectedAccountType !== actualAccountType
       ) {
@@ -419,8 +661,8 @@ export default function LoginPage() {
           </h1>
 
           <p className="login-desc">
-            먼저 계정 유형을 선택한 뒤 로그인해주세요. 로그인 후 실제 가입
-            정보에 맞는 화면으로 이동합니다.
+            먼저 계정 유형을 선택한 뒤 로그인해주세요. 소상공인은 사업자번호와
+            이메일 중 편한 방식으로 로그인할 수 있습니다.
           </p>
         </div>
 
@@ -457,17 +699,19 @@ export default function LoginPage() {
           </div>
 
           <label className="login-field">
-            <span>이메일</span>
+            <span>{loginFieldLabel}</span>
             <input
-              type="email"
-              name="gamsung2-login-email"
+              type={isBusinessLogin ? "text" : "email"}
+              name="gamsung2-login-id"
               autoComplete="off"
-              inputMode="email"
-              value={form.email}
-              onChange={(event) => updateForm("email", event.target.value)}
-              placeholder="example@email.com"
+              inputMode={isBusinessLogin ? "text" : "email"}
+              value={form.loginId}
+              onChange={(event) => updateForm("loginId", event.target.value)}
+              placeholder={loginFieldPlaceholder}
               disabled={submitting}
             />
+
+            <em className="login-field-help">{loginFieldHelp}</em>
           </label>
 
           <label className="login-field">
@@ -487,16 +731,18 @@ export default function LoginPage() {
             <label className="login-remember">
               <input
                 type="checkbox"
-                checked={rememberEmail}
-                onChange={(event) => toggleRememberEmail(event.target.checked)}
+                checked={rememberLoginId}
+                onChange={(event) =>
+                  toggleRememberLoginId(event.target.checked)
+                }
                 disabled={submitting}
               />
               <span>아이디 기억하기</span>
             </label>
 
-            {rememberEmail ? (
+            {rememberLoginId ? (
               <span className="login-remember-note">
-                체크한 경우에만 이메일이 저장됩니다.
+                체크한 경우에만 로그인 아이디가 저장됩니다.
               </span>
             ) : null}
           </div>
