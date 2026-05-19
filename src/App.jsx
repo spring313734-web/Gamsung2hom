@@ -5,6 +5,8 @@
 // - 홈 / 감성여행2 소개 / 감성배달 소개 / 이벤트 / 문의 라우팅 연결
 // - 로그인 / 회원가입 / 권한별 관리 화면 라우팅 연결
 // - 소상공인 내 가게 관리 /business/dashboard 연결
+// - 공통 소상공인 미니홈피 /store/:storeId 연결
+// - 감성배달형 미니홈피 확인용 /delivery/store/:storeId 연결
 // - 지자체 관리자 대시보드 /gov/dashboard 연결
 // - 지자체 축제·관광이벤트 등록 /gov/contents/new 연결
 // - 지자체 등록 콘텐츠 관리 /gov/contents 연결
@@ -30,6 +32,7 @@ import SignupPage from "./pages/SignupPage";
 import UserSignupPage from "./pages/UserSignupPage";
 import BusinessSignupPage from "./pages/BusinessSignupPage";
 import BusinessDashboardPage from "./pages/BusinessDashboardPage";
+import StoreMiniHomePage from "./pages/StoreMiniHomePage";
 import GovSignupPage from "./pages/GovSignupPage";
 import GovDashboardPage from "./pages/GovDashboardPage";
 import GovContentFormPage from "./pages/GovContentFormPage";
@@ -99,6 +102,15 @@ export default function App() {
             <Route path="/signup/user" element={<UserSignupPage />} />
             <Route path="/signup/business" element={<BusinessSignupPage />} />
             <Route path="/signup/gov" element={<GovSignupPage />} />
+
+            <Route
+              path="/store/:storeId"
+              element={<StoreMiniHomePage mode="travel" />}
+            />
+            <Route
+              path="/delivery/store/:storeId"
+              element={<StoreMiniHomePage mode="delivery" />}
+            />
 
             <Route
               path="/business/dashboard"

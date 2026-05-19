@@ -3,6 +3,8 @@
 // 📌 감성여행2 홈페이지 소상공인 내 가게 관리 준비 화면
 // - 소상공인 무료 가입 후 처음 도착하는 전용 관리 화면
 // - 현재 로그인 세션 기준으로 profiles / owner_profiles 정보를 불러옴
+// - owner_profiles의 사업자번호 기준으로 stores에 생성된 가게 미니홈피 정보를 함께 확인
+// - 미니홈피 미리보기 버튼을 /store/:storeId 화면으로 연결
 // - 일반회원이 직접 URL로 접근하면 차단 안내
 // - 관리자 계정은 확인용으로 접근 가능
 // - 가입은 무료 상태로 표시
@@ -11,7 +13,7 @@
 // ========================================
 
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contect/AuthContext";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import "./BusinessDashboardPage.css";
@@ -43,12 +45,48 @@ function hasMeaningfulOwnerProfile(row) {
   );
 }
 
+function getStoreName(store, ownerProfile, profile, currentUser) {
+  return (
+    store?.store_name ||
+    store?.name ||
+    store?.title ||
+    ownerProfile?.store_name ||
+    profile?.nickname ||
+    profile?.name ||
+    currentUser?.displayName ||
+    "내 가게"
+  );
+}
+
+function getStoreAddress(store, ownerProfile) {
+  return (
+    store?.address ||
+    store?.store_address ||
+    store?.road_address ||
+    ownerProfile?.store_address ||
+    ""
+  );
+}
+
+function getStorePhone(store, ownerProfile, profile) {
+  return (
+    store?.phone ||
+    store?.store_phone ||
+    store?.tel ||
+    ownerProfile?.store_phone ||
+    profile?.phone ||
+    ""
+  );
+}
+
 export default function BusinessDashboardPage() {
+  const navigate = useNavigate();
   const { currentUser, loading: authLoading, isLoggedIn } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
   const [ownerProfile, setOwnerProfile] = useState(null);
+  const [store, setStore] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [noticeMessage, setNoticeMessage] = useState("");
 
@@ -58,27 +96,60 @@ export default function BusinessDashboardPage() {
   const isAdminView = accountType === "admin";
 
   const storeName = useMemo(() => {
-    return (
-      ownerProfile?.store_name ||
-      profile?.nickname ||
-      profile?.name ||
-      currentUser?.displayName ||
-      "내 가게"
-    );
-  }, [ownerProfile, profile, currentUser]);
+    return getStoreName(store, ownerProfile, profile, currentUser);
+  }, [store, ownerProfile, profile, currentUser]);
 
   const ownerName = useMemo(() => {
-    return ownerProfile?.owner_name || profile?.name || "대표자";
-  }, [ownerProfile, profile]);
+    return (
+      store?.owner_name ||
+      store?.representative_name ||
+      ownerProfile?.owner_name ||
+      profile?.name ||
+      "대표자"
+    );
+  }, [store, ownerProfile, profile]);
 
   const businessNumber = useMemo(() => {
-    return ownerProfile?.business_number || profile?.username || "";
-  }, [ownerProfile, profile]);
+    return (
+      store?.business_number ||
+      ownerProfile?.business_number ||
+      profile?.username ||
+      ""
+    );
+  }, [store, ownerProfile, profile]);
 
-  const hasStoreInfo = hasMeaningfulOwnerProfile(ownerProfile);
+  const storeAddress = useMemo(() => {
+    return getStoreAddress(store, ownerProfile);
+  }, [store, ownerProfile]);
+
+  const storePhone = useMemo(() => {
+    return getStorePhone(store, ownerProfile, profile);
+  }, [store, ownerProfile, profile]);
+
+  const hasStoreInfo = hasMeaningfulOwnerProfile(ownerProfile) || Boolean(store?.id);
+  const hasStoreMiniHome = Boolean(store?.id);
 
   useEffect(() => {
     let mounted = true;
+
+    async function loadStoreByBusinessNumber(nextBusinessNumber) {
+      if (!nextBusinessNumber) return null;
+
+      const { data, error } = await supabase
+        .from("stores")
+        .select("*")
+        .eq("business_number", nextBusinessNumber)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        console.warn("[소상공인 관리] stores 조회 확인 필요:", error);
+        return null;
+      }
+
+      return data || null;
+    }
 
     async function loadBusinessInfo() {
       if (authLoading) {
@@ -92,6 +163,7 @@ export default function BusinessDashboardPage() {
       if (!isLoggedIn || !userId) {
         setProfile(null);
         setOwnerProfile(null);
+        setStore(null);
         setLoading(false);
         return;
       }
@@ -99,6 +171,7 @@ export default function BusinessDashboardPage() {
       if (!canUseDashboard) {
         setProfile(currentUser?.profile || null);
         setOwnerProfile(null);
+        setStore(null);
         setLoading(false);
         return;
       }
@@ -130,10 +203,18 @@ export default function BusinessDashboardPage() {
           console.warn("[소상공인 관리] owner_profiles 조회 확인 필요:", ownerError);
         }
 
+        const nextProfile = profileData || currentUser?.profile || null;
+        const nextOwnerProfile = ownerData || null;
+        const nextBusinessNumber =
+          nextOwnerProfile?.business_number || nextProfile?.username || "";
+
+        const storeData = await loadStoreByBusinessNumber(nextBusinessNumber);
+
         if (!mounted) return;
 
-        setProfile(profileData || currentUser?.profile || null);
-        setOwnerProfile(ownerData || null);
+        setProfile(nextProfile);
+        setOwnerProfile(nextOwnerProfile);
+        setStore(storeData || null);
       } catch (error) {
         console.error("[소상공인 관리] 정보 불러오기 실패:", error);
 
@@ -141,6 +222,7 @@ export default function BusinessDashboardPage() {
 
         setProfile(currentUser?.profile || null);
         setOwnerProfile(null);
+        setStore(null);
         setErrorMessage(
           error?.message || "소상공인 정보를 불러오는 중 문제가 발생했습니다."
         );
@@ -167,20 +249,43 @@ export default function BusinessDashboardPage() {
   function handlePreviewClick() {
     if (!hasStoreInfo) {
       setNoticeMessage(
-        "아직 가게 기본 정보가 부족합니다. 다음 단계에서 가게 정보 수정 화면을 연결한 뒤 미리보기를 사용할 수 있게 하면 좋습니다."
+        "아직 가게 기본 정보가 부족합니다. 가게명, 사업자번호, 주소 같은 기본 정보를 먼저 채워야 미니홈피를 확인할 수 있습니다."
       );
       return;
     }
 
-    setNoticeMessage(
-      "미니홈피 미리보기 화면은 다음 단계에서 연결할 예정입니다. 지금은 가입 정보 확인 단계입니다."
-    );
+    if (!hasStoreMiniHome) {
+      setNoticeMessage(
+        "owner_profiles에는 가입 정보가 있지만 stores에 연결된 가게 미니홈피가 아직 없습니다. 다음 단계에서 가게 생성/동기화 작업을 연결해야 합니다."
+      );
+      return;
+    }
+
+    navigate(`/store/${store.id}`);
+  }
+
+  function handleDeliveryPreviewClick() {
+    if (!hasStoreMiniHome) {
+      setNoticeMessage(
+        "감성배달형 미니홈피를 보려면 stores에 연결된 가게 데이터가 먼저 필요합니다."
+      );
+      return;
+    }
+
+    navigate(`/delivery/store/${store.id}`);
   }
 
   function handleStartClick() {
     if (!hasStoreInfo) {
       setNoticeMessage(
         "미니홈피를 공개하려면 가게명, 사업자번호, 주소 같은 기본 정보를 먼저 채워야 합니다."
+      );
+      return;
+    }
+
+    if (!hasStoreMiniHome) {
+      setNoticeMessage(
+        "먼저 stores에 가게 미니홈피 데이터를 생성한 뒤 운영 시작 결제 흐름으로 연결하면 됩니다."
       );
       return;
     }
@@ -274,9 +379,9 @@ export default function BusinessDashboardPage() {
           </h1>
 
           <p>
-            가입은 무료로 완료되었습니다. 지금은 가게 정보를 확인하고,
-            미니홈피 공개 또는 운영 시작 버튼을 누를 때 결제 안내가 연결되는
-            구조로 준비합니다.
+            가입은 무료로 완료되었습니다. 사장님은 휴대폰에서 가게 정보를 쉽게
+            만들고, 같은 데이터가 감성여행2 예약형 미니홈피와 감성배달
+            배달형 미니홈피에 함께 표시됩니다.
           </p>
         </div>
 
@@ -304,6 +409,14 @@ export default function BusinessDashboardPage() {
           </div>
         ) : null}
 
+        {hasStoreInfo && !hasStoreMiniHome ? (
+          <div className="business-dashboard-alert warning">
+            소상공인 가입 정보는 확인되었지만, stores에 연결된 가게 미니홈피
+            데이터가 아직 없습니다. 가게 생성/동기화 작업을 다음 단계에서
+            연결하면 됩니다.
+          </div>
+        ) : null}
+
         <div className="business-dashboard-grid">
           <section className="business-dashboard-card store-card">
             <div className="business-dashboard-card-head">
@@ -312,7 +425,7 @@ export default function BusinessDashboardPage() {
                 <h2>내 가게 정보</h2>
               </div>
 
-              <strong>{hasStoreInfo ? "입점 준비중" : "정보 입력 필요"}</strong>
+              <strong>{hasStoreMiniHome ? "미니홈피 연결됨" : "입점 준비중"}</strong>
             </div>
 
             <dl className="business-info-list">
@@ -333,26 +446,32 @@ export default function BusinessDashboardPage() {
 
               <div>
                 <dt>업종 / 품목</dt>
-                <dd>{getDisplayValue(ownerProfile?.business_type)}</dd>
+                <dd>
+                  {getDisplayValue(
+                    store?.category ||
+                      store?.store_category ||
+                      ownerProfile?.business_type
+                  )}
+                </dd>
               </div>
 
               <div>
                 <dt>주소</dt>
-                <dd>{getDisplayValue(ownerProfile?.store_address)}</dd>
+                <dd>{getDisplayValue(storeAddress)}</dd>
               </div>
 
               <div>
                 <dt>대표 전화</dt>
-                <dd>
-                  {getDisplayValue(ownerProfile?.store_phone || profile?.phone)}
-                </dd>
+                <dd>{getDisplayValue(storePhone)}</dd>
               </div>
 
               <div>
                 <dt>이메일</dt>
                 <dd>
                   {getDisplayValue(
-                    ownerProfile?.store_email ||
+                    store?.email ||
+                      store?.store_email ||
+                      ownerProfile?.store_email ||
                       profile?.email ||
                       currentUser?.email
                   )}
@@ -361,7 +480,14 @@ export default function BusinessDashboardPage() {
 
               <div>
                 <dt>한 줄 소개</dt>
-                <dd>{getDisplayValue(ownerProfile?.intro)}</dd>
+                <dd>
+                  {getDisplayValue(
+                    store?.summary ||
+                      store?.intro ||
+                      store?.description ||
+                      ownerProfile?.intro
+                  )}
+                </dd>
               </div>
             </dl>
           </section>
@@ -384,10 +510,10 @@ export default function BusinessDashboardPage() {
 
             <div className="business-status-box">
               <span>미니홈피 상태</span>
-              <strong>아직 공개 전</strong>
+              <strong>{hasStoreMiniHome ? "미리보기 가능" : "아직 공개 전"}</strong>
               <p>
-                공개 버튼을 누르면 나중에 365일 이용권 결제창으로 연결할
-                예정입니다.
+                감성여행2에서는 예약형으로, 감성배달에서는 배달형으로 같은
+                가게 데이터를 다르게 보여줍니다.
               </p>
             </div>
 
@@ -408,15 +534,19 @@ export default function BusinessDashboardPage() {
             <h2>다음 단계</h2>
 
             <p>
-              사장님은 먼저 가게 정보를 확인하고, 미니홈피가 어떻게 보일지
-              미리 본 뒤, 실제 공개하거나 운영을 시작할 때 결제하도록 만들면
-              됩니다.
+              사장님은 휴대폰에서 한 번만 가게 정보를 만들고, 고객은 목적에
+              따라 감성여행2에서는 예약형 화면, 감성배달에서는 배달형 화면으로
+              보게 됩니다.
             </p>
           </div>
 
           <div className="business-next-actions">
             <button type="button" onClick={handlePreviewClick}>
-              미니홈피 미리보기
+              감성여행2 미니홈피 보기
+            </button>
+
+            <button type="button" onClick={handleDeliveryPreviewClick}>
+              감성배달 미니홈피 보기
             </button>
 
             <button type="button" onClick={handleStartClick}>
