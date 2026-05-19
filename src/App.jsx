@@ -8,11 +8,13 @@
 // - 지자체 관리자 대시보드 /gov/dashboard 연결
 // - 지자체 축제·관광이벤트 등록 /gov/contents/new 연결
 // - 지자체 등록 콘텐츠 관리 /gov/contents 연결
+// - 관리자 문의함 /admin/inquiries 연결
 // - 관리자 / 소상공인 / 지자체 관리 화면에서는 오른쪽 아래 감성문의 버튼 숨김
 // - AuthProvider로 홈페이지 전체 공용 로그인 상태 제공
+// - ProtectedRoute로 직접 URL 접근 시 로그인 / 권한 분기 보호
 // ========================================
 
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Navigate, Routes, Route, useLocation } from "react-router-dom";
 import Header from "./components/Header";
 import InquiryMemoWidget from "./components/InquiryMemoWidget";
 import HomePage from "./pages/HomePage";
@@ -35,8 +37,39 @@ import GovContentsListPage from "./pages/GovContentsListPage";
 import RegionEventHubDetailPage from "./pages/RegionEventHubDetailPage";
 import RegionEventPostsPage from "./pages/RegionEventPostsPage";
 import RegionEventPostDetailPage from "./pages/RegionEventPostDetailPage";
-import { AuthProvider } from "./contect/AuthContext";
+import { AuthProvider, useAuth } from "./contect/AuthContext";
 import "./App.css";
+
+function normalizeAccountType(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function ProtectedRoute({ allowedAccountTypes = [], children }) {
+  const location = useLocation();
+  const { loading, isLoggedIn, currentUser } = useAuth();
+
+  const accountType = normalizeAccountType(currentUser?.accountType);
+  const allowedTypes = allowedAccountTypes.map(normalizeAccountType);
+  const isAdmin = accountType === "admin";
+
+  if (loading) {
+    return (
+      <section className="protected-route-state">
+        <p>로그인 상태를 확인하는 중입니다...</p>
+      </section>
+    );
+  }
+
+  if (!isLoggedIn) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  if (!isAdmin && !allowedTypes.includes(accountType)) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+}
 
 export default function App() {
   const location = useLocation();
@@ -69,14 +102,72 @@ export default function App() {
 
             <Route
               path="/business/dashboard"
-              element={<BusinessDashboardPage />}
+              element={
+                <ProtectedRoute allowedAccountTypes={["business", "biz", "owner"]}>
+                  <BusinessDashboardPage />
+                </ProtectedRoute>
+              }
             />
 
-            <Route path="/gov/dashboard" element={<GovDashboardPage />} />
-            <Route path="/gov/contents/new" element={<GovContentFormPage />} />
-            <Route path="/gov/contents" element={<GovContentsListPage />} />
+            <Route
+              path="/gov/dashboard"
+              element={
+                <ProtectedRoute
+                  allowedAccountTypes={[
+                    "gov",
+                    "government",
+                    "local_government",
+                    "agency",
+                    "institution",
+                  ]}
+                >
+                  <GovDashboardPage />
+                </ProtectedRoute>
+              }
+            />
 
-            <Route path="/admin/inquiries" element={<AdminInquiriesPage />} />
+            <Route
+              path="/gov/contents/new"
+              element={
+                <ProtectedRoute
+                  allowedAccountTypes={[
+                    "gov",
+                    "government",
+                    "local_government",
+                    "agency",
+                    "institution",
+                  ]}
+                >
+                  <GovContentFormPage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/gov/contents"
+              element={
+                <ProtectedRoute
+                  allowedAccountTypes={[
+                    "gov",
+                    "government",
+                    "local_government",
+                    "agency",
+                    "institution",
+                  ]}
+                >
+                  <GovContentsListPage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/admin/inquiries"
+              element={
+                <ProtectedRoute allowedAccountTypes={["admin"]}>
+                  <AdminInquiriesPage />
+                </ProtectedRoute>
+              }
+            />
 
             <Route
               path="/events/region/:slug"

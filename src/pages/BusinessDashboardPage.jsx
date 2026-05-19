@@ -3,6 +3,8 @@
 // 📌 감성여행2 홈페이지 소상공인 내 가게 관리 준비 화면
 // - 소상공인 무료 가입 후 처음 도착하는 전용 관리 화면
 // - 현재 로그인 세션 기준으로 profiles / owner_profiles 정보를 불러옴
+// - 일반회원이 직접 URL로 접근하면 차단 안내
+// - 관리자 계정은 확인용으로 접근 가능
 // - 가입은 무료 상태로 표시
 // - 미니홈피 공개 / 운영 시작 버튼은 결제 연결 예정 상태로 안내
 // - owner_subscriptions는 이 화면에서도 아직 저장하지 않음
@@ -10,6 +12,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../contect/AuthContext";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import "./BusinessDashboardPage.css";
 
@@ -26,22 +29,43 @@ function getDisplayValue(value, fallback = "미입력") {
   return text || fallback;
 }
 
+function hasMeaningfulOwnerProfile(row) {
+  if (!row) return false;
+
+  return Boolean(
+    row.store_name ||
+      row.business_number ||
+      row.owner_name ||
+      row.store_address ||
+      row.store_phone ||
+      row.business_type ||
+      row.intro
+  );
+}
+
 export default function BusinessDashboardPage() {
+  const { currentUser, loading: authLoading, isLoggedIn } = useAuth();
+
   const [loading, setLoading] = useState(true);
-  const [sessionUser, setSessionUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [ownerProfile, setOwnerProfile] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [noticeMessage, setNoticeMessage] = useState("");
+
+  const userId = currentUser?.id || "";
+  const accountType = currentUser?.accountType || "guest";
+  const canUseDashboard = accountType === "business" || accountType === "admin";
+  const isAdminView = accountType === "admin";
 
   const storeName = useMemo(() => {
     return (
       ownerProfile?.store_name ||
       profile?.nickname ||
       profile?.name ||
+      currentUser?.displayName ||
       "내 가게"
     );
-  }, [ownerProfile, profile]);
+  }, [ownerProfile, profile, currentUser]);
 
   const ownerName = useMemo(() => {
     return ownerProfile?.owner_name || profile?.name || "대표자";
@@ -51,18 +75,33 @@ export default function BusinessDashboardPage() {
     return ownerProfile?.business_number || profile?.username || "";
   }, [ownerProfile, profile]);
 
-  const isBusinessMember =
-    profile?.member_type === "business" ||
-    profile?.role === "biz" ||
-    profile?.role === "business";
+  const hasStoreInfo = hasMeaningfulOwnerProfile(ownerProfile);
 
   useEffect(() => {
     let mounted = true;
 
     async function loadBusinessInfo() {
+      if (authLoading) {
+        return;
+      }
+
       setLoading(true);
       setErrorMessage("");
       setNoticeMessage("");
+
+      if (!isLoggedIn || !userId) {
+        setProfile(null);
+        setOwnerProfile(null);
+        setLoading(false);
+        return;
+      }
+
+      if (!canUseDashboard) {
+        setProfile(currentUser?.profile || null);
+        setOwnerProfile(null);
+        setLoading(false);
+        return;
+      }
 
       if (!isSupabaseConfigured) {
         setErrorMessage("Supabase 연결 정보가 없습니다. 환경변수를 확인해주세요.");
@@ -71,30 +110,10 @@ export default function BusinessDashboardPage() {
       }
 
       try {
-        const { data: sessionData, error: sessionError } =
-          await supabase.auth.getSession();
-
-        if (sessionError) {
-          throw sessionError;
-        }
-
-        const user = sessionData?.session?.user;
-
-        if (!user?.id) {
-          if (!mounted) return;
-          setSessionUser(null);
-          setLoading(false);
-          return;
-        }
-
-        if (!mounted) return;
-
-        setSessionUser(user);
-
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .select("*")
-          .eq("user_id", user.id)
+          .eq("user_id", userId)
           .maybeSingle();
 
         if (profileError) {
@@ -104,7 +123,7 @@ export default function BusinessDashboardPage() {
         const { data: ownerData, error: ownerError } = await supabase
           .from("owner_profiles")
           .select("*")
-          .eq("user_id", user.id)
+          .eq("user_id", userId)
           .maybeSingle();
 
         if (ownerError) {
@@ -113,13 +132,15 @@ export default function BusinessDashboardPage() {
 
         if (!mounted) return;
 
-        setProfile(profileData || null);
+        setProfile(profileData || currentUser?.profile || null);
         setOwnerProfile(ownerData || null);
       } catch (error) {
         console.error("[소상공인 관리] 정보 불러오기 실패:", error);
 
         if (!mounted) return;
 
+        setProfile(currentUser?.profile || null);
+        setOwnerProfile(null);
         setErrorMessage(
           error?.message || "소상공인 정보를 불러오는 중 문제가 발생했습니다."
         );
@@ -135,21 +156,41 @@ export default function BusinessDashboardPage() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [
+    authLoading,
+    isLoggedIn,
+    userId,
+    canUseDashboard,
+    currentUser?.profile,
+  ]);
 
   function handlePreviewClick() {
+    if (!hasStoreInfo) {
+      setNoticeMessage(
+        "아직 가게 기본 정보가 부족합니다. 다음 단계에서 가게 정보 수정 화면을 연결한 뒤 미리보기를 사용할 수 있게 하면 좋습니다."
+      );
+      return;
+    }
+
     setNoticeMessage(
       "미니홈피 미리보기 화면은 다음 단계에서 연결할 예정입니다. 지금은 가입 정보 확인 단계입니다."
     );
   }
 
   function handleStartClick() {
+    if (!hasStoreInfo) {
+      setNoticeMessage(
+        "미니홈피를 공개하려면 가게명, 사업자번호, 주소 같은 기본 정보를 먼저 채워야 합니다."
+      );
+      return;
+    }
+
     setNoticeMessage(
       `운영 시작은 ${SUBSCRIPTION_DAYS}일 이용권 결제 후 공개되는 구조로 연결할 예정입니다. 현재 단계에서는 결제를 진행하지 않습니다.`
     );
   }
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <main className="business-dashboard-page">
         <section className="business-dashboard-loading">
@@ -159,7 +200,7 @@ export default function BusinessDashboardPage() {
     );
   }
 
-  if (!sessionUser) {
+  if (!isLoggedIn) {
     return (
       <main className="business-dashboard-page">
         <section className="business-dashboard-empty">
@@ -173,8 +214,40 @@ export default function BusinessDashboardPage() {
           </p>
 
           <div className="business-dashboard-actions">
-            <Link to="/signup/business" className="business-main-btn">
+            <Link to="/login" className="business-main-btn">
+              로그인하기
+            </Link>
+
+            <Link to="/signup/business" className="business-sub-btn">
               소상공인 가입하기
+            </Link>
+
+            <Link to="/" className="business-sub-btn">
+              홈으로 이동
+            </Link>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  if (!canUseDashboard) {
+    return (
+      <main className="business-dashboard-page">
+        <section className="business-dashboard-empty">
+          <p className="business-dashboard-badge">소상공인 관리</p>
+
+          <h1>소상공인 계정만 이용할 수 있습니다</h1>
+
+          <p>
+            현재 로그인된 계정은 소상공인 계정으로 확인되지 않았습니다.
+            소상공인 미니홈피를 운영하려면 소상공인 무료 입점을 먼저 진행해
+            주세요.
+          </p>
+
+          <div className="business-dashboard-actions">
+            <Link to="/signup/business" className="business-main-btn">
+              소상공인 무료 입점
             </Link>
 
             <Link to="/" className="business-sub-btn">
@@ -190,7 +263,9 @@ export default function BusinessDashboardPage() {
     <main className="business-dashboard-page">
       <section className="business-dashboard-wrap">
         <div className="business-dashboard-hero">
-          <p className="business-dashboard-badge">소상공인 전용 관리 화면</p>
+          <p className="business-dashboard-badge">
+            {isAdminView ? "관리자 확인 모드" : "소상공인 전용 관리 화면"}
+          </p>
 
           <h1>
             {getDisplayValue(storeName)}
@@ -215,10 +290,17 @@ export default function BusinessDashboardPage() {
           <div className="business-dashboard-alert">{noticeMessage}</div>
         ) : null}
 
-        {!isBusinessMember ? (
+        {isAdminView ? (
+          <div className="business-dashboard-alert">
+            관리자 계정으로 접속 중입니다. 소상공인 화면 확인용으로 접근이
+            허용되었습니다.
+          </div>
+        ) : null}
+
+        {!hasStoreInfo ? (
           <div className="business-dashboard-alert warning">
-            현재 계정의 회원 유형이 소상공인으로 확인되지 않았습니다.
-            profiles의 member_type 또는 role 값을 확인해주세요.
+            아직 가게 기본 정보가 충분하지 않습니다. 다음 단계에서 가게 정보
+            수정 화면을 연결하면 미니홈피 공개 전 정보를 채울 수 있습니다.
           </div>
         ) : null}
 
@@ -230,7 +312,7 @@ export default function BusinessDashboardPage() {
                 <h2>내 가게 정보</h2>
               </div>
 
-              <strong>입점 준비중</strong>
+              <strong>{hasStoreInfo ? "입점 준비중" : "정보 입력 필요"}</strong>
             </div>
 
             <dl className="business-info-list">
@@ -269,7 +351,11 @@ export default function BusinessDashboardPage() {
               <div>
                 <dt>이메일</dt>
                 <dd>
-                  {getDisplayValue(ownerProfile?.store_email || profile?.email)}
+                  {getDisplayValue(
+                    ownerProfile?.store_email ||
+                      profile?.email ||
+                      currentUser?.email
+                  )}
                 </dd>
               </div>
 

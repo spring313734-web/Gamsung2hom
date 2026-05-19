@@ -8,6 +8,7 @@
 // - 로그인 후 profiles(공통 회원 기본정보)
 //   + owner_profiles(소상공인 기본정보)
 //   + gov_profiles(지자체 기본정보)를 함께 확인
+// - 빈 owner_profiles row 때문에 일반회원이 소상공인으로 오인되지 않도록 방지
 // - 소상공인은 /business/dashboard 이동
 // - 지자체는 /gov/dashboard 이동
 // - 관리자는 /admin/inquiries 이동
@@ -110,11 +111,37 @@ function getSafeFallbackPath(pathname) {
   return pathname;
 }
 
-function hasRow(row) {
-  return Boolean(row && (row.id || row.user_id));
+function hasMeaningfulOwnerProfile(row) {
+  if (!row) return false;
+
+  return Boolean(
+    row.store_name ||
+      row.business_number ||
+      row.owner_name ||
+      row.store_address ||
+      row.store_phone ||
+      row.business_type ||
+      row.intro
+  );
+}
+
+function hasMeaningfulGovProfile(row) {
+  if (!row) return false;
+
+  return Boolean(
+    row.org_name ||
+      row.organization_name ||
+      row.gov_name ||
+      row.department_name ||
+      row.manager_name ||
+      row.region_name ||
+      row.phone
+  );
 }
 
 function getAccountTypeLabel(type) {
+  if (type === "admin") return "관리자";
+
   const found = ACCOUNT_TYPES.find((item) => item.key === type);
   return found?.label || "회원";
 }
@@ -127,37 +154,60 @@ function getActualAccountType(loginProfile) {
   const role = normalizeText(profile?.role);
   const memberType = normalizeText(profile?.member_type);
 
-  if (role === "admin" || memberType === "admin") {
+  if (
+    role === "admin" ||
+    role === "administrator" ||
+    role === "super_admin" ||
+    memberType === "admin" ||
+    memberType === "administrator" ||
+    memberType === "super_admin"
+  ) {
     return "admin";
   }
 
   if (
-    hasRow(ownerProfile) ||
     role === "business" ||
     role === "biz" ||
     role === "owner" ||
+    role === "store_owner" ||
+    role === "merchant" ||
     memberType === "business" ||
     memberType === "biz" ||
-    memberType === "owner"
+    memberType === "owner" ||
+    memberType === "store_owner" ||
+    memberType === "merchant" ||
+    hasMeaningfulOwnerProfile(ownerProfile)
   ) {
     return "business";
   }
 
   if (
-    hasRow(govProfile) ||
     role === "gov" ||
     role === "government" ||
     role === "local_government" ||
     role === "agency" ||
+    role === "institution" ||
+    role === "public" ||
     memberType === "gov" ||
     memberType === "government" ||
     memberType === "local_government" ||
-    memberType === "agency"
+    memberType === "agency" ||
+    memberType === "institution" ||
+    memberType === "public" ||
+    hasMeaningfulGovProfile(govProfile)
   ) {
     return "gov";
   }
 
   return "user";
+}
+
+function isManagePath(pathname) {
+  return (
+    pathname?.startsWith("/admin") ||
+    pathname?.startsWith("/business") ||
+    pathname?.startsWith("/gov")
+  );
 }
 
 function resolveNextPath(accountType, fallbackPath) {
@@ -171,6 +221,10 @@ function resolveNextPath(accountType, fallbackPath) {
 
   if (accountType === "gov") {
     return "/gov/dashboard";
+  }
+
+  if (isManagePath(fallbackPath)) {
+    return "/";
   }
 
   return fallbackPath || "/";
@@ -314,7 +368,7 @@ export default function LoginPage() {
       const loginProfile = await loadLoginProfile(userId);
       const actualAccountType = getActualAccountType(loginProfile);
 
-      await refreshUserProfile();
+      await refreshUserProfile(data?.session || null);
 
       if (
         actualAccountType !== "admin" &&
@@ -337,7 +391,7 @@ export default function LoginPage() {
       const nextPath = resolveNextPath(actualAccountType, fallbackPath);
 
       window.setTimeout(() => {
-        navigate(nextPath);
+        navigate(nextPath, { replace: true });
       }, 600);
     } catch (error) {
       const message = getLoginErrorMessage(error);
@@ -382,7 +436,9 @@ export default function LoginPage() {
                   <button
                     key={type.key}
                     type="button"
-                    className={active ? "login-type-btn active" : "login-type-btn"}
+                    className={
+                      active ? "login-type-btn active" : "login-type-btn"
+                    }
                     onClick={() => selectAccountType(type.key)}
                     disabled={submitting}
                     aria-pressed={active}
@@ -455,7 +511,11 @@ export default function LoginPage() {
             <p className="login-result success">{resultMessage}</p>
           ) : null}
 
-          <button type="submit" className="login-submit-btn" disabled={!canSubmit}>
+          <button
+            type="submit"
+            className="login-submit-btn"
+            disabled={!canSubmit}
+          >
             {submitLabel}
           </button>
 

@@ -5,6 +5,8 @@
 // - auth.users.id를 감성여행2 / 감성배달 / 홈페이지 공통 user_id 기준으로 사용
 // - public.profiles에서 내 회원 정보를 불러와 별명 / 아이디 / 공개 이름 설정 반영
 // - public_name_type / public_name_mode 둘 다 읽어 앱과 홈페이지 공용 구조 호환
+// - role / member_type 값을 기준으로 accountType을 공통 정리
+// - 일반회원 / 소상공인 / 지자체 / 관리자 권한 분기를 홈페이지 전체에서 재사용
 // - Header에서 회원가입 버튼 대신 로그인 사용자 이름을 표시할 수 있도록 제공
 // - 세션 확인이 지연되어도 Header가 "로그인 확인 중"에 멈추지 않도록 안전 처리
 // - 현재 프로젝트 폴더명이 contect 이므로 이 경로를 기준으로 사용
@@ -30,11 +32,25 @@ const EMPTY_USER = {
   username: "",
   nickname: "",
   role: "",
+  memberType: "",
+  accountType: "guest",
   publicNameType: "userId",
   displayName: "",
   isLoggedIn: false,
+  isAdmin: false,
+  isBusiness: false,
+  isGov: false,
+  isUser: false,
   profile: null,
 };
+
+function normalizeText(value) {
+  return String(value || "").trim();
+}
+
+function normalizeKey(value) {
+  return normalizeText(value).toLowerCase();
+}
 
 function getMetadataValue(user, key) {
   const metadata = user?.user_metadata || {};
@@ -47,6 +63,54 @@ function pickDisplayName({ publicNameType, username, nickname, name, email }) {
   }
 
   return username || nickname || name || email || "회원";
+}
+
+function resolveAccountType({ role, memberType }) {
+  const safeRole = normalizeKey(role);
+  const safeMemberType = normalizeKey(memberType);
+
+  const keys = [safeRole, safeMemberType].filter(Boolean);
+
+  if (
+    keys.some((value) =>
+      ["admin", "administrator", "super_admin", "master"].includes(value)
+    )
+  ) {
+    return "admin";
+  }
+
+  if (
+    keys.some((value) =>
+      ["business", "biz", "owner", "store_owner", "merchant"].includes(value)
+    )
+  ) {
+    return "business";
+  }
+
+  if (
+    keys.some((value) =>
+      [
+        "gov",
+        "government",
+        "local_government",
+        "agency",
+        "institution",
+        "public",
+      ].includes(value)
+    )
+  ) {
+    return "gov";
+  }
+
+  if (
+    keys.some((value) =>
+      ["user", "normal", "customer", "traveler", "member"].includes(value)
+    )
+  ) {
+    return "user";
+  }
+
+  return "user";
 }
 
 function normalizeUserFromSession(session, profile) {
@@ -78,10 +142,22 @@ function normalizeUserFromSession(session, profile) {
       ? profile.role.trim()
       : getMetadataValue(authUser, "role") || "USER";
 
+  const memberType =
+    typeof profile?.member_type === "string" && profile.member_type.trim()
+      ? profile.member_type.trim()
+      : getMetadataValue(authUser, "member_type") || "";
+
+  const accountType = resolveAccountType({
+    role,
+    memberType,
+  });
+
   const profilePublicNameType =
-    typeof profile?.public_name_type === "string" && profile.public_name_type.trim()
+    typeof profile?.public_name_type === "string" &&
+    profile.public_name_type.trim()
       ? profile.public_name_type.trim()
-      : typeof profile?.public_name_mode === "string" && profile.public_name_mode.trim()
+      : typeof profile?.public_name_mode === "string" &&
+          profile.public_name_mode.trim()
         ? profile.public_name_mode.trim()
         : "";
 
@@ -107,11 +183,56 @@ function normalizeUserFromSession(session, profile) {
     username,
     nickname,
     role,
+    memberType,
+    accountType,
     publicNameType,
     displayName,
     isLoggedIn: true,
+    isAdmin: accountType === "admin",
+    isBusiness: accountType === "business",
+    isGov: accountType === "gov",
+    isUser: accountType === "user",
     profile: profile || null,
   };
+}
+
+function buildFallbackUser(userInfo) {
+  const role = userInfo?.role || "";
+  const memberType = userInfo?.memberType || userInfo?.member_type || "";
+  const accountType =
+    userInfo?.accountType ||
+    resolveAccountType({
+      role,
+      memberType,
+    });
+
+  const nextUser = {
+    ...EMPTY_USER,
+    ...userInfo,
+    id: userInfo?.id || userInfo?.userId || "",
+    userId: userInfo?.userId || userInfo?.id || "",
+    role,
+    memberType,
+    accountType,
+    isLoggedIn: Boolean(userInfo?.id || userInfo?.userId),
+  };
+
+  nextUser.displayName =
+    userInfo?.displayName ||
+    pickDisplayName({
+      publicNameType: userInfo?.publicNameType || "userId",
+      username: userInfo?.username || "",
+      nickname: userInfo?.nickname || "",
+      name: userInfo?.name || "",
+      email: userInfo?.email || "",
+    });
+
+  nextUser.isAdmin = accountType === "admin";
+  nextUser.isBusiness = accountType === "business";
+  nextUser.isGov = accountType === "gov";
+  nextUser.isUser = accountType === "user";
+
+  return nextUser;
 }
 
 export function AuthProvider({ children }) {
@@ -204,9 +325,9 @@ export function AuthProvider({ children }) {
     };
   }, [loadProfileForSession]);
 
-  async function refreshUserProfile() {
+  async function refreshUserProfile(nextSession = session) {
     setLoading(true);
-    await loadProfileForSession(session);
+    await loadProfileForSession(nextSession);
   }
 
   async function logout() {
@@ -222,37 +343,39 @@ export function AuthProvider({ children }) {
   }
 
   function login(userInfo) {
-    const fallbackUser = {
-      ...EMPTY_USER,
-      ...userInfo,
-      id: userInfo?.id || userInfo?.userId || "",
-      userId: userInfo?.userId || userInfo?.id || "",
-      isLoggedIn: Boolean(userInfo?.id || userInfo?.userId),
-    };
-
-    fallbackUser.displayName =
-      userInfo?.displayName ||
-      pickDisplayName({
-        publicNameType: userInfo?.publicNameType || "userId",
-        username: userInfo?.username || "",
-        nickname: userInfo?.nickname || "",
-        name: userInfo?.name || "",
-        email: userInfo?.email || "",
-      });
-
-    setCurrentUser(fallbackUser);
+    setCurrentUser(buildFallbackUser(userInfo));
     setLoading(false);
   }
 
   function updateProfile(profile) {
     setCurrentUser((prev) => {
+      const mergedProfile = {
+        ...(prev.profile || {}),
+        ...(profile || {}),
+      };
+
+      const role = profile?.role || prev.role || "";
+      const memberType =
+        profile?.memberType ||
+        profile?.member_type ||
+        prev.memberType ||
+        mergedProfile.member_type ||
+        "";
+
+      const accountType =
+        profile?.accountType ||
+        resolveAccountType({
+          role,
+          memberType,
+        });
+
       const nextUser = {
         ...prev,
         ...profile,
-        profile: {
-          ...(prev.profile || {}),
-          ...(profile || {}),
-        },
+        role,
+        memberType,
+        accountType,
+        profile: mergedProfile,
       };
 
       return {
@@ -264,6 +387,10 @@ export function AuthProvider({ children }) {
           name: nextUser.name || "",
           email: nextUser.email || "",
         }),
+        isAdmin: accountType === "admin",
+        isBusiness: accountType === "business",
+        isGov: accountType === "gov",
+        isUser: accountType === "user",
       };
     });
   }
