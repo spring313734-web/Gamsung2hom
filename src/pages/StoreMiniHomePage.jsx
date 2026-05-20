@@ -7,10 +7,14 @@
 // - store_events 테이블의 가게 이벤트 / 혜택 정보를 함께 표시
 // - 같은 가게 데이터를 감성여행2에서는 예약형 미니홈피로 표시
 // - 같은 가게 데이터를 감성배달에서는 배달형 미니홈피로 표시
-// - 메뉴 데이터는 공통으로 쓰고, 감성여행2는 방문 예약 / 담기 선택 중심으로 표시
+// - 메뉴 데이터는 공통으로 쓰고, 감성여행2는 예약 메뉴 담기 / 방문 예약 중심으로 표시
 // - 메뉴 데이터는 공통으로 쓰고, 감성배달은 장바구니 / 배달 주문 중심으로 표시
-// - 감성여행2 담기 선택은 앱과 서버 명칭에 맞춰 '나만의 여행' / '나만의 버킷'으로 통일
-// - 담기 선택 버튼을 누르면 누른 메뉴 카드 바로 아래에 선택 패널을 표시
+// - 감성여행2 가게 담기 선택은 앱과 서버 명칭에 맞춰 '나만의 여행' / '나만의 버킷'으로 통일
+// - 가게 상단 담기 선택 버튼을 누르면 나만의 여행 / 나만의 버킷 선택 패널을 표시
+// - 메뉴 카드에는 나만의 여행 / 나만의 버킷 선택을 넣지 않고 예약 메뉴 담기만 표시
+// - 선택 전에는 둘 다 연한색, 마우스 hover 때만 주황 테두리/연한 주황 배경으로 표시
+// - 담기 성공한 항목은 체크 표시와 함께 주황색으로 고정하고 버튼 문구를 담기 성공으로 변경
+// - 같은 곳에 다시 담으면 카드 바로 아래에 중복 저장 안내를 표시
 // - 데이터가 비어 있어도 준비중 안내가 자연스럽게 보이도록 구성
 // - 배달 가능 메뉴는 고객 오해를 줄이기 위해 '가능 · 배달료 별도'로 표시
 // - 이벤트가 없으면 고객 미니홈피에서 이벤트 영역 자체를 숨김
@@ -25,17 +29,24 @@ const MENU_TABLE_NAME = "store_menus";
 const PRODUCT_TABLE_NAME = "store_products";
 const EVENT_TABLE_NAME = "store_events";
 const MENU_STORAGE_PREFIX = "gamsung2.business-menu.v1";
+const TRAVEL_SAVE_STORAGE_PREFIX = "gamsung2.travel-save.v1";
 
 const TRAVEL_SAVE_OPTIONS = [
   {
     key: "my-travel",
+    destination: "나만의 여행",
     label: "나만의 여행에 담기",
-    description: "감성여행2의 나만의 여행 일정에 이 가게를 추가합니다.",
+    savedLabel: "나만의 여행 담기 성공",
+    description: "감성여행2의 내 여행 일정에 이 가게를 추가합니다.",
+    savedDescription: "담김 완료 · 다시 누르면 중복 안내만 표시됩니다.",
   },
   {
     key: "my-bucket",
+    destination: "나만의 버킷",
     label: "나만의 버킷에 담기",
+    savedLabel: "나만의 버킷 담기 성공",
     description: "언젠가 가고 싶은 장소로 나만의 버킷에 저장합니다.",
+    savedDescription: "담김 완료 · 다시 누르면 중복 안내만 표시됩니다.",
   },
 ];
 
@@ -326,6 +337,62 @@ function buildMenuStorageKey({ storeId, businessNumber }) {
   return `${MENU_STORAGE_PREFIX}.${safeKey}`;
 }
 
+function buildTravelSaveStorageKey(storeId) {
+  const safeKey = String(storeId || "guest").replace(/[^a-zA-Z0-9가-힣_-]/g, "_");
+  return `${TRAVEL_SAVE_STORAGE_PREFIX}.${safeKey}`;
+}
+
+function buildTravelSaveItemKey(dropdownKey, optionKey) {
+  const safeDropdownKey = String(dropdownKey || "store").replace(
+    /[^a-zA-Z0-9가-힣_-]/g,
+    "_"
+  );
+
+  return `${safeDropdownKey}::${optionKey}`;
+}
+
+function buildMenuReservationItemKey(menu, index) {
+  const rawKey =
+    menu?.id ||
+    `${getMenuName(menu)}-${getMenuPrice(menu)}-${index}` ||
+    `menu-${index}`;
+
+  return String(rawKey).replace(/[^a-zA-Z0-9가-힣_-]/g, "_");
+}
+
+function readLocalTravelSaveMap(storageKey) {
+  if (typeof window === "undefined" || !storageKey) {
+    return {};
+  }
+
+  try {
+    const raw = window.localStorage.getItem(storageKey);
+    if (!raw) return {};
+
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return {};
+    }
+
+    return parsed;
+  } catch (error) {
+    console.warn("[StoreMiniHomePage] 담기 선택 임시 저장 읽기 실패:", error);
+    return {};
+  }
+}
+
+function writeLocalTravelSaveMap(storageKey, saveMap) {
+  if (typeof window === "undefined" || !storageKey) {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(storageKey, JSON.stringify(saveMap || {}));
+  } catch (error) {
+    console.warn("[StoreMiniHomePage] 담기 선택 임시 저장 실패:", error);
+  }
+}
+
 function readLocalMenuState(storageKey) {
   if (typeof window === "undefined" || !storageKey) {
     return null;
@@ -394,11 +461,11 @@ function getModeInfo(mode) {
   return {
     badge: "감성여행2 미니홈피",
     title: "방문 예약 중심 화면",
-    desc: "같은 가게 정보를 감성여행2에서는 여행 일정, 방문 예약, 길찾기 흐름으로 보여줍니다.",
+    desc: "같은 가게 정보를 감성여행2에서는 나만의 여행 / 나만의 버킷 담기, 방문 예약, 길찾기 흐름으로 보여줍니다.",
     primaryButton: "방문 예약하기",
     secondaryButton: "담기 선택",
     menuTitle: "방문 예약 메뉴",
-    menuDesc: "감성여행2에서는 같은 메뉴 데이터를 방문 전 확인과 나만의 여행 / 나만의 버킷 담기 흐름으로 연결합니다.",
+    menuDesc: "감성여행2에서는 메뉴를 예약 메뉴에 담은 뒤 방문 예약 흐름으로 연결합니다.",
     emptyAction: "예약 기능은 다음 단계에서 여행 일정과 연결됩니다.",
     modeClass: "travel-mode",
   };
@@ -416,6 +483,9 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
   const [usedLocalMenus, setUsedLocalMenus] = useState(false);
   const [travelSaveDropdownKey, setTravelSaveDropdownKey] = useState("");
   const [travelSaveTargetName, setTravelSaveTargetName] = useState("");
+  const [savedTravelItems, setSavedTravelItems] = useState({});
+  const [travelSaveFeedbackMap, setTravelSaveFeedbackMap] = useState({});
+  const [reservationMenuItems, setReservationMenuItems] = useState({});
 
   const modeInfo = useMemo(() => getModeInfo(mode), [mode]);
 
@@ -429,6 +499,29 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
   const sortedMenus = useMemo(() => [...menus].sort(sortMenus), [menus]);
   const mapUrl = useMemo(() => buildMapSearchUrl(store), [store]);
   const phoneHref = useMemo(() => buildPhoneHref(storePhone), [storePhone]);
+  const travelSaveStorageKey = useMemo(
+    () => buildTravelSaveStorageKey(storeId),
+    [storeId]
+  );
+
+  const storeTravelSavedOption = useMemo(() => {
+    const savedOptions = TRAVEL_SAVE_OPTIONS
+      .map((option) => {
+        const itemKey = buildTravelSaveItemKey("store", option.key);
+        const savedItem = savedTravelItems[itemKey];
+
+        return savedItem ? { option, savedAt: savedItem.savedAt || "" } : null;
+      })
+      .filter(Boolean)
+      .sort((a, b) => String(b.savedAt).localeCompare(String(a.savedAt)));
+
+    return savedOptions[0]?.option || null;
+  }, [savedTravelItems]);
+
+  const storeTravelSaveButtonLabel =
+    mode === "travel" && storeTravelSavedOption
+      ? `${storeTravelSavedOption.destination} 담기 성공`
+      : modeInfo.secondaryButton;
 
   useEffect(() => {
     let mounted = true;
@@ -455,6 +548,9 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
       setUsedLocalMenus(false);
       setTravelSaveDropdownKey("");
       setTravelSaveTargetName("");
+      setSavedTravelItems({});
+      setTravelSaveFeedbackMap({});
+      setReservationMenuItems({});
 
       if (!isSupabaseConfigured) {
         setErrorMessage("Supabase 연결 정보가 없습니다. 환경변수를 확인해주세요.");
@@ -510,6 +606,7 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
         setMenus(nextMenus);
         setEvents(eventRows || []);
         setUsedLocalMenus(localMenus.length > 0);
+        setSavedTravelItems(readLocalTravelSaveMap(travelSaveStorageKey));
 
         if (localMenus.length > 0) {
           setNoticeMessage(
@@ -536,7 +633,7 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
     return () => {
       mounted = false;
     };
-  }, [storeId]);
+  }, [storeId, travelSaveStorageKey]);
 
   function handlePrimaryAction(menuName = "") {
     if (mode === "delivery") {
@@ -551,7 +648,28 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
     );
   }
 
-  function handleSecondaryAction(menuName = "", dropdownKey = "store") {
+  function handleStoreSecondaryAction() {
+    if (mode === "delivery") {
+      setNoticeMessage(
+        `${storeName} 장바구니 담기 기능은 다음 단계에서 감성배달 장바구니와 연결할 예정입니다.`
+      );
+      return;
+    }
+
+    setTravelSaveTargetName(storeName);
+    setTravelSaveDropdownKey((prev) => (prev === "store" ? "" : "store"));
+
+    if (storeTravelSavedOption) {
+      setNoticeMessage(
+        `${storeName}은 이미 ${storeTravelSavedOption.destination}에 담겨 있습니다. 다른 위치에 추가하려면 아래 선택창에서 눌러주세요.`
+      );
+      return;
+    }
+
+    setNoticeMessage(`${storeName}을 나만의 여행 또는 나만의 버킷 중 어디에 담을지 선택해주세요.`);
+  }
+
+  function handleMenuSecondaryAction(menuName = "", menuKey = "") {
     if (mode === "delivery") {
       setNoticeMessage(
         `${menuName ? `${menuName} ` : ""}장바구니 담기 기능은 다음 단계에서 감성배달 장바구니와 연결할 예정입니다.`
@@ -559,58 +677,146 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
       return;
     }
 
-    setTravelSaveTargetName(menuName || storeName);
-    setTravelSaveDropdownKey((prev) => (prev === dropdownKey ? "" : dropdownKey));
-    setNoticeMessage(
-      `${menuName ? `${menuName} ` : `${storeName} `}어디에 담을지 선택해주세요.`
-    );
-  }
+    const safeMenuKey = menuKey || menuName || "menu";
+    const alreadySaved = Boolean(reservationMenuItems[safeMenuKey]);
 
-  function handleTravelSaveChoice(option) {
-    const targetName = travelSaveTargetName || storeName;
-    const targetText = targetName ? `${targetName}을/를` : "이 가게를";
-
-    setTravelSaveDropdownKey("");
-
-    if (option.key === "my-bucket") {
+    if (alreadySaved) {
       setNoticeMessage(
-        `${targetText} 나만의 버킷에 담는 기능은 다음 단계에서 감성여행2 버킷 데이터와 연결할 예정입니다.`
+        `${menuName} 메뉴는 이미 예약 메뉴에 담겨 있습니다. 중복으로 다시 담기지 않습니다.`
       );
       return;
     }
 
-    setNoticeMessage(
-      `${targetText} 나만의 여행에 담는 기능은 다음 단계에서 감성여행2 여행 일정 데이터와 연결할 예정입니다.`
-    );
+    setReservationMenuItems((prev) => ({
+      ...prev,
+      [safeMenuKey]: {
+        menuName,
+        savedAt: new Date().toISOString(),
+      },
+    }));
+    setNoticeMessage(`${menuName} 예약 메뉴 담기 성공`);
   }
 
-  function renderTravelSaveDropdown(dropdownKey) {
+  function setTravelSaveFeedback(dropdownKey, message, type = "saved") {
+    setTravelSaveFeedbackMap((prev) => ({
+      ...prev,
+      [dropdownKey]: { message, type },
+    }));
+  }
+
+  function handleTravelSaveChoice(option, dropdownKey, targetName = "") {
+    const nextTargetName = targetName || travelSaveTargetName || storeName;
+    const itemKey = buildTravelSaveItemKey(dropdownKey, option.key);
+    const alreadySaved = Boolean(savedTravelItems[itemKey]);
+
+    if (alreadySaved) {
+      const duplicateMessage = `${nextTargetName}은 이미 ${option.destination}에 담겨 있습니다. 중복으로 다시 담기지 않습니다.`;
+
+      setNoticeMessage(duplicateMessage);
+      setTravelSaveFeedback(dropdownKey, duplicateMessage, "duplicate");
+      return;
+    }
+
+    const nextSavedItems = {
+      ...savedTravelItems,
+      [itemKey]: {
+        optionKey: option.key,
+        destination: option.destination,
+        targetName: nextTargetName,
+        savedAt: new Date().toISOString(),
+      },
+    };
+
+    const savedMessage = `${nextTargetName} ${option.destination} 담기 성공`;
+
+    setSavedTravelItems(nextSavedItems);
+    writeLocalTravelSaveMap(travelSaveStorageKey, nextSavedItems);
+    setNoticeMessage(savedMessage);
+    setTravelSaveFeedback(dropdownKey, savedMessage, "saved");
+  }
+
+  function handleTravelChoiceKeyDown(event, option, dropdownKey, targetName = "") {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
+    event.preventDefault();
+    handleTravelSaveChoice(option, dropdownKey, targetName);
+  }
+
+  function renderTravelSaveDropdown(dropdownKey, targetName = "") {
     if (mode !== "travel" || travelSaveDropdownKey !== dropdownKey) {
       return null;
     }
 
     const panelId = `travel-save-panel-${dropdownKey}`;
+    const displayTargetName = targetName || travelSaveTargetName || storeName;
+    const feedback = travelSaveFeedbackMap[dropdownKey];
+    const savedDestinations = TRAVEL_SAVE_OPTIONS.filter((option) => {
+      const itemKey = buildTravelSaveItemKey(dropdownKey, option.key);
+      return Boolean(savedTravelItems[itemKey]);
+    }).map((option) => option.destination);
+    const savedSummary = savedDestinations.length
+      ? `현재 담긴 위치: ${savedDestinations.join(", ")}`
+      : "아직 담긴 곳이 없습니다. 원하는 위치를 눌러주세요.";
 
     return (
-      <div id={panelId} className="store-travel-save-panel">
-        <strong>담기 선택</strong>
-        <p>
-          감성여행2 앱과 서버 명칭에 맞춰 나만의 여행 또는 나만의 버킷으로
-          저장합니다.
-        </p>
-
-        <div className="store-travel-save-actions">
-          {TRAVEL_SAVE_OPTIONS.map((option) => (
-            <button
-              key={option.key}
-              type="button"
-              onClick={() => handleTravelSaveChoice(option)}
-            >
-              <span>{option.label}</span>
-              <small>{option.description}</small>
-            </button>
-          ))}
+      <div id={panelId} className="g2-place-save-panel">
+        <div className="g2-place-save-head">
+          <strong>담기 선택</strong>
+          <p>
+            {displayTargetName} 가게 자체를 나만의 여행 또는 나만의 버킷에 저장합니다.
+          </p>
         </div>
+
+        <div
+          className={`g2-place-save-current ${
+            savedDestinations.length ? "has-saved" : "is-empty"
+          }`}
+        >
+          {savedSummary}
+        </div>
+
+        <div className="g2-place-save-list" aria-label="담기 위치 선택">
+          {TRAVEL_SAVE_OPTIONS.map((option) => {
+            const itemKey = buildTravelSaveItemKey(dropdownKey, option.key);
+            const isSaved = Boolean(savedTravelItems[itemKey]);
+
+            return (
+              <button
+                key={option.key}
+                type="button"
+                className={`g2-place-save-button ${
+                  isSaved ? "g2-place-save-saved" : "g2-place-save-ready"
+                }`}
+                aria-pressed={isSaved}
+                onClick={() =>
+                  handleTravelSaveChoice(option, dropdownKey, displayTargetName)
+                }
+              >
+                <span className="g2-place-save-button-title">
+                  {isSaved ? option.savedLabel : option.label}
+                  {isSaved ? <em>담김</em> : null}
+                </span>
+                <small>{isSaved ? option.savedDescription : option.description}</small>
+              </button>
+            );
+          })}
+        </div>
+
+        {feedback?.message ? (
+          <p
+            className={`g2-place-save-feedback ${
+              feedback.type === "duplicate" ? "is-duplicate" : "is-saved"
+            }`}
+          >
+            {feedback.message}
+          </p>
+        ) : (
+          <p className="g2-place-save-feedback is-guide">
+            담기 버튼을 누르면 선택한 위치만 주황색으로 바뀌고, 중복 담기는 막습니다.
+          </p>
+        )}
       </div>
     );
   }
@@ -681,11 +887,12 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
 
             <button
               type="button"
-              onClick={() => handleSecondaryAction("", "store")}
-              aria-expanded={travelSaveDropdownKey === "store"}
-              aria-controls="travel-save-panel-store"
+              className={storeTravelSavedOption ? "store-mini-save-success-button" : ""}
+              onClick={handleStoreSecondaryAction}
+              aria-expanded={mode === "travel" ? travelSaveDropdownKey === "store" : undefined}
+              aria-controls={mode === "travel" ? "travel-save-panel-store" : undefined}
             >
-              {modeInfo.secondaryButton}
+              {storeTravelSaveButtonLabel}
             </button>
 
             {phoneHref ? (
@@ -704,7 +911,7 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
             </a>
           </div>
 
-          {renderTravelSaveDropdown("store")}
+          {renderTravelSaveDropdown("store", storeName)}
 
           {noticeMessage ? <p className="store-mini-notice">{noticeMessage}</p> : null}
         </div>
@@ -815,7 +1022,10 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
               const deliveryAvailable = getMenuDeliveryAvailable(menu);
               const isDeliveryUnavailable =
                 mode === "delivery" && deliveryAvailable === "불가";
-              const dropdownKey = menu.id || `menu-${index}`;
+              const reservationMenuKey = buildMenuReservationItemKey(menu, index);
+              const isReservationMenuSaved = Boolean(
+                reservationMenuItems[reservationMenuKey]
+              );
 
               return (
                 <article key={menu.id || `${menuName}-${index}`} className="store-product-card">
@@ -877,15 +1087,22 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
 
                       <button
                         type="button"
-                        onClick={() => handleSecondaryAction(menuName, dropdownKey)}
-                        aria-expanded={travelSaveDropdownKey === dropdownKey}
-                        aria-controls={`travel-save-panel-${dropdownKey}`}
+                        className={
+                          mode === "travel" && isReservationMenuSaved
+                            ? "is-reservation-saved"
+                            : ""
+                        }
+                        onClick={() =>
+                          handleMenuSecondaryAction(menuName, reservationMenuKey)
+                        }
                       >
-                        {modeInfo.secondaryButton}
+                        {mode === "travel"
+                          ? isReservationMenuSaved
+                            ? "예약 메뉴에 담김"
+                            : "예약 메뉴 담기"
+                          : modeInfo.secondaryButton}
                       </button>
                     </div>
-
-                    {renderTravelSaveDropdown(dropdownKey)}
                   </div>
                 </article>
               );

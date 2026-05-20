@@ -6,6 +6,7 @@
    - 감성여행2 예약형 모드와 감성배달 배달형 모드를 같은 화면 구조에서 구분
    - 같은 메뉴 데이터를 쓰되 감성여행2는 예약 / 담기 선택, 감성배달은 배달 주문 / 장바구니 중심으로 표시
    - 담기 선택 패널은 누른 버튼 바로 아래에서 '나만의 여행' / '나만의 버킷' 선택으로 표시
+   - 이미 담은 선택지는 주황색으로 표시하고 중복 담기 안내를 보여줌
    - 대표 이미지가 없어도 준비중 카드가 자연스럽게 보이도록 구성
    - 지도 / 길찾기 / 전화 / 메뉴 / 이벤트 영역 포함
    ======================================== */
@@ -256,6 +257,13 @@
 .store-mini-actions button:nth-child(2) {
   color: #5a3518;
   background: #fff0da;
+}
+
+.store-mini-actions .store-mini-save-success-button,
+.store-mini-actions .store-mini-save-success-button:nth-child(2) {
+  color: #ffffff;
+  background: linear-gradient(135deg, #ff8a2a, #ff6b3d);
+  box-shadow: 0 12px 24px rgba(255, 111, 45, 0.2);
 }
 
 .store-mini-outline-link,
@@ -652,6 +660,13 @@
   background: #fff0da;
 }
 
+.store-product-actions button.is-reservation-saved,
+.store-product-actions button.is-reservation-saved:nth-child(2) {
+  color: #ffffff;
+  background: linear-gradient(135deg, #ff8a2a, #ff6b3d);
+  box-shadow: 0 10px 20px rgba(255, 111, 45, 0.16);
+}
+
 .store-product-actions button:disabled {
   cursor: not-allowed;
   opacity: 0.58;
@@ -699,49 +714,99 @@
   margin-top: 12px;
 }
 
-.store-travel-save-actions button {
+.store-travel-save-choice-card {
   min-height: 58px;
   display: grid;
   align-content: center;
   gap: 3px;
   padding: 10px 12px;
-  border: 0;
   border-radius: 15px;
-  background: #fff3e4;
-  color: #56351c;
   font-family: inherit;
   text-align: left;
   cursor: pointer;
+  user-select: none;
   transition:
     transform 0.18s ease,
     background 0.18s ease,
-    box-shadow 0.18s ease;
+    color 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
 }
 
-.store-travel-save-actions button:first-child {
-  background: linear-gradient(135deg, #ff8a2a, #ff6b3d);
-  color: #ffffff;
-  box-shadow: 0 10px 20px rgba(255, 111, 45, 0.16);
+.store-travel-save-choice-card.is-ready {
+  color: #56351c !important;
+  background: #fff3e4 !important;
+  border: 1px solid rgba(255, 150, 67, 0.16) !important;
+  box-shadow: none !important;
 }
 
-.store-travel-save-actions button:hover {
+.store-travel-save-choice-card.is-saved {
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #ff8a2a, #ff6b3d) !important;
+  border: 1px solid rgba(255, 107, 61, 0.34) !important;
+  box-shadow: 0 10px 20px rgba(255, 111, 45, 0.16) !important;
+}
+
+.store-travel-save-choice-card:hover,
+.store-travel-save-choice-card:focus-visible {
   transform: translateY(-1px);
+  outline: none;
 }
 
-.store-travel-save-actions span {
+.store-travel-save-choice-card:focus-visible {
+  box-shadow: 0 0 0 3px rgba(255, 139, 42, 0.22) !important;
+}
+
+.store-travel-save-choice-card span {
   display: block;
   font-size: 13.5px;
   font-weight: 950;
   line-height: 1.35;
 }
 
-.store-travel-save-actions small {
+.store-travel-save-choice-card em {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  color: inherit;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 950;
+  vertical-align: middle;
+}
+
+.store-travel-save-choice-card small {
   display: block;
   color: inherit;
   font-size: 11.5px;
   line-height: 1.45;
   opacity: 0.78;
   word-break: keep-all;
+}
+
+.store-travel-save-feedback {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 14px;
+  font-size: 12.8px;
+  line-height: 1.55;
+  font-weight: 800;
+  word-break: keep-all;
+}
+
+.store-travel-save-feedback.is-saved {
+  color: #8a3b08;
+  background: #fff3e4;
+  border: 1px solid rgba(255, 132, 42, 0.22);
+}
+
+.store-travel-save-feedback.is-duplicate {
+  color: #6c3f15;
+  background: #fff8ec;
+  border: 1px dashed rgba(180, 108, 35, 0.34);
 }
 
 .store-event-card span {
@@ -870,5 +935,210 @@
 
   .store-product-meta-list div {
     grid-template-columns: 70px minmax(0, 1fr);
+  }
+}
+
+
+/* ========================================
+   📌 담기 선택 상태 강제 정리
+   - 선택 전 버튼은 반드시 연한색
+   - 저장된 버튼만 주황색
+   - 기존 button:first-child 스타일이 선택 카드에 묻지 않도록 div 카드 전용 클래스로 분리
+   ======================================== */
+.store-mini-home-page.travel-mode .store-travel-save-panel .store-travel-save-actions > .store-travel-save-choice-card.is-ready,
+.store-mini-home-page.travel-mode .store-travel-save-panel .store-travel-save-actions > .store-travel-save-choice-card.is-ready:first-child,
+.store-mini-home-page.travel-mode .store-travel-save-panel .store-travel-save-actions > .store-travel-save-choice-card.is-ready:nth-child(2) {
+  color: #56351c !important;
+  background: #fff3e4 !important;
+  border: 1px solid rgba(255, 150, 67, 0.16) !important;
+  box-shadow: none !important;
+}
+
+.store-mini-home-page.travel-mode .store-travel-save-panel .store-travel-save-actions > .store-travel-save-choice-card.is-saved,
+.store-mini-home-page.travel-mode .store-travel-save-panel .store-travel-save-actions > .store-travel-save-choice-card.is-saved:first-child,
+.store-mini-home-page.travel-mode .store-travel-save-panel .store-travel-save-actions > .store-travel-save-choice-card.is-saved:nth-child(2) {
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #ff8a2a, #ff6b3d) !important;
+  border: 1px solid rgba(255, 107, 61, 0.34) !important;
+  box-shadow: 0 10px 20px rgba(255, 111, 45, 0.16) !important;
+}
+
+/* ========================================
+   📌 가게 자체 담기 선택 패널 최종 스타일
+   - 메뉴가 아니라 가게 자체를 나만의 여행 / 나만의 버킷에 담는 영역
+   - 선택 전: 연한색
+   - hover: 주황 테두리와 살짝 떠오르는 효과
+   - 담김: 주황색 고정 + 담김 배지
+   ======================================== */
+.g2-place-save-panel {
+  margin: 14px 0 0;
+  padding: 15px;
+  border-radius: 20px;
+  background: #ffffff;
+  border: 1px solid rgba(242, 139, 47, 0.3);
+  box-shadow: 0 12px 30px rgba(91, 51, 18, 0.08);
+}
+
+.g2-place-save-head strong {
+  display: block;
+  margin: 0;
+  color: #31261e;
+  font-size: 15px;
+  line-height: 1.35;
+  font-weight: 950;
+}
+
+.g2-place-save-head p {
+  margin: 7px 0 0;
+  color: #6b5948;
+  font-size: 13.5px;
+  line-height: 1.58;
+  word-break: keep-all;
+}
+
+.g2-place-save-current {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+
+.g2-place-save-current.is-empty {
+  color: #72533a;
+  background: #fff7ea;
+  border: 1px solid rgba(164, 104, 41, 0.13);
+}
+
+.g2-place-save-current.has-saved {
+  color: #9a3d09;
+  background: #fff1df;
+  border: 1px solid rgba(255, 120, 45, 0.26);
+}
+
+.g2-place-save-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.store-mini-home-page .g2-place-save-panel .g2-place-save-button {
+  width: 100%;
+  min-height: 72px;
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  padding: 12px 13px;
+  border-radius: 16px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.store-mini-home-page .g2-place-save-panel .g2-place-save-button.g2-place-save-ready,
+.store-mini-home-page .g2-place-save-panel .g2-place-save-button.g2-place-save-ready:first-child,
+.store-mini-home-page .g2-place-save-panel .g2-place-save-button.g2-place-save-ready:nth-child(2) {
+  color: #56351c !important;
+  background: #fff4e7 !important;
+  border: 1px solid rgba(255, 150, 67, 0.18) !important;
+  box-shadow: none !important;
+}
+
+.store-mini-home-page .g2-place-save-panel .g2-place-save-button.g2-place-save-ready:hover,
+.store-mini-home-page .g2-place-save-panel .g2-place-save-button.g2-place-save-ready:focus-visible {
+  color: #c64d12 !important;
+  background: #fff0df !important;
+  border-color: rgba(255, 107, 45, 0.72) !important;
+  box-shadow: 0 10px 20px rgba(255, 111, 45, 0.13) !important;
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.store-mini-home-page .g2-place-save-panel .g2-place-save-button.g2-place-save-saved,
+.store-mini-home-page .g2-place-save-panel .g2-place-save-button.g2-place-save-saved:first-child,
+.store-mini-home-page .g2-place-save-panel .g2-place-save-button.g2-place-save-saved:nth-child(2) {
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #ff8a2a, #ff613d) !important;
+  border: 1px solid rgba(255, 107, 61, 0.38) !important;
+  box-shadow: 0 12px 24px rgba(255, 111, 45, 0.2) !important;
+}
+
+.store-mini-home-page .g2-place-save-panel .g2-place-save-button.g2-place-save-saved:hover,
+.store-mini-home-page .g2-place-save-panel .g2-place-save-button.g2-place-save-saved:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(255, 111, 45, 0.24) !important;
+  outline: none;
+}
+
+.g2-place-save-button-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13.6px;
+  font-weight: 950;
+  line-height: 1.35;
+}
+
+.g2-place-save-button-title em {
+  flex: 0 0 auto;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  color: inherit;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 950;
+}
+
+.g2-place-save-button small {
+  display: block;
+  color: inherit;
+  font-size: 11.5px;
+  line-height: 1.45;
+  opacity: 0.82;
+  word-break: keep-all;
+}
+
+.g2-place-save-feedback {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 14px;
+  font-size: 12.8px;
+  line-height: 1.55;
+  font-weight: 850;
+  word-break: keep-all;
+}
+
+.g2-place-save-feedback.is-guide {
+  color: #74543a;
+  background: #fff8ec;
+  border: 1px dashed rgba(166, 103, 34, 0.22);
+}
+
+.g2-place-save-feedback.is-saved {
+  color: #8a3b08;
+  background: #fff3e4;
+  border: 1px solid rgba(255, 132, 42, 0.24);
+}
+
+.g2-place-save-feedback.is-duplicate {
+  color: #6c3f15;
+  background: #fff8ec;
+  border: 1px dashed rgba(180, 108, 35, 0.34);
+}
+
+@media (max-width: 720px) {
+  .g2-place-save-list {
+    grid-template-columns: 1fr;
   }
 }
