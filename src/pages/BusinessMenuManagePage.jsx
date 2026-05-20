@@ -5,7 +5,7 @@
 // - 로그인 세션 기준으로 profiles / owner_profiles / stores 정보를 조회
 // - stores에 연결된 가게가 있으면 store_menus 테이블에서 메뉴 목록을 불러옴
 // - store_menus 테이블이 없거나 저장 실패 시에도 화면 미리보기용으로 메뉴를 추가할 수 있음
-// - 사진 파일 선택 시 blob 링크를 입력창에 노출하지 않고 이미지 미리보기로 바로 표시
+// - 사진 파일 선택만 사용하고 주소 입력칸은 제거하여 사장님이 사진만 고르면 바로 미리보기로 표시
 // - 실제 공개 / 예약 접수 / 배달 주문 접수는 운영 시작 결제 후 활성화된다는 안내 표시
 // ========================================
 
@@ -21,7 +21,6 @@ const emptyDraft = {
   menuName: "",
   price: "",
   description: "",
-  imageUrl: "",
   imagePreviewUrl: "",
   imageFileName: "",
   category: "",
@@ -386,9 +385,7 @@ export default function BusinessMenuManagePage() {
     }
 
     const price = parsePrice(draft.price);
-    const typedImageUrl = normalizeImageUrl(draft.imageUrl);
     const previewImageUrl = normalizeImageUrl(draft.imagePreviewUrl);
-    const displayImageUrl = previewImageUrl || typedImageUrl;
     const hasLocalFilePreview = previewImageUrl.startsWith("blob:");
 
     const nextMenu = {
@@ -398,7 +395,7 @@ export default function BusinessMenuManagePage() {
       name: menuName,
       price,
       description: draft.description.trim(),
-      image_url: displayImageUrl,
+      image_url: previewImageUrl,
       category: draft.category.trim() || "대표 메뉴",
       is_available: true,
       sort_order: menus.length + 1,
@@ -409,7 +406,7 @@ export default function BusinessMenuManagePage() {
       setDraft(emptyDraft);
       setNoticeMessage(
         hasLocalFilePreview
-          ? "사진 파일이 포함된 메뉴를 화면 미리보기용으로 추가했습니다. 실제 저장은 Supabase Storage 업로드 연결 후 가능합니다."
+          ? "사진이 포함된 메뉴를 화면 미리보기용으로 추가했습니다. 실제 저장은 Supabase Storage 업로드 연결 후 가능합니다."
           : "화면 미리보기용 메뉴를 추가했습니다. stores와 store_menus 저장 구조가 연결되면 실제 저장까지 이어집니다."
       );
       return;
@@ -427,7 +424,7 @@ export default function BusinessMenuManagePage() {
           name: menuName,
           price,
           description: draft.description.trim(),
-          image_url: typedImageUrl,
+          image_url: "",
           category: draft.category.trim() || "대표 메뉴",
           is_available: true,
           sort_order: menus.length + 1,
@@ -590,34 +587,24 @@ export default function BusinessMenuManagePage() {
                 />
               </label>
 
-              <label>
-                <span>사진 주소 직접 입력</span>
-                <input
-                  type="text"
-                  value={draft.imageUrl}
-                  onChange={(event) => updateDraft("imageUrl", event.target.value)}
-                  placeholder="선택 사항: https://... 이미지 주소"
-                />
-              </label>
-
               <label className="image-file-label">
                 <span>사진 파일 선택</span>
                 <input type="file" accept="image/*" onChange={handleImageFileChange} />
-                <small>사진을 선택하면 링크가 아니라 아래에 이미지로 바로 보입니다. 실제 업로드는 다음 단계에서 Storage와 연결합니다.</small>
+                <small>사진을 선택하면 아래에 바로 미리보기로 표시됩니다. 실제 업로드는 다음 단계에서 Storage와 연결합니다.</small>
               </label>
 
-              {draft.imagePreviewUrl || draft.imageUrl ? (
+              {draft.imagePreviewUrl ? (
                 <div className="business-menu-draft-preview">
                   <div className="business-menu-draft-image-box">
                     <img
-                      src={draft.imagePreviewUrl || normalizeImageUrl(draft.imageUrl)}
+                      src={draft.imagePreviewUrl}
                       alt={draft.menuName || "선택한 메뉴 사진 미리보기"}
                     />
                   </div>
 
                   <div>
                     <span>선택한 사진 미리보기</span>
-                    <strong>{draft.imageFileName || "직접 입력한 이미지 주소"}</strong>
+                    <strong>{draft.imageFileName || "선택한 사진"}</strong>
                     <p>이 사진은 상품/메뉴 추가 후 아래 미니홈피 미리보기 카드에도 표시됩니다.</p>
                   </div>
                 </div>
