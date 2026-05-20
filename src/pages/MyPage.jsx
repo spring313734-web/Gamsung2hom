@@ -533,9 +533,10 @@ export default function MyPage() {
             <MyActionCard
               icon="🍲"
               title="상품 / 메뉴 관리"
-              desc="메뉴명, 가격, 설명, 사진은 앱에서 등록하고 홈페이지 미니홈피에 함께 표시합니다."
-              to="/business/dashboard"
-              buttonText="관리 바로가기"
+              desc="결제 전에도 메뉴명, 가격, 설명, 사진을 등록하고 미니홈피에서 어떻게 보일지 미리 확인합니다."
+              to="/business/menu"
+              buttonText="메뉴 관리 열기"
+              badge="무료 준비"
             />
 
             <MyActionCard

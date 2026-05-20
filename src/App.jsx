@@ -6,6 +6,7 @@
 // - 로그인 / 회원가입 / 권한별 관리 화면 라우팅 연결
 // - 권한별 마이페이지 /my 연결
 // - 소상공인 내 가게 관리 /business/dashboard 연결
+// - 소상공인 상품/메뉴 관리 /business/menu 연결
 // - 공통 소상공인 미니홈피 /store/:storeId 연결
 // - 감성배달형 미니홈피 확인용 /delivery/store/:storeId 연결
 // - 지자체 관리자 대시보드 /gov/dashboard 연결
@@ -33,6 +34,7 @@ import SignupPage from "./pages/SignupPage";
 import UserSignupPage from "./pages/UserSignupPage";
 import BusinessSignupPage from "./pages/BusinessSignupPage";
 import BusinessDashboardPage from "./pages/BusinessDashboardPage";
+import BusinessMenuManagePage from "./pages/BusinessMenuManagePage";
 import StoreMiniHomePage from "./pages/StoreMiniHomePage";
 import MyPage from "./pages/MyPage";
 import GovSignupPage from "./pages/GovSignupPage";
@@ -129,6 +131,15 @@ export default function App() {
               element={
                 <ProtectedRoute allowedAccountTypes={["business", "biz", "owner"]}>
                   <BusinessDashboardPage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/business/menu"
+              element={
+                <ProtectedRoute allowedAccountTypes={["business", "biz", "owner"]}>
+                  <BusinessMenuManagePage />
                 </ProtectedRoute>
               }
             />

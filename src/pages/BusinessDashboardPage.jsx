@@ -8,7 +8,8 @@
 // - 일반회원이 직접 URL로 접근하면 차단 안내
 // - 관리자 계정은 확인용으로 접근 가능
 // - 가입은 무료 상태로 표시
-// - 미니홈피 공개 / 운영 시작 버튼은 결제 연결 예정 상태로 안내
+// - 결제 전에도 가게 정보 / 상품·메뉴 / 사진 등록 준비와 미리보기는 가능하게 안내
+// - 미니홈피 공개 / 예약 접수 / 배달 주문 접수는 결제 후 활성화되는 구조로 안내
 // - owner_subscriptions는 이 화면에서도 아직 저장하지 않음
 // ========================================
 
@@ -275,6 +276,23 @@ export default function BusinessDashboardPage() {
     navigate(`/delivery/store/${store.id}`);
   }
 
+  function handleStoreEditClick() {
+    setNoticeMessage(
+      "가게 기본정보 수정 화면은 다음 단계에서 연결합니다. 현재는 가입 시 저장된 가게 정보를 확인하는 단계입니다."
+    );
+  }
+
+  function handleMenuManageClick() {
+    if (!hasStoreInfo) {
+      setNoticeMessage(
+        "상품/메뉴를 등록하려면 가게명과 사업자번호 같은 기본 정보가 먼저 필요합니다."
+      );
+      return;
+    }
+
+    navigate("/business/menu");
+  }
+
   function handleStartClick() {
     if (!hasStoreInfo) {
       setNoticeMessage(
@@ -291,7 +309,7 @@ export default function BusinessDashboardPage() {
     }
 
     setNoticeMessage(
-      `운영 시작은 ${SUBSCRIPTION_DAYS}일 이용권 결제 후 공개되는 구조로 연결할 예정입니다. 현재 단계에서는 결제를 진행하지 않습니다.`
+      `상품/메뉴 등록과 미리보기는 무료 가입 상태에서도 가능합니다. 실제 공개, 예약 접수, 배달 주문 접수는 ${SUBSCRIPTION_DAYS}일 이용권 결제 후 활성화되는 구조로 연결하면 됩니다.`
     );
   }
 
@@ -379,9 +397,9 @@ export default function BusinessDashboardPage() {
           </h1>
 
           <p>
-            가입은 무료로 완료되었습니다. 사장님은 휴대폰에서 가게 정보를 쉽게
-            만들고, 같은 데이터가 감성여행2 예약형 미니홈피와 감성배달
-            배달형 미니홈피에 함께 표시됩니다.
+            가입은 무료로 완료되었습니다. 결제 전에도 가게 정보, 상품/메뉴,
+            메뉴 사진을 준비하고 미니홈피 미리보기를 확인할 수 있습니다. 실제
+            공개와 예약·배달 주문 접수만 운영 시작 결제 후 활성화됩니다.
           </p>
         </div>
 
@@ -527,6 +545,62 @@ export default function BusinessDashboardPage() {
           </aside>
         </div>
 
+
+        <section className="business-dashboard-card prepare-card">
+          <div className="business-dashboard-card-head">
+            <div>
+              <span>FREE PREPARE</span>
+              <h2>결제 전에도 준비할 수 있는 기능</h2>
+            </div>
+
+            <strong>무료 준비 가능</strong>
+          </div>
+
+          <p className="business-prepare-intro">
+            사장님이 먼저 가게를 꾸며보고 마음에 들 때 운영을 시작할 수 있도록,
+            등록과 미리보기는 무료 상태에서도 열어둡니다. 고객에게 실제로
+            공개되거나 예약·배달 주문을 받는 기능만 결제 후 활성화됩니다.
+          </p>
+
+          <div className="business-prepare-grid">
+            <button type="button" onClick={handleStoreEditClick}>
+              <span>🏪</span>
+              <strong>가게 기본정보 준비</strong>
+              <small>상호, 주소, 전화번호, 한 줄 소개 확인</small>
+            </button>
+
+            <button type="button" onClick={handleMenuManageClick}>
+              <span>🍲</span>
+              <strong>상품/메뉴 관리</strong>
+              <small>메뉴명, 가격, 설명, 사진 등록과 미리보기</small>
+            </button>
+
+            <button type="button" onClick={handlePreviewClick}>
+              <span>🌿</span>
+              <strong>감성여행2 미리보기</strong>
+              <small>방문 예약형 미니홈피 화면 확인</small>
+            </button>
+
+            <button type="button" onClick={handleDeliveryPreviewClick}>
+              <span>🛵</span>
+              <strong>감성배달 미리보기</strong>
+              <small>배달 주문형 미니홈피 화면 확인</small>
+            </button>
+          </div>
+
+          <div className="business-paid-lock-box">
+            <div>
+              <span>PAYMENT LOCK</span>
+              <strong>운영 시작 후 활성화</strong>
+            </div>
+
+            <p>
+              미니홈피 공개, 지도/검색 노출, 감성여행2 예약 접수, 감성배달
+              주문 접수는 365일 이용권 결제 후 열리는 구조로 두면 됩니다.
+            </p>
+          </div>
+        </section>
+
         <section className="business-dashboard-card next-card">
           <div>
             <span className="next-label">NEXT STEP</span>
@@ -534,13 +608,17 @@ export default function BusinessDashboardPage() {
             <h2>다음 단계</h2>
 
             <p>
-              사장님은 휴대폰에서 한 번만 가게 정보를 만들고, 고객은 목적에
-              따라 감성여행2에서는 예약형 화면, 감성배달에서는 배달형 화면으로
-              보게 됩니다.
+              먼저 상품/메뉴와 사진을 등록해 미니홈피를 꾸며본 뒤, 마음에 들면
+              운영 시작 결제로 공개하면 됩니다. 준비는 무료, 공개와 주문·예약
+              접수는 결제 후 활성화되는 흐름입니다.
             </p>
           </div>
 
           <div className="business-next-actions">
+            <button type="button" onClick={handleMenuManageClick}>
+              상품/메뉴 관리하기
+            </button>
+
             <button type="button" onClick={handlePreviewClick}>
               감성여행2 미니홈피 보기
             </button>
