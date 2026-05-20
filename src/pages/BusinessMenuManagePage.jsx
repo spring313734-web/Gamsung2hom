@@ -9,6 +9,8 @@
 // - 가격 입력 시 숫자만 받아 천 단위 콤마를 자동 표시
 // - 사장님 입력 부담을 줄이기 위해 원산지 / 추천 대상 / 포장 / 배달 4개 기본 정보만 사용
 // - 메뉴가 1개 또는 2개일 때도 미니홈피 미리보기 카드가 어색하게 붙지 않도록 보기 좋게 정렬
+// - 상품/메뉴 추가 버튼을 누르면 먼저 화면과 브라우저 임시 저장에 즉시 추가하고, 가능할 때만 서버 저장 시도
+// - 입력 중인 내용과 미리보기 메뉴를 localStorage에 임시 저장하여 화면 이동 / 새로고침 후에도 유지
 // - 실제 공개 / 예약 접수 / 배달 주문 접수는 운영 시작 결제 후 활성화된다는 안내 표시
 // ========================================
 
@@ -19,6 +21,7 @@ import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import "./BusinessMenuManagePage.css";
 
 const MENU_TABLE_NAME = "store_menus";
+const STORAGE_PREFIX = "gamsung2.business-menu.v1";
 
 const emptyDraft = {
   menuName: "",
@@ -248,6 +251,154 @@ function canUseBusinessMenu(currentUser, ownerProfile) {
   );
 }
 
+function buildStorageKey({ userId, storeId, businessNumber }) {
+  const rawKey = storeId || businessNumber || userId || "guest";
+  const safeKey = String(rawKey).replace(/[^a-zA-Z0-9가-힣_-]/g, "_");
+  return `${STORAGE_PREFIX}.${safeKey}`;
+}
+
+function readLocalMenuState(storageKey) {
+  if (typeof window === "undefined" || !storageKey) {
+    return null;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(storageKey);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+
+    return parsed;
+  } catch (error) {
+    console.warn("[상품/메뉴 관리] 브라우저 임시 저장 데이터 읽기 실패:", error);
+    return null;
+  }
+}
+
+function writeLocalMenuState(storageKey, state) {
+  if (typeof window === "undefined" || !storageKey) {
+    return { ok: false, savedAt: "" };
+  }
+
+  const savedAt = new Date().toISOString();
+
+  try {
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        ...state,
+        savedAt,
+      })
+    );
+
+    return { ok: true, savedAt };
+  } catch (error) {
+    console.warn("[상품/메뉴 관리] 브라우저 임시 저장 실패:", error);
+    return { ok: false, savedAt: "" };
+  }
+}
+
+function sanitizeDraft(value) {
+  if (!value || typeof value !== "object") {
+    return emptyDraft;
+  }
+
+  return {
+    ...emptyDraft,
+    ...value,
+    price: formatPriceInput(value.price),
+    takeoutAvailable: value.takeoutAvailable || "가능",
+    deliveryAvailable: value.deliveryAvailable || "가능",
+  };
+}
+
+function mergeMenus(serverMenus, localMenus) {
+  const merged = [];
+  const seen = new Set();
+
+  [...(localMenus || []), ...(serverMenus || [])].forEach((menu, index) => {
+    if (!menu) return;
+
+    const menuKey =
+      menu.id ||
+      `${menu.store_id || "local"}-${getMenuName(menu)}-${getMenuPrice(menu)}-${index}`;
+
+    if (seen.has(menuKey)) return;
+
+    seen.add(menuKey);
+    merged.push(menu);
+  });
+
+  return merged;
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(reader.error);
+
+    reader.readAsDataURL(file);
+  });
+}
+
+async function createCompressedImageDataUrl(file) {
+  const originalDataUrl = await readFileAsDataUrl(file);
+
+  return new Promise((resolve) => {
+    const image = new Image();
+
+    image.onload = () => {
+      const maxSide = 1200;
+      const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
+      const width = Math.max(1, Math.round(image.width * scale));
+      const height = Math.max(1, Math.round(image.height * scale));
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+
+      const context = canvas.getContext("2d");
+
+      if (!context) {
+        resolve(originalDataUrl);
+        return;
+      }
+
+      context.drawImage(image, 0, 0, width, height);
+
+      try {
+        resolve(canvas.toDataURL("image/jpeg", 0.82));
+      } catch (error) {
+        console.warn("[상품/메뉴 관리] 사진 압축 실패:", error);
+        resolve(originalDataUrl);
+      }
+    };
+
+    image.onerror = () => {
+      resolve(originalDataUrl);
+    };
+
+    image.src = originalDataUrl;
+  });
+}
+
+function formatSavedAt(value) {
+  if (!value) return "";
+
+  try {
+    return new Intl.DateTimeFormat("ko-KR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    }).format(new Date(value));
+  } catch {
+    return "";
+  }
+}
+
 export default function BusinessMenuManagePage() {
   const navigate = useNavigate();
   const { currentUser, loading: authLoading, isLoggedIn } = useAuth();
@@ -262,6 +413,9 @@ export default function BusinessMenuManagePage() {
   const [noticeMessage, setNoticeMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [localOnlyMode, setLocalOnlyMode] = useState(false);
+  const [storageKey, setStorageKey] = useState("");
+  const [localStateReady, setLocalStateReady] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState("");
 
   const userId = currentUser?.id || "";
 
@@ -273,7 +427,6 @@ export default function BusinessMenuManagePage() {
     return getBusinessNumber(profile, ownerProfile, store);
   }, [profile, ownerProfile, store]);
 
-  const hasStoreInfo = hasMeaningfulOwnerProfile(ownerProfile) || Boolean(store?.id);
   const hasStoreMiniHome = Boolean(store?.id);
   const canUsePage = canUseBusinessMenu(currentUser, ownerProfile);
 
@@ -351,6 +504,7 @@ export default function BusinessMenuManagePage() {
       if (authLoading) return;
 
       setLoading(true);
+      setLocalStateReady(false);
       setErrorMessage("");
       setNoticeMessage("");
 
@@ -359,13 +513,17 @@ export default function BusinessMenuManagePage() {
         setOwnerProfile(null);
         setStore(null);
         setMenus([]);
+        setDraft(emptyDraft);
+        setStorageKey("");
         setLoading(false);
+        setLocalStateReady(true);
         return;
       }
 
       if (!isSupabaseConfigured) {
         setErrorMessage("Supabase 연결 정보가 없습니다. 환경변수를 확인해주세요.");
         setLoading(false);
+        setLocalStateReady(true);
         return;
       }
 
@@ -385,13 +543,29 @@ export default function BusinessMenuManagePage() {
 
         const storeData = await loadStoreByBusinessNumber(nextBusinessNumber);
         const menuData = await loadMenusByStoreId(storeData?.id);
+        const nextStorageKey = buildStorageKey({
+          userId,
+          storeId: storeData?.id,
+          businessNumber: nextBusinessNumber,
+        });
+        const localState = readLocalMenuState(nextStorageKey);
+        const localMenus = Array.isArray(localState?.menus) ? localState.menus : [];
 
         if (!mounted) return;
 
         setProfile(nextProfile);
         setOwnerProfile(nextOwnerProfile);
         setStore(storeData || null);
-        setMenus(menuData);
+        setStorageKey(nextStorageKey);
+        setDraft(sanitizeDraft(localState?.draft));
+        setMenus(mergeMenus(menuData, localMenus));
+        setLastSavedAt(localState?.savedAt || "");
+
+        if (localMenus.length > 0 || localState?.draft) {
+          setNoticeMessage(
+            "브라우저에 임시 저장된 상품/메뉴 내용을 다시 불러왔습니다. 실제 서버 저장은 Supabase Storage와 store_menus 연결 후 진행하면 됩니다."
+          );
+        }
       } catch (error) {
         console.error("[상품/메뉴 관리] 정보 불러오기 실패:", error);
 
@@ -403,6 +577,7 @@ export default function BusinessMenuManagePage() {
       } finally {
         if (mounted) {
           setLoading(false);
+          setLocalStateReady(true);
         }
       }
     }
@@ -415,12 +590,24 @@ export default function BusinessMenuManagePage() {
   }, [authLoading, isLoggedIn, userId, currentUser?.profile]);
 
   useEffect(() => {
-    return () => {
-      if (draft.imagePreviewUrl?.startsWith("blob:")) {
-        URL.revokeObjectURL(draft.imagePreviewUrl);
-      }
-    };
-  }, [draft.imagePreviewUrl]);
+    if (!localStateReady || !storageKey || !isLoggedIn) {
+      return;
+    }
+
+    const result = writeLocalMenuState(storageKey, {
+      draft,
+      menus,
+    });
+
+    if (result.ok) {
+      setLastSavedAt(result.savedAt);
+      return;
+    }
+
+    setNoticeMessage(
+      "사진 용량이 커서 브라우저 임시 저장이 어려울 수 있습니다. 사진을 조금 더 작은 용량으로 선택하거나, 다음 단계에서 Supabase Storage 저장을 연결하면 안정적으로 보관됩니다."
+    );
+  }, [draft, menus, isLoggedIn, localStateReady, storageKey]);
 
   function updateDraft(key, value) {
     setDraft((prev) => ({
@@ -429,26 +616,29 @@ export default function BusinessMenuManagePage() {
     }));
   }
 
-  function handleImageFileChange(event) {
+  async function handleImageFileChange(event) {
     const file = event.target.files?.[0];
 
     if (!file) return;
 
-    if (draft.imagePreviewUrl?.startsWith("blob:")) {
-      URL.revokeObjectURL(draft.imagePreviewUrl);
+    setNoticeMessage("선택한 사진을 미리보기용으로 준비하는 중입니다...");
+
+    try {
+      const previewUrl = await createCompressedImageDataUrl(file);
+
+      setDraft((prev) => ({
+        ...prev,
+        imagePreviewUrl: previewUrl,
+        imageFileName: file.name,
+      }));
+
+      setNoticeMessage(
+        "선택한 사진을 아래 미리보기로 표시하고 브라우저에 임시 저장했습니다. 실제 서버 저장용 Supabase Storage 업로드는 다음 단계에서 연결하면 됩니다."
+      );
+    } catch (error) {
+      console.warn("[상품/메뉴 관리] 사진 미리보기 생성 실패:", error);
+      setNoticeMessage("사진 미리보기를 만들지 못했습니다. 다른 사진 파일로 다시 선택해주세요.");
     }
-
-    const previewUrl = URL.createObjectURL(file);
-
-    setDraft((prev) => ({
-      ...prev,
-      imagePreviewUrl: previewUrl,
-      imageFileName: file.name,
-    }));
-
-    setNoticeMessage(
-      "선택한 사진을 아래 미리보기로 표시했습니다. 현재는 브라우저 미리보기용이며, 실제 저장용 Supabase Storage 업로드는 다음 단계에서 연결하면 됩니다."
-    );
   }
 
   async function handleAddMenu(event) {
@@ -461,12 +651,14 @@ export default function BusinessMenuManagePage() {
       return;
     }
 
+    const localId = `local-${Date.now()}`;
     const price = parsePrice(draft.price);
     const previewImageUrl = normalizeImageUrl(draft.imagePreviewUrl);
-    const hasLocalFilePreview = previewImageUrl.startsWith("blob:");
+    const hasLocalFilePreview =
+      previewImageUrl.startsWith("blob:") || previewImageUrl.startsWith("data:image");
 
     const nextMenu = {
-      id: `local-${Date.now()}`,
+      id: localId,
       store_id: store?.id || null,
       menu_name: menuName,
       name: menuName,
@@ -486,19 +678,20 @@ export default function BusinessMenuManagePage() {
       sort_order: menus.length + 1,
     };
 
+    // ✅ 먼저 화면과 브라우저 임시저장에 바로 추가합니다.
+    // 서버 저장이 아직 연결되지 않았거나 실패해도 사장님이 입력한 내용이 사라지지 않게 하기 위한 구조입니다.
+    setMenus((prev) => [nextMenu, ...prev]);
+    setDraft(emptyDraft);
+    setNoticeMessage(
+      "상품/메뉴를 미리보기 목록에 추가했습니다. 같은 브라우저에서는 새로고침하거나 다시 들어와도 임시 저장 내용이 유지됩니다."
+    );
+
+    // 사진 파일은 현재 data:image 임시 미리보기 상태라 Supabase Storage 연결 전에는 서버 테이블에 바로 넣지 않습니다.
     if (!hasStoreMiniHome || localOnlyMode || hasLocalFilePreview) {
-      setMenus((prev) => [nextMenu, ...prev]);
-      setDraft(emptyDraft);
-      setNoticeMessage(
-        hasLocalFilePreview
-          ? "사진이 포함된 메뉴를 화면 미리보기용으로 추가했습니다. 실제 저장은 Supabase Storage 업로드 연결 후 가능합니다."
-          : "화면 미리보기용 메뉴를 추가했습니다. stores와 store_menus 저장 구조가 연결되면 실제 저장까지 이어집니다."
-      );
       return;
     }
 
     setSaving(true);
-    setNoticeMessage("");
 
     try {
       const { data, error } = await supabase
@@ -529,15 +722,20 @@ export default function BusinessMenuManagePage() {
         throw error;
       }
 
-      setMenus((prev) => [data || nextMenu, ...prev]);
-      setDraft(emptyDraft);
-      setNoticeMessage("상품/메뉴를 저장했습니다.");
+      if (data) {
+        setMenus((prev) =>
+          prev.map((menu) => (menu.id === localId ? data : menu))
+        );
+      }
+
+      setNoticeMessage(
+        "상품/메뉴를 미리보기에 추가했고, 서버 저장도 완료했습니다."
+      );
     } catch (error) {
-      console.warn("[상품/메뉴 관리] 메뉴 저장 실패:", error);
-      setMenus((prev) => [nextMenu, ...prev]);
+      console.warn("[상품/메뉴 관리] 메뉴 서버 저장 실패:", error);
       setLocalOnlyMode(true);
       setNoticeMessage(
-        "store_menus 저장 컬럼을 확인해야 합니다. 우선 화면 미리보기용으로 메뉴를 추가했습니다."
+        "상품/메뉴를 브라우저 임시 저장으로 유지했습니다. store_menus 테이블 또는 RLS 정책은 다음 단계에서 확인하면 됩니다."
       );
     } finally {
       setSaving(false);
@@ -637,6 +835,12 @@ export default function BusinessMenuManagePage() {
 
         {noticeMessage ? <div className="business-menu-alert">{noticeMessage}</div> : null}
 
+        {lastSavedAt ? (
+          <div className="business-menu-alert">
+            브라우저 임시 저장 완료: {formatSavedAt(lastSavedAt)}
+          </div>
+        ) : null}
+
         <div className="business-menu-layout">
           <section className="business-menu-card form-card">
             <div className="business-menu-card-head">
@@ -686,8 +890,8 @@ export default function BusinessMenuManagePage() {
                 <span>사진 파일 선택</span>
                 <input type="file" accept="image/*" onChange={handleImageFileChange} />
                 <small>
-                  사진을 선택하면 아래에 바로 미리보기로 표시됩니다. 실제 업로드는 다음
-                  단계에서 Storage와 연결합니다.
+                  사진을 선택하면 아래에 바로 미리보기로 표시됩니다. 현재는 브라우저에
+                  임시 저장하고, 실제 서버 업로드는 다음 단계에서 Storage와 연결합니다.
                 </small>
               </label>
 
