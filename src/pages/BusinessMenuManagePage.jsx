@@ -6,6 +6,7 @@
 // - stores에 연결된 가게가 있으면 store_menus 테이블에서 메뉴 목록을 불러옴
 // - store_menus 테이블이 없거나 저장 실패 시에도 화면 미리보기용으로 메뉴를 추가할 수 있음
 // - 사진 파일 선택만 사용하고 주소 입력칸은 제거하여 사장님이 사진만 고르면 바로 미리보기로 표시
+// - 가격 입력 시 숫자만 받아 천 단위 콤마를 자동 표시
 // - 실제 공개 / 예약 접수 / 배달 주문 접수는 운영 시작 결제 후 활성화된다는 안내 표시
 // ========================================
 
@@ -82,6 +83,14 @@ function parsePrice(value) {
   const text = String(value || "").replace(/[^\d]/g, "");
   if (!text) return 0;
   return Number(text);
+}
+
+function formatPriceInput(value) {
+  const text = String(value || "").replace(/[^\d]/g, "");
+
+  if (!text) return "";
+
+  return new Intl.NumberFormat("ko-KR").format(Number(text));
 }
 
 function formatPrice(value) {
@@ -571,8 +580,10 @@ export default function BusinessMenuManagePage() {
                 <input
                   type="text"
                   value={draft.price}
-                  onChange={(event) => updateDraft("price", event.target.value)}
-                  placeholder="예: 12000"
+                  onChange={(event) =>
+                    updateDraft("price", formatPriceInput(event.target.value))
+                  }
+                  placeholder="예: 12,000"
                   inputMode="numeric"
                 />
               </label>
