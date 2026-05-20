@@ -7,6 +7,8 @@
 // - store_menus 테이블이 없거나 저장 실패 시에도 화면 미리보기용으로 메뉴를 추가할 수 있음
 // - 사진 파일 선택만 사용하고 주소 입력칸은 제거하여 사장님이 사진만 고르면 바로 미리보기로 표시
 // - 가격 입력 시 숫자만 받아 천 단위 콤마를 자동 표시
+// - 원산지 / 추천 대상 / 포장 가능 / 배달 가능 4개 기본 정보만 추가해 입력 부담을 줄임
+// - 설명은 제일 아래에 두어 메뉴 특징을 자유롭게 작성할 수 있게 구성
 // - 실제 공개 / 예약 접수 / 배달 주문 접수는 운영 시작 결제 후 활성화된다는 안내 표시
 // ========================================
 
@@ -25,6 +27,10 @@ const emptyDraft = {
   imagePreviewUrl: "",
   imageFileName: "",
   category: "",
+  origin: "",
+  recommendedFor: "",
+  takeoutAvailable: "가능",
+  deliveryAvailable: "가능",
 };
 
 function normalizeText(value) {
@@ -162,6 +168,34 @@ function getMenuImageUrl(menu) {
 function getMenuCategory(menu) {
   return menu?.category || menu?.menu_category || menu?.group_name || "대표 메뉴";
 }
+
+function getMenuOrigin(menu) {
+  return menu?.origin || menu?.origin_info || menu?.country_of_origin || "";
+}
+
+function getMenuRecommendedFor(menu) {
+  return menu?.recommended_for || menu?.recommendedFor || menu?.target_customer || "";
+}
+
+function getMenuTakeoutAvailable(menu) {
+  return menu?.takeout_available || menu?.takeoutAvailable || menu?.takeout || "";
+}
+
+function getMenuDeliveryAvailable(menu) {
+  return menu?.delivery_available || menu?.deliveryAvailable || menu?.delivery || "";
+}
+
+function buildMenuDetailText(menu) {
+  const rows = [
+    ["원산지", getMenuOrigin(menu)],
+    ["추천 대상", getMenuRecommendedFor(menu)],
+    ["포장", getMenuTakeoutAvailable(menu)],
+    ["배달", getMenuDeliveryAvailable(menu)],
+  ].filter(([, value]) => String(value || "").trim());
+
+  return rows;
+}
+
 
 function sortMenus(a, b) {
   const aOrder = Number(a?.sort_order ?? a?.order_no ?? 9999);
@@ -406,6 +440,10 @@ export default function BusinessMenuManagePage() {
       description: draft.description.trim(),
       image_url: previewImageUrl,
       category: draft.category.trim() || "대표 메뉴",
+      origin: draft.origin.trim(),
+      recommended_for: draft.recommendedFor.trim(),
+      takeout_available: draft.takeoutAvailable,
+      delivery_available: draft.deliveryAvailable,
       is_available: true,
       sort_order: menus.length + 1,
     };
@@ -445,7 +483,7 @@ export default function BusinessMenuManagePage() {
         throw error;
       }
 
-      setMenus((prev) => [data || nextMenu, ...prev]);
+      setMenus((prev) => [data ? { ...data, ...nextMenu, id: data.id || nextMenu.id } : nextMenu, ...prev]);
       setDraft(emptyDraft);
       setNoticeMessage("상품/메뉴를 저장했습니다.");
     } catch (error) {
@@ -539,9 +577,9 @@ export default function BusinessMenuManagePage() {
           </h1>
 
           <p>
-            결제 전에도 메뉴명, 가격, 설명, 사진을 등록하고 미니홈피에서 어떻게
-            보일지 확인할 수 있습니다. 실제 고객 공개와 예약·배달 주문 접수는
-            운영 시작 결제 후 활성화됩니다.
+            결제 전에도 메뉴명, 가격, 사진, 원산지, 추천 대상, 포장·배달 가능 여부를
+            간단히 등록하고 미니홈피에서 어떻게 보일지 확인할 수 있습니다. 실제 고객
+            공개와 예약·배달 주문 접수는 운영 시작 결제 후 활성화됩니다.
           </p>
         </div>
 
@@ -621,17 +659,86 @@ export default function BusinessMenuManagePage() {
                 </div>
               ) : null}
 
+              <div className="business-menu-basic-info full">
+                <div className="business-menu-basic-head">
+                  <span>기본 정보</span>
+                  <p>사장님이 부담 없이 입력할 수 있도록 꼭 필요한 4개만 넣었습니다.</p>
+                </div>
+
+                <div className="business-menu-basic-grid">
+                  <label>
+                    <span>원산지</span>
+                    <input
+                      type="text"
+                      value={draft.origin}
+                      onChange={(event) => updateDraft("origin", event.target.value)}
+                      placeholder="예: 복어 국내산, 쌀 국내산"
+                    />
+                  </label>
+
+                  <label>
+                    <span>추천 대상</span>
+                    <input
+                      type="text"
+                      value={draft.recommendedFor}
+                      onChange={(event) => updateDraft("recommendedFor", event.target.value)}
+                      placeholder="예: 가족 식사, 모임, 담백한 음식 선호 고객"
+                    />
+                  </label>
+
+                  <div className="business-menu-choice-field">
+                    <span>포장 가능</span>
+                    <div className="business-menu-choice-row">
+                      {["가능", "불가"].map((value) => (
+                        <button
+                          key={`takeout-${value}`}
+                          type="button"
+                          className={
+                            draft.takeoutAvailable === value
+                              ? "business-menu-choice-button active"
+                              : "business-menu-choice-button"
+                          }
+                          onClick={() => updateDraft("takeoutAvailable", value)}
+                        >
+                          {value}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="business-menu-choice-field">
+                    <span>배달 가능</span>
+                    <div className="business-menu-choice-row">
+                      {["가능", "불가"].map((value) => (
+                        <button
+                          key={`delivery-${value}`}
+                          type="button"
+                          className={
+                            draft.deliveryAvailable === value
+                              ? "business-menu-choice-button active"
+                              : "business-menu-choice-button"
+                          }
+                          onClick={() => updateDraft("deliveryAvailable", value)}
+                        >
+                          {value}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <label className="full">
                 <span>설명</span>
                 <textarea
                   value={draft.description}
                   onChange={(event) => updateDraft("description", event.target.value)}
-                  placeholder="메뉴 특징, 추천 대상, 원산지나 구성 설명을 적어주세요."
+                  placeholder="메뉴 특징, 맛, 구성, 사장님이 추천하는 이유를 자유롭게 적어주세요."
                   rows={4}
                 />
               </label>
 
-              <button type="submit" disabled={saving}>
+              <button type="submit" className="business-menu-submit-btn" disabled={saving}>
                 {saving ? "저장 중..." : "상품/메뉴 추가"}
               </button>
             </form>
@@ -697,6 +804,7 @@ export default function BusinessMenuManagePage() {
             <div className="business-menu-grid">
               {sortedMenus.map((menu, index) => {
                 const imageUrl = getMenuImageUrl(menu);
+                const detailRows = buildMenuDetailText(menu);
 
                 return (
                   <article className="business-menu-item" key={menu.id || `${getMenuName(menu)}-${index}`}>
@@ -715,6 +823,18 @@ export default function BusinessMenuManagePage() {
                       <span>{getMenuCategory(menu)}</span>
                       <h3>{getMenuName(menu)}</h3>
                       <strong>{formatPrice(getMenuPrice(menu))}</strong>
+
+                      {detailRows.length > 0 ? (
+                        <dl className="business-menu-meta-list">
+                          {detailRows.map(([label, value]) => (
+                            <div key={`${getMenuName(menu)}-${label}`}>
+                              <dt>{label}</dt>
+                              <dd>{value}</dd>
+                            </div>
+                          ))}
+                        </dl>
+                      ) : null}
+
                       <p>{getMenuDescription(menu)}</p>
                     </div>
                   </article>
@@ -726,8 +846,8 @@ export default function BusinessMenuManagePage() {
               <span>🍽️</span>
               <h3>아직 등록된 상품/메뉴가 없습니다</h3>
               <p>
-                위 입력창에서 메뉴명, 가격, 설명, 사진을 넣으면 이곳에서
-                미니홈피에 보일 모습을 먼저 확인할 수 있습니다.
+                위 입력창에서 메뉴명, 가격, 사진, 원산지, 추천 대상, 포장·배달 가능 여부를
+                넣으면 이곳에서 미니홈피에 보일 모습을 먼저 확인할 수 있습니다.
               </p>
             </div>
           )}

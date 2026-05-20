@@ -4,6 +4,7 @@
    - 결제 전에도 상품/메뉴와 사진을 준비하고 미리보기 가능한 화면
    - 입력 폼 / 가게 상태 / 미니홈피 메뉴 카드 미리보기 구성
    - 사진 선택 시 링크가 아니라 이미지 미리보기 박스로 바로 표시
+   - 원산지 / 추천 대상 / 포장 가능 / 배달 가능 4개 기본 정보 입력 영역 구성
    - 공개 / 예약 / 배달 주문 접수는 결제 후 활성화되는 안내 강조
    ======================================== */
 
@@ -146,7 +147,8 @@
 }
 
 .business-menu-form label.full,
-.image-file-label {
+.image-file-label,
+.business-menu-basic-info.full {
   grid-column: 1 / -1;
 }
 
@@ -255,7 +257,87 @@
   word-break: keep-all;
 }
 
-.business-menu-form button,
+.business-menu-basic-info {
+  padding: 16px;
+  border-radius: 22px;
+  background: rgba(255, 252, 247, 0.92);
+  border: 1px solid rgba(143, 91, 39, 0.12);
+}
+
+.business-menu-basic-head {
+  margin-bottom: 14px;
+}
+
+.business-menu-basic-head span {
+  display: block;
+  color: #c26417;
+  font-size: 0.82rem;
+  font-weight: 950;
+}
+
+.business-menu-basic-head p {
+  margin: 6px 0 0;
+  color: #7a685b;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  font-weight: 800;
+  word-break: keep-all;
+}
+
+.business-menu-basic-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.business-menu-choice-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.business-menu-choice-field > span {
+  color: #6c5a4a;
+  font-size: 0.84rem;
+  font-weight: 950;
+}
+
+.business-menu-choice-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.business-menu-choice-button {
+  min-height: 50px;
+  padding: 0 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(143, 91, 39, 0.16);
+  background: rgba(255, 248, 238, 0.85);
+  color: #6c5a4a;
+  font-family: inherit;
+  font-size: 0.94rem;
+  font-weight: 950;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease;
+}
+
+.business-menu-choice-button.active {
+  border-color: rgba(255, 107, 44, 0.42);
+  background: linear-gradient(135deg, #ff9f1c, #ff6b2c);
+  color: #ffffff;
+  box-shadow: 0 10px 22px rgba(255, 111, 45, 0.18);
+}
+
+.business-menu-choice-button:hover {
+  transform: translateY(-1px);
+}
+
+.business-menu-submit-btn,
 .business-menu-side-actions button,
 .business-menu-side-actions a,
 .business-menu-actions a {
@@ -280,18 +362,18 @@
     box-shadow 0.18s ease;
 }
 
-.business-menu-form button {
+.business-menu-submit-btn {
   grid-column: 1 / -1;
 }
 
-.business-menu-form button:hover,
+.business-menu-submit-btn:hover,
 .business-menu-side-actions button:hover,
 .business-menu-side-actions a:hover,
 .business-menu-actions a:hover {
   transform: translateY(-1px);
 }
 
-.business-menu-form button:disabled {
+.business-menu-submit-btn:disabled {
   opacity: 0.65;
   cursor: not-allowed;
   transform: none;
@@ -460,6 +542,40 @@
   font-weight: 950;
 }
 
+.business-menu-meta-list {
+  display: grid;
+  gap: 7px;
+  margin: 12px 0 0;
+}
+
+.business-menu-meta-list div {
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  padding: 8px 10px;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(143, 91, 39, 0.08);
+}
+
+.business-menu-meta-list dt {
+  margin: 0;
+  color: #8a7564;
+  font-size: 0.74rem;
+  line-height: 1.4;
+  font-weight: 950;
+}
+
+.business-menu-meta-list dd {
+  margin: 0;
+  color: #2f261f;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  font-weight: 850;
+  word-break: keep-all;
+}
+
 .business-menu-item-body p {
   margin: 10px 0 0;
   color: #6c5a4a;
@@ -563,7 +679,8 @@
     font-size: 0.94rem;
   }
 
-  .business-menu-form {
+  .business-menu-form,
+  .business-menu-basic-grid {
     grid-template-columns: 1fr;
   }
 
