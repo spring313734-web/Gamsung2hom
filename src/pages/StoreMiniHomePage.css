@@ -1142,3 +1142,123 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* ========================================
+   V6 담기 선택 상태 표시 강제 스타일
+   - 기존 버튼 first-child 스타일과 충돌하지 않도록 g2 전용 클래스에 !important 적용
+   ======================================== */
+.store-mini-home-page.travel-mode .store-mini-actions > .store-mini-save-success-button {
+  background: linear-gradient(135deg, #ff6a2a, #ff8a3d) !important;
+  color: #ffffff !important;
+  border-color: #ff6a2a !important;
+  box-shadow: 0 12px 24px rgba(255, 106, 42, 0.24) !important;
+}
+
+.store-mini-home-page.travel-mode .g2-place-save-panel {
+  display: block !important;
+  margin-top: 14px !important;
+  border: 1px solid rgba(255, 106, 42, 0.28) !important;
+  border-radius: 20px !important;
+  background: #fffaf4 !important;
+  padding: 16px !important;
+}
+
+.store-mini-home-page.travel-mode .g2-place-save-current.has-saved {
+  background: #2f2118 !important;
+  color: #ffffff !important;
+  border-color: #2f2118 !important;
+}
+
+.store-mini-home-page.travel-mode .g2-place-save-current.is-empty {
+  background: #fff4e4 !important;
+  color: #6f4b2d !important;
+}
+
+.store-mini-home-page.travel-mode .g2-place-save-list {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.store-mini-home-page.travel-mode .g2-place-save-panel .g2-place-save-button,
+.store-mini-home-page.travel-mode .g2-place-save-panel .g2-place-save-button:first-child,
+.store-mini-home-page.travel-mode .g2-place-save-panel .g2-place-save-button:nth-child(2) {
+  width: 100% !important;
+  min-height: 92px !important;
+  border-radius: 16px !important;
+  border: 2px solid rgba(255, 106, 42, 0.14) !important;
+  padding: 14px !important;
+  text-align: left !important;
+  cursor: pointer !important;
+  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease !important;
+}
+
+.store-mini-home-page.travel-mode .g2-place-save-panel .g2-place-save-button.g2-place-save-ready,
+.store-mini-home-page.travel-mode .g2-place-save-panel .g2-place-save-button.g2-place-save-ready:first-child,
+.store-mini-home-page.travel-mode .g2-place-save-panel .g2-place-save-button.g2-place-save-ready:nth-child(2) {
+  background: #fff2df !important;
+  color: #2f2118 !important;
+}
+
+.store-mini-home-page.travel-mode .g2-place-save-panel .g2-place-save-button.g2-place-save-ready:hover,
+.store-mini-home-page.travel-mode .g2-place-save-panel .g2-place-save-button.g2-place-save-ready:focus-visible {
+  background: #ffe2c6 !important;
+  border-color: #ff6a2a !important;
+  color: #ff5a1f !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 12px 24px rgba(255, 106, 42, 0.18) !important;
+}
+
+.store-mini-home-page.travel-mode .g2-place-save-panel .g2-place-save-button.g2-place-save-saved,
+.store-mini-home-page.travel-mode .g2-place-save-panel .g2-place-save-button.g2-place-save-saved:first-child,
+.store-mini-home-page.travel-mode .g2-place-save-panel .g2-place-save-button.g2-place-save-saved:nth-child(2) {
+  background: linear-gradient(135deg, #ff6a2a, #ff8a3d) !important;
+  border-color: #ff6a2a !important;
+  color: #ffffff !important;
+  box-shadow: 0 14px 28px rgba(255, 106, 42, 0.24) !important;
+}
+
+.store-mini-home-page.travel-mode .g2-place-save-button-title {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  font-size: 15px !important;
+  font-weight: 900 !important;
+}
+
+.store-mini-home-page.travel-mode .g2-place-save-button-title em {
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.22) !important;
+  padding: 4px 8px !important;
+  font-style: normal !important;
+  font-size: 11px !important;
+}
+
+.store-mini-home-page.travel-mode .g2-place-save-button small {
+  display: block !important;
+  margin-top: 7px !important;
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+}
+
+.store-mini-home-page.travel-mode .g2-place-save-feedback.is-saved {
+  background: #fff0df !important;
+  color: #f05a1a !important;
+  border-color: rgba(255, 106, 42, 0.24) !important;
+  font-weight: 900 !important;
+}
+
+.store-mini-home-page.travel-mode .g2-place-save-feedback.is-duplicate {
+  background: #fff7ed !important;
+  color: #8a4b12 !important;
+  border-color: rgba(255, 138, 61, 0.28) !important;
+  font-weight: 900 !important;
+}
+
+@media (max-width: 720px) {
+  .store-mini-home-page.travel-mode .g2-place-save-list {
+    grid-template-columns: 1fr !important;
+  }
+}

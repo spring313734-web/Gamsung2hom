@@ -15,6 +15,7 @@
 // - 선택 전에는 둘 다 연한색, 마우스 hover 때만 주황 테두리/연한 주황 배경으로 표시
 // - 담기 성공한 항목은 체크 표시와 함께 주황색으로 고정하고 버튼 문구를 담기 성공으로 변경
 // - 같은 곳에 다시 담으면 카드 바로 아래에 중복 저장 안내를 표시
+// - V6: 선택 패널을 감성여행2 화면에서 기본 표시해 숨김 상태/토글 오류를 제거
 // - 데이터가 비어 있어도 준비중 안내가 자연스럽게 보이도록 구성
 // - 배달 가능 메뉴는 고객 오해를 줄이기 위해 '가능 · 배달료 별도'로 표시
 // - 이벤트가 없으면 고객 미니홈피에서 이벤트 영역 자체를 숨김
@@ -481,7 +482,7 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
   const [errorMessage, setErrorMessage] = useState("");
   const [noticeMessage, setNoticeMessage] = useState("");
   const [usedLocalMenus, setUsedLocalMenus] = useState(false);
-  const [travelSaveDropdownKey, setTravelSaveDropdownKey] = useState("");
+  const [storeSavePanelOpen, setStoreSavePanelOpen] = useState(() => mode === "travel");
   const [travelSaveTargetName, setTravelSaveTargetName] = useState("");
   const [savedTravelItems, setSavedTravelItems] = useState({});
   const [travelSaveFeedbackMap, setTravelSaveFeedbackMap] = useState({});
@@ -546,7 +547,7 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
       setErrorMessage("");
       setNoticeMessage("");
       setUsedLocalMenus(false);
-      setTravelSaveDropdownKey("");
+      setStoreSavePanelOpen(mode === "travel");
       setTravelSaveTargetName("");
       setSavedTravelItems({});
       setTravelSaveFeedbackMap({});
@@ -657,16 +658,16 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
     }
 
     setTravelSaveTargetName(storeName);
-    setTravelSaveDropdownKey((prev) => (prev === "store" ? "" : "store"));
+    setStoreSavePanelOpen(true);
 
     if (storeTravelSavedOption) {
       setNoticeMessage(
-        `${storeName}은 이미 ${storeTravelSavedOption.destination}에 담겨 있습니다. 다른 위치에 추가하려면 아래 선택창에서 눌러주세요.`
+        `${storeName}은 현재 ${storeTravelSavedOption.destination}에 담겨 있습니다. 다른 위치에도 담으려면 아래 선택 버튼을 눌러주세요.`
       );
       return;
     }
 
-    setNoticeMessage(`${storeName}을 나만의 여행 또는 나만의 버킷 중 어디에 담을지 선택해주세요.`);
+    setNoticeMessage(`${storeName}을 나만의 여행 또는 나만의 버킷 중 어디에 담을지 아래에서 선택해주세요.`);
   }
 
   function handleMenuSecondaryAction(menuName = "", menuKey = "") {
@@ -712,6 +713,7 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
     if (alreadySaved) {
       const duplicateMessage = `${nextTargetName}은 이미 ${option.destination}에 담겨 있습니다. 중복으로 다시 담기지 않습니다.`;
 
+      setStoreSavePanelOpen(true);
       setNoticeMessage(duplicateMessage);
       setTravelSaveFeedback(dropdownKey, duplicateMessage, "duplicate");
       return;
@@ -731,6 +733,7 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
 
     setSavedTravelItems(nextSavedItems);
     writeLocalTravelSaveMap(travelSaveStorageKey, nextSavedItems);
+    setStoreSavePanelOpen(true);
     setNoticeMessage(savedMessage);
     setTravelSaveFeedback(dropdownKey, savedMessage, "saved");
   }
@@ -744,12 +747,13 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
     handleTravelSaveChoice(option, dropdownKey, targetName);
   }
 
-  function renderTravelSaveDropdown(dropdownKey, targetName = "") {
-    if (mode !== "travel" || travelSaveDropdownKey !== dropdownKey) {
+  function renderStoreTravelSavePanel(targetName = "") {
+    if (mode !== "travel" || !storeSavePanelOpen) {
       return null;
     }
 
-    const panelId = `travel-save-panel-${dropdownKey}`;
+    const dropdownKey = "store";
+    const panelId = "travel-save-panel-store";
     const displayTargetName = targetName || travelSaveTargetName || storeName;
     const feedback = travelSaveFeedbackMap[dropdownKey];
     const savedDestinations = TRAVEL_SAVE_OPTIONS.filter((option) => {
@@ -763,9 +767,9 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
     return (
       <div id={panelId} className="g2-place-save-panel">
         <div className="g2-place-save-head">
-          <strong>담기 선택</strong>
+          <strong>나만의 여행 / 나만의 버킷 선택</strong>
           <p>
-            {displayTargetName} 가게 자체를 나만의 여행 또는 나만의 버킷에 저장합니다.
+            음식 메뉴가 아니라 {displayTargetName} 가게 자체를 저장합니다. 원하는 곳을 누르면 버튼 글자가 담기 성공으로 바뀝니다.
           </p>
         </div>
 
@@ -889,7 +893,7 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
               type="button"
               className={storeTravelSavedOption ? "store-mini-save-success-button" : ""}
               onClick={handleStoreSecondaryAction}
-              aria-expanded={mode === "travel" ? travelSaveDropdownKey === "store" : undefined}
+              aria-expanded={mode === "travel" ? storeSavePanelOpen : undefined}
               aria-controls={mode === "travel" ? "travel-save-panel-store" : undefined}
             >
               {storeTravelSaveButtonLabel}
@@ -911,7 +915,7 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
             </a>
           </div>
 
-          {renderTravelSaveDropdown("store", storeName)}
+          {renderStoreTravelSavePanel(storeName)}
 
           {noticeMessage ? <p className="store-mini-notice">{noticeMessage}</p> : null}
         </div>
