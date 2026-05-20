@@ -4,7 +4,8 @@
    - stores / store_menus / store_products / store_events 데이터를 보기 좋게 표시
    - 상품/메뉴 관리 화면에서 브라우저 임시 저장한 메뉴도 같은 브라우저에서는 표시
    - 감성여행2 예약형 모드와 감성배달 배달형 모드를 같은 화면 구조에서 구분
-   - 같은 메뉴 데이터를 쓰되 감성여행2는 예약 / 코스 담기, 감성배달은 배달 주문 / 장바구니 중심으로 표시
+   - 같은 메뉴 데이터를 쓰되 감성여행2는 예약 / 담기 선택, 감성배달은 배달 주문 / 장바구니 중심으로 표시
+   - 담기 선택 패널은 누른 버튼 바로 아래에서 '나만의 여행' / '나만의 버킷' 선택으로 표시
    - 대표 이미지가 없어도 준비중 카드가 자연스럽게 보이도록 구성
    - 지도 / 길찾기 / 전화 / 메뉴 / 이벤트 영역 포함
    ======================================== */
@@ -661,6 +662,88 @@
   transform: translateY(-1px);
 }
 
+.store-travel-save-panel {
+  margin: 14px 0 0;
+  padding: 15px;
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid rgba(242, 139, 47, 0.28);
+  box-shadow: 0 12px 28px rgba(91, 51, 18, 0.08);
+}
+
+.store-product-body .store-travel-save-panel {
+  margin-top: 12px;
+}
+
+.store-travel-save-panel strong {
+  display: block;
+  margin: 0;
+  color: #3a2d23;
+  font-size: 15px;
+  line-height: 1.35;
+  font-weight: 950;
+}
+
+.store-travel-save-panel p {
+  margin: 7px 0 0;
+  color: #6b5948;
+  font-size: 13.5px;
+  line-height: 1.58;
+  word-break: keep-all;
+}
+
+.store-travel-save-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.store-travel-save-actions button {
+  min-height: 58px;
+  display: grid;
+  align-content: center;
+  gap: 3px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 15px;
+  background: #fff3e4;
+  color: #56351c;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.store-travel-save-actions button:first-child {
+  background: linear-gradient(135deg, #ff8a2a, #ff6b3d);
+  color: #ffffff;
+  box-shadow: 0 10px 20px rgba(255, 111, 45, 0.16);
+}
+
+.store-travel-save-actions button:hover {
+  transform: translateY(-1px);
+}
+
+.store-travel-save-actions span {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 950;
+  line-height: 1.35;
+}
+
+.store-travel-save-actions small {
+  display: block;
+  color: inherit;
+  font-size: 11.5px;
+  line-height: 1.45;
+  opacity: 0.78;
+  word-break: keep-all;
+}
+
 .store-event-card span {
   display: inline-flex;
   margin-bottom: 8px;
@@ -780,7 +863,8 @@
     padding: 22px 18px;
   }
 
-  .store-product-actions {
+  .store-product-actions,
+  .store-travel-save-actions {
     grid-template-columns: 1fr;
   }
 
