@@ -15,8 +15,8 @@
 // - 선택 전에는 둘 다 연한색, 마우스 hover 때만 주황 테두리/연한 주황 배경으로 표시
 // - 담기 성공한 항목은 체크 표시와 함께 주황색으로 고정하고 버튼 문구를 담기 성공으로 변경
 // - 같은 곳에 다시 담으면 카드 바로 아래에 중복 저장 안내를 표시
-// - V7: 담기 선택은 공간을 적게 차지하는 드롭다운 방식으로 표시
-// - 담기 선택 패널은 버튼을 눌렀을 때만 작게 열리고, 선택 완료/중복 안내만 짧게 표시
+// - V8: 드롭다운에서 이미 담긴 항목을 다시 누르면 담기 취소로 동작
+// - 담기 선택 패널은 버튼을 눌렀을 때만 작게 열리고, 선택 완료/취소 안내만 짧게 표시
 // - 데이터가 비어 있어도 준비중 안내가 자연스럽게 보이도록 구성
 // - 배달 가능 메뉴는 고객 오해를 줄이기 위해 '가능 · 배달료 별도'로 표시
 // - 이벤트가 없으면 고객 미니홈피에서 이벤트 영역 자체를 숨김
@@ -40,7 +40,7 @@ const TRAVEL_SAVE_OPTIONS = [
     label: "나만의 여행에 담기",
     savedLabel: "나만의 여행 담기 성공",
     description: "감성여행2의 내 여행 일정에 이 가게를 추가합니다.",
-    savedDescription: "담김 완료 · 다시 누르면 중복 안내만 표시됩니다.",
+    savedDescription: "담김 완료 · 다시 누르면 취소됩니다.",
   },
   {
     key: "my-bucket",
@@ -48,7 +48,7 @@ const TRAVEL_SAVE_OPTIONS = [
     label: "나만의 버킷에 담기",
     savedLabel: "나만의 버킷 담기 성공",
     description: "언젠가 가고 싶은 장소로 나만의 버킷에 저장합니다.",
-    savedDescription: "담김 완료 · 다시 누르면 중복 안내만 표시됩니다.",
+    savedDescription: "담김 완료 · 다시 누르면 취소됩니다.",
   },
 ];
 
@@ -668,7 +668,7 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
 
     if (storeTravelSavedOption) {
       setNoticeMessage(
-        `${storeName}은 현재 ${storeTravelSavedOption.destination}에 담겨 있습니다. 같은 곳을 다시 누르면 중복 안내만 표시됩니다.`
+        `${storeName}은 현재 ${storeTravelSavedOption.destination}에 담겨 있습니다. 드롭다운에서 같은 항목을 다시 누르면 담기가 취소됩니다.`
       );
       return;
     }
@@ -717,11 +717,16 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
     const alreadySaved = Boolean(savedTravelItems[itemKey]);
 
     if (alreadySaved) {
-      const duplicateMessage = `${nextTargetName}은 이미 ${option.destination}에 담겨 있습니다. 중복으로 다시 담기지 않습니다.`;
+      const nextSavedItems = { ...savedTravelItems };
+      delete nextSavedItems[itemKey];
 
+      const cancelMessage = `${nextTargetName} ${option.destination} 담기 취소`;
+
+      setSavedTravelItems(nextSavedItems);
+      writeLocalTravelSaveMap(travelSaveStorageKey, nextSavedItems);
       setStoreSavePanelOpen(true);
-      setNoticeMessage(duplicateMessage);
-      setTravelSaveFeedback(dropdownKey, duplicateMessage, "duplicate");
+      setNoticeMessage(cancelMessage);
+      setTravelSaveFeedback(dropdownKey, cancelMessage, "cancelled");
       return;
     }
 
@@ -796,7 +801,7 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
               >
                 <span className="g2-place-save-button-title">
                   {isSaved ? option.savedLabel : option.label}
-                  {isSaved ? <em>담김</em> : null}
+                  {isSaved ? <em>다시 누르면 취소</em> : null}
                 </span>
               </button>
             );
@@ -806,7 +811,11 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
         {feedback?.message ? (
           <p
             className={`g2-place-save-feedback ${
-              feedback.type === "duplicate" ? "is-duplicate" : "is-saved"
+              feedback.type === "cancelled"
+                ? "is-cancelled"
+                : feedback.type === "duplicate"
+                  ? "is-duplicate"
+                  : "is-saved"
             }`}
           >
             {feedback.message}

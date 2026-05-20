@@ -1131,6 +1131,12 @@
   border: 1px solid rgba(255, 132, 42, 0.24);
 }
 
+.g2-place-save-feedback.is-cancelled {
+  color: #5f4935;
+  background: #fff8ef;
+  border: 1px dashed rgba(153, 103, 54, 0.28);
+}
+
 .g2-place-save-feedback.is-duplicate {
   color: #6c3f15;
   background: #fff8ec;
@@ -1265,7 +1271,7 @@
 
 
 /* ========================================
-   V7 담기 선택 드롭다운 최종 스타일
+   V8 담기 선택 드롭다운 최종 스타일
    - 공간을 적게 차지하도록 버튼 아래에 작게 펼쳐지는 구조
    - 기본 닫힘: JSX에서 패널 미출력
    - 선택 전: 연한색 / hover: 주황 강조 / 선택 후: 주황색 고정
@@ -1382,7 +1388,7 @@
   border-radius: 999px !important;
   background: rgba(255, 255, 255, 0.22) !important;
   color: inherit !important;
-  font-size: 10px !important;
+  font-size: 9.5px !important;
   font-style: normal !important;
   font-weight: 950 !important;
 }
@@ -1400,6 +1406,12 @@
   color: #f05a1a !important;
   background: #fff0df !important;
   border: 1px solid rgba(255, 106, 42, 0.22) !important;
+}
+
+.store-mini-home-page.travel-mode .g2-place-save-panel--dropdown .g2-place-save-feedback.is-cancelled {
+  color: #6f4b2d !important;
+  background: #fff8ef !important;
+  border: 1px dashed rgba(153, 103, 54, 0.34) !important;
 }
 
 .store-mini-home-page.travel-mode .g2-place-save-panel--dropdown .g2-place-save-feedback.is-duplicate {
