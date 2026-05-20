@@ -1262,3 +1262,165 @@
     grid-template-columns: 1fr !important;
   }
 }
+
+
+/* ========================================
+   V7 담기 선택 드롭다운 최종 스타일
+   - 공간을 적게 차지하도록 버튼 아래에 작게 펼쳐지는 구조
+   - 기본 닫힘: JSX에서 패널 미출력
+   - 선택 전: 연한색 / hover: 주황 강조 / 선택 후: 주황색 고정
+   ======================================== */
+.store-mini-home-page.travel-mode .store-mini-actions > .store-mini-save-success-button {
+  background: linear-gradient(135deg, #ff6a2a, #ff8a3d) !important;
+  color: #ffffff !important;
+  border-color: #ff6a2a !important;
+  box-shadow: 0 10px 20px rgba(255, 106, 42, 0.2) !important;
+}
+
+.store-mini-home-page.travel-mode .g2-place-save-panel.g2-place-save-panel--dropdown {
+  display: block !important;
+  margin-top: 10px !important;
+  padding: 11px !important;
+  border-radius: 16px !important;
+  background: #fffaf4 !important;
+  border: 1px solid rgba(255, 106, 42, 0.24) !important;
+  box-shadow: 0 10px 22px rgba(91, 51, 18, 0.07) !important;
+}
+
+.store-mini-home-page.travel-mode .g2-place-save-dropdown-head {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  margin-bottom: 8px !important;
+}
+
+.store-mini-home-page.travel-mode .g2-place-save-dropdown-head strong {
+  color: #2f2118 !important;
+  font-size: 14px !important;
+  font-weight: 950 !important;
+  line-height: 1.25 !important;
+}
+
+.store-mini-home-page.travel-mode .g2-place-save-dropdown-head span {
+  flex: 0 1 auto !important;
+  max-width: 58% !important;
+  padding: 5px 8px !important;
+  border-radius: 999px !important;
+  color: #7a461f !important;
+  background: #fff0df !important;
+  font-size: 11.5px !important;
+  font-weight: 850 !important;
+  line-height: 1.2 !important;
+  text-align: right !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.store-mini-home-page.travel-mode .g2-place-save-panel--dropdown .g2-place-save-list {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  margin-top: 0 !important;
+}
+
+.store-mini-home-page.travel-mode .g2-place-save-panel--dropdown .g2-place-save-button,
+.store-mini-home-page.travel-mode .g2-place-save-panel--dropdown .g2-place-save-button:first-child,
+.store-mini-home-page.travel-mode .g2-place-save-panel--dropdown .g2-place-save-button:nth-child(2) {
+  width: 100% !important;
+  min-height: 46px !important;
+  padding: 10px 11px !important;
+  border-radius: 14px !important;
+  border: 1px solid rgba(255, 150, 67, 0.22) !important;
+  font-family: inherit !important;
+  text-align: left !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease, color 0.16s ease, box-shadow 0.16s ease !important;
+}
+
+.store-mini-home-page.travel-mode .g2-place-save-panel--dropdown .g2-place-save-button.g2-place-save-ready,
+.store-mini-home-page.travel-mode .g2-place-save-panel--dropdown .g2-place-save-button.g2-place-save-ready:first-child,
+.store-mini-home-page.travel-mode .g2-place-save-panel--dropdown .g2-place-save-button.g2-place-save-ready:nth-child(2) {
+  color: #56351c !important;
+  background: #fff3e4 !important;
+}
+
+.store-mini-home-page.travel-mode .g2-place-save-panel--dropdown .g2-place-save-button.g2-place-save-ready:hover,
+.store-mini-home-page.travel-mode .g2-place-save-panel--dropdown .g2-place-save-button.g2-place-save-ready:focus-visible {
+  color: #f05a1a !important;
+  background: #ffe3ca !important;
+  border-color: #ff6a2a !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 8px 16px rgba(255, 106, 42, 0.14) !important;
+  outline: none !important;
+}
+
+.store-mini-home-page.travel-mode .g2-place-save-panel--dropdown .g2-place-save-button.g2-place-save-saved,
+.store-mini-home-page.travel-mode .g2-place-save-panel--dropdown .g2-place-save-button.g2-place-save-saved:first-child,
+.store-mini-home-page.travel-mode .g2-place-save-panel--dropdown .g2-place-save-button.g2-place-save-saved:nth-child(2) {
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #ff6a2a, #ff8a3d) !important;
+  border-color: #ff6a2a !important;
+  box-shadow: 0 8px 18px rgba(255, 106, 42, 0.2) !important;
+}
+
+.store-mini-home-page.travel-mode .g2-place-save-panel--dropdown .g2-place-save-button-title {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  font-size: 13px !important;
+  font-weight: 950 !important;
+  line-height: 1.25 !important;
+}
+
+.store-mini-home-page.travel-mode .g2-place-save-panel--dropdown .g2-place-save-button-title em {
+  flex: 0 0 auto !important;
+  padding: 3px 7px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.22) !important;
+  color: inherit !important;
+  font-size: 10px !important;
+  font-style: normal !important;
+  font-weight: 950 !important;
+}
+
+.store-mini-home-page.travel-mode .g2-place-save-panel--dropdown .g2-place-save-feedback {
+  margin: 8px 0 0 !important;
+  padding: 8px 10px !important;
+  border-radius: 12px !important;
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+  font-weight: 850 !important;
+}
+
+.store-mini-home-page.travel-mode .g2-place-save-panel--dropdown .g2-place-save-feedback.is-saved {
+  color: #f05a1a !important;
+  background: #fff0df !important;
+  border: 1px solid rgba(255, 106, 42, 0.22) !important;
+}
+
+.store-mini-home-page.travel-mode .g2-place-save-panel--dropdown .g2-place-save-feedback.is-duplicate {
+  color: #74420f !important;
+  background: #fff8ed !important;
+  border: 1px dashed rgba(255, 138, 61, 0.34) !important;
+}
+
+@media (max-width: 720px) {
+  .store-mini-home-page.travel-mode .g2-place-save-dropdown-head {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+  }
+
+  .store-mini-home-page.travel-mode .g2-place-save-dropdown-head span {
+    max-width: 100% !important;
+    text-align: left !important;
+  }
+
+  .store-mini-home-page.travel-mode .g2-place-save-panel--dropdown .g2-place-save-list {
+    grid-template-columns: 1fr !important;
+  }
+}

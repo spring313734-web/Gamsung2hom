@@ -15,7 +15,8 @@
 // - 선택 전에는 둘 다 연한색, 마우스 hover 때만 주황 테두리/연한 주황 배경으로 표시
 // - 담기 성공한 항목은 체크 표시와 함께 주황색으로 고정하고 버튼 문구를 담기 성공으로 변경
 // - 같은 곳에 다시 담으면 카드 바로 아래에 중복 저장 안내를 표시
-// - V6: 선택 패널을 감성여행2 화면에서 기본 표시해 숨김 상태/토글 오류를 제거
+// - V7: 담기 선택은 공간을 적게 차지하는 드롭다운 방식으로 표시
+// - 담기 선택 패널은 버튼을 눌렀을 때만 작게 열리고, 선택 완료/중복 안내만 짧게 표시
 // - 데이터가 비어 있어도 준비중 안내가 자연스럽게 보이도록 구성
 // - 배달 가능 메뉴는 고객 오해를 줄이기 위해 '가능 · 배달료 별도'로 표시
 // - 이벤트가 없으면 고객 미니홈피에서 이벤트 영역 자체를 숨김
@@ -482,7 +483,7 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
   const [errorMessage, setErrorMessage] = useState("");
   const [noticeMessage, setNoticeMessage] = useState("");
   const [usedLocalMenus, setUsedLocalMenus] = useState(false);
-  const [storeSavePanelOpen, setStoreSavePanelOpen] = useState(() => mode === "travel");
+  const [storeSavePanelOpen, setStoreSavePanelOpen] = useState(false);
   const [travelSaveTargetName, setTravelSaveTargetName] = useState("");
   const [savedTravelItems, setSavedTravelItems] = useState({});
   const [travelSaveFeedbackMap, setTravelSaveFeedbackMap] = useState({});
@@ -547,7 +548,7 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
       setErrorMessage("");
       setNoticeMessage("");
       setUsedLocalMenus(false);
-      setStoreSavePanelOpen(mode === "travel");
+      setStoreSavePanelOpen(false);
       setTravelSaveTargetName("");
       setSavedTravelItems({});
       setTravelSaveFeedbackMap({});
@@ -658,16 +659,21 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
     }
 
     setTravelSaveTargetName(storeName);
-    setStoreSavePanelOpen(true);
+    setStoreSavePanelOpen((prev) => !prev);
+
+    if (storeSavePanelOpen) {
+      setNoticeMessage("");
+      return;
+    }
 
     if (storeTravelSavedOption) {
       setNoticeMessage(
-        `${storeName}은 현재 ${storeTravelSavedOption.destination}에 담겨 있습니다. 다른 위치에도 담으려면 아래 선택 버튼을 눌러주세요.`
+        `${storeName}은 현재 ${storeTravelSavedOption.destination}에 담겨 있습니다. 같은 곳을 다시 누르면 중복 안내만 표시됩니다.`
       );
       return;
     }
 
-    setNoticeMessage(`${storeName}을 나만의 여행 또는 나만의 버킷 중 어디에 담을지 아래에서 선택해주세요.`);
+    setNoticeMessage(`${storeName}을 나만의 여행 또는 나만의 버킷 중 어디에 담을지 선택해주세요.`);
   }
 
   function handleMenuSecondaryAction(menuName = "", menuKey = "") {
@@ -761,24 +767,14 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
       return Boolean(savedTravelItems[itemKey]);
     }).map((option) => option.destination);
     const savedSummary = savedDestinations.length
-      ? `현재 담긴 위치: ${savedDestinations.join(", ")}`
-      : "아직 담긴 곳이 없습니다. 원하는 위치를 눌러주세요.";
+      ? `현재: ${savedDestinations.join(", ")}`
+      : "아직 담긴 곳 없음";
 
     return (
-      <div id={panelId} className="g2-place-save-panel">
-        <div className="g2-place-save-head">
-          <strong>나만의 여행 / 나만의 버킷 선택</strong>
-          <p>
-            음식 메뉴가 아니라 {displayTargetName} 가게 자체를 저장합니다. 원하는 곳을 누르면 버튼 글자가 담기 성공으로 바뀝니다.
-          </p>
-        </div>
-
-        <div
-          className={`g2-place-save-current ${
-            savedDestinations.length ? "has-saved" : "is-empty"
-          }`}
-        >
-          {savedSummary}
+      <div id={panelId} className="g2-place-save-panel g2-place-save-panel--dropdown">
+        <div className="g2-place-save-dropdown-head">
+          <strong>담기 선택</strong>
+          <span>{savedSummary}</span>
         </div>
 
         <div className="g2-place-save-list" aria-label="담기 위치 선택">
@@ -802,7 +798,6 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
                   {isSaved ? option.savedLabel : option.label}
                   {isSaved ? <em>담김</em> : null}
                 </span>
-                <small>{isSaved ? option.savedDescription : option.description}</small>
               </button>
             );
           })}
@@ -816,11 +811,7 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
           >
             {feedback.message}
           </p>
-        ) : (
-          <p className="g2-place-save-feedback is-guide">
-            담기 버튼을 누르면 선택한 위치만 주황색으로 바뀌고, 중복 담기는 막습니다.
-          </p>
-        )}
+        ) : null}
       </div>
     );
   }
