@@ -12,6 +12,7 @@
 // - 데이터가 비어 있어도 준비중 안내가 자연스럽게 보이도록 구성
 // - 배달 가능 메뉴는 고객 오해를 줄이기 위해 '가능 · 배달료 별도'로 표시
 // - 이벤트가 없으면 고객 미니홈피에서 이벤트 영역 자체를 숨김
+// - 감성여행2 예약형에서는 여행 코스에 담기 버튼을 드롭다운으로 열어 내 여행/나만의 버킷을 선택
 // ========================================
 
 import { useEffect, useMemo, useState } from "react";
@@ -23,6 +24,29 @@ const MENU_TABLE_NAME = "store_menus";
 const PRODUCT_TABLE_NAME = "store_products";
 const EVENT_TABLE_NAME = "store_events";
 const MENU_STORAGE_PREFIX = "gamsung2.business-menu.v1";
+
+const TRAVEL_SAVE_OPTIONS = [
+  {
+    key: "my-trip",
+    label: "내 여행에 담기",
+    description: "이미 준비 중인 여행 일정에 이 가게를 추가합니다.",
+  },
+  {
+    key: "my-bucket",
+    label: "나만의 버킷에 담기",
+    description: "언젠가 가고 싶은 장소로 버킷에 저장합니다.",
+  },
+  {
+    key: "new-trip",
+    label: "새 여행 만들기",
+    description: "새 여행 일정 이름을 만들고 이 가게를 첫 코스로 담습니다.",
+  },
+  {
+    key: "new-bucket",
+    label: "새 버킷 만들기",
+    description: "새 버킷 목록을 만들고 이 가게를 저장합니다.",
+  },
+];
 
 function getDisplayValue(value, fallback = "준비중") {
   if (value === null || value === undefined) return fallback;
@@ -399,6 +423,8 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
   const [errorMessage, setErrorMessage] = useState("");
   const [noticeMessage, setNoticeMessage] = useState("");
   const [usedLocalMenus, setUsedLocalMenus] = useState(false);
+  const [travelSaveDropdownOpen, setTravelSaveDropdownOpen] = useState(false);
+  const [travelSaveTargetName, setTravelSaveTargetName] = useState("");
 
   const modeInfo = useMemo(() => getModeInfo(mode), [mode]);
 
@@ -540,8 +566,42 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
       return;
     }
 
+    setTravelSaveTargetName(menuName);
+    setTravelSaveDropdownOpen((prev) => !prev);
     setNoticeMessage(
-      `${menuName ? `${menuName} ` : ""}여행 코스 담기 기능은 다음 단계에서 감성여행2 코스/버킷과 연결할 예정입니다.`
+      `${menuName ? `${menuName} ` : ""}어디에 담을지 선택해주세요.`
+    );
+  }
+
+  function handleTravelSaveChoice(option) {
+    const targetName = travelSaveTargetName || storeName;
+    const targetText = targetName ? `${targetName}을/를` : "이 가게를";
+
+    setTravelSaveDropdownOpen(false);
+
+    if (option.key === "new-trip") {
+      setNoticeMessage(
+        `${targetText} 새 여행 만들기 흐름과 연결할 예정입니다. 다음 단계에서 여행 이름 입력과 일정 저장 화면으로 이어집니다.`
+      );
+      return;
+    }
+
+    if (option.key === "new-bucket") {
+      setNoticeMessage(
+        `${targetText} 새 버킷 만들기 흐름과 연결할 예정입니다. 다음 단계에서 버킷 이름 입력과 공개 범위 설정으로 이어집니다.`
+      );
+      return;
+    }
+
+    if (option.key === "my-bucket") {
+      setNoticeMessage(
+        `${targetText} 나만의 버킷에 담는 기능은 다음 단계에서 감성여행2 버킷 데이터와 연결할 예정입니다.`
+      );
+      return;
+    }
+
+    setNoticeMessage(
+      `${targetText} 내 여행에 담는 기능은 다음 단계에서 감성여행2 여행 일정 데이터와 연결할 예정입니다.`
     );
   }
 
@@ -628,6 +688,28 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
               길찾기
             </a>
           </div>
+
+          {mode === "travel" && travelSaveDropdownOpen ? (
+            <div className="store-mini-notice">
+              <strong>어디에 담을까요?</strong>
+              <p>
+                감성여행2 구조에 맞게 내 여행 또는 나만의 버킷 중에서 선택할 수
+                있게 준비했습니다.
+              </p>
+
+              <div className="store-mini-actions">
+                {TRAVEL_SAVE_OPTIONS.map((option) => (
+                  <button
+                    key={option.key}
+                    type="button"
+                    onClick={() => handleTravelSaveChoice(option)}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
 
           {noticeMessage ? <p className="store-mini-notice">{noticeMessage}</p> : null}
         </div>
