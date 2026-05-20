@@ -10,6 +10,7 @@
 // - 메뉴 데이터는 공통으로 쓰고, 감성여행2는 방문 예약 / 코스 담기 중심으로 표시
 // - 메뉴 데이터는 공통으로 쓰고, 감성배달은 장바구니 / 배달 주문 중심으로 표시
 // - 데이터가 비어 있어도 준비중 안내가 자연스럽게 보이도록 구성
+// - 배달 가능 메뉴는 고객 오해를 줄이기 위해 '가능 · 배달료 별도'로 표시
 // ========================================
 
 import { useEffect, useMemo, useState } from "react";
@@ -230,12 +231,18 @@ function getMenuTakeoutAvailable(menu) {
 }
 
 function getMenuDeliveryAvailable(menu) {
-  return getAvailabilityText(
+  const deliveryText = getAvailabilityText(
     menu?.delivery_available ??
       menu?.is_delivery_available ??
       menu?.deliveryAvailable,
     "가능"
   );
+
+  if (deliveryText === "가능" || deliveryText === "배달 가능") {
+    return "가능 · 배달료 별도";
+  }
+
+  return deliveryText;
 }
 
 function getEventTitle(event) {
