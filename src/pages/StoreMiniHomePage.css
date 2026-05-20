@@ -1,8 +1,10 @@
 /* 파일 경로: src/pages/StoreMiniHomePage.css */
 /* ========================================
    📌 공통 소상공인 미니홈피 보기 화면 스타일
-   - stores / store_products / store_events 데이터를 보기 좋게 표시
+   - stores / store_menus / store_products / store_events 데이터를 보기 좋게 표시
+   - 상품/메뉴 관리 화면에서 브라우저 임시 저장한 메뉴도 같은 브라우저에서는 표시
    - 감성여행2 예약형 모드와 감성배달 배달형 모드를 같은 화면 구조에서 구분
+   - 같은 메뉴 데이터를 쓰되 감성여행2는 예약 / 코스 담기, 감성배달은 배달 주문 / 장바구니 중심으로 표시
    - 대표 이미지가 없어도 준비중 카드가 자연스럽게 보이도록 구성
    - 지도 / 길찾기 / 전화 / 메뉴 / 이벤트 영역 포함
    ======================================== */
@@ -463,12 +465,24 @@
 }
 
 .store-mini-section-head p {
-  max-width: 420px;
+  max-width: 460px;
   margin: 0;
   color: #6c5948;
   font-size: 14.5px;
   line-height: 1.65;
   word-break: keep-all;
+}
+
+.store-mini-local-note {
+  margin: -4px 0 16px;
+  padding: 12px 14px;
+  border-radius: 15px;
+  background: rgba(124, 84, 201, 0.1);
+  border: 1px solid rgba(124, 84, 201, 0.16);
+  color: #4c2ea3;
+  font-size: 13.5px;
+  font-weight: 850;
+  line-height: 1.55;
 }
 
 .store-product-grid,
@@ -481,21 +495,37 @@
 .store-product-card,
 .store-event-card {
   overflow: hidden;
-  border-radius: 22px;
+  border-radius: 24px;
   background: #fffaf3;
   border: 1px solid rgba(143, 91, 39, 0.1);
+  box-shadow: 0 12px 26px rgba(80, 45, 15, 0.06);
+}
+
+.delivery-mode .store-product-card {
+  background: #fff8f1;
+}
+
+.store-product-image-box {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top left, rgba(255, 159, 28, 0.22), transparent 36%),
+    linear-gradient(135deg, #fff2dd, #f5efe8);
 }
 
 .store-product-card img,
 .store-event-card img {
   width: 100%;
-  height: 150px;
+  height: 100%;
   display: block;
   object-fit: cover;
 }
 
 .store-product-placeholder {
-  height: 150px;
+  width: 100%;
+  height: 100%;
+  min-height: 150px;
   display: grid;
   place-items: center;
   background: #fff0da;
@@ -503,35 +533,132 @@
   font-weight: 950;
 }
 
-.store-product-card div,
+.store-product-body,
 .store-event-card div {
-  padding: 16px;
+  padding: 17px;
+}
+
+.store-product-category {
+  display: inline-flex;
+  margin-bottom: 9px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #fff0dc;
+  color: #b95c13;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.delivery-mode .store-product-category {
+  background: #ffe9dd;
+  color: #d14d2b;
 }
 
 .store-product-card h3,
 .store-event-card h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 19px;
   line-height: 1.35;
   letter-spacing: -0.035em;
   font-weight: 950;
   word-break: keep-all;
 }
 
+.store-product-card strong,
+.store-event-card strong {
+  display: block;
+  margin-top: 7px;
+  color: #f06f2b;
+  font-size: 16px;
+  font-weight: 950;
+}
+
+.store-product-meta-list {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 0;
+}
+
+.store-product-meta-list div {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  min-height: 34px;
+  padding: 8px 10px;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(143, 91, 39, 0.08);
+}
+
+.store-product-meta-list dt {
+  color: #7a685b;
+  font-size: 12.5px;
+  font-weight: 950;
+}
+
+.store-product-meta-list dd {
+  margin: 0;
+  color: #2f261f;
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 950;
+  word-break: keep-all;
+}
+
 .store-product-card p,
 .store-event-card p {
-  margin: 8px 0 12px;
+  margin: 12px 0 0;
   color: #6b5948;
   font-size: 14px;
   line-height: 1.62;
   word-break: keep-all;
 }
 
-.store-product-card strong,
-.store-event-card strong {
-  color: #f06f2b;
-  font-size: 15px;
+.store-product-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.store-product-actions button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 14px;
+  font-family: inherit;
+  font-size: 13px;
   font-weight: 950;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    opacity 0.18s ease,
+    background 0.18s ease;
+}
+
+.store-product-actions button:first-child {
+  color: #ffffff;
+  background: linear-gradient(135deg, #ff8a2a, #ff5e3a);
+  box-shadow: 0 10px 20px rgba(255, 111, 45, 0.18);
+}
+
+.delivery-mode .store-product-actions button:first-child {
+  background: linear-gradient(135deg, #ff6848, #f08a24);
+}
+
+.store-product-actions button:nth-child(2) {
+  color: #5a3518;
+  background: #fff0da;
+}
+
+.store-product-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+  box-shadow: none;
+}
+
+.store-product-actions button:hover:not(:disabled) {
+  transform: translateY(-1px);
 }
 
 .store-event-card span {
@@ -651,5 +778,13 @@
   .store-mini-card,
   .store-mini-section {
     padding: 22px 18px;
+  }
+
+  .store-product-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .store-product-meta-list div {
+    grid-template-columns: 70px minmax(0, 1fr);
   }
 }
