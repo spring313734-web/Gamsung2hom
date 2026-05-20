@@ -12,7 +12,8 @@
 // - 데이터가 비어 있어도 준비중 안내가 자연스럽게 보이도록 구성
 // - 배달 가능 메뉴는 고객 오해를 줄이기 위해 '가능 · 배달료 별도'로 표시
 // - 이벤트가 없으면 고객 미니홈피에서 이벤트 영역 자체를 숨김
-// - 감성여행2 예약형에서는 여행 코스에 담기 버튼을 드롭다운으로 열어 내 여행/나만의 버킷을 선택
+// - 감성여행2 예약형에서는 '여행 코스에 담기' 선택창을 누른 위치 바로 아래에 표시
+// - 감성여행2 서버 구조와 맞추기 위해 명칭을 '나만의 여행' / '나만의 버킷'으로 통일
 // ========================================
 
 import { useEffect, useMemo, useState } from "react";
@@ -27,23 +28,23 @@ const MENU_STORAGE_PREFIX = "gamsung2.business-menu.v1";
 
 const TRAVEL_SAVE_OPTIONS = [
   {
-    key: "my-trip",
-    label: "내 여행에 담기",
-    description: "이미 준비 중인 여행 일정에 이 가게를 추가합니다.",
+    key: "my-travel",
+    label: "나만의 여행에 담기",
+    description: "감성여행2의 나만의 여행 일정에 이 가게를 추가합니다.",
   },
   {
     key: "my-bucket",
     label: "나만의 버킷에 담기",
-    description: "언젠가 가고 싶은 장소로 버킷에 저장합니다.",
+    description: "언젠가 가고 싶은 장소로 나만의 버킷에 저장합니다.",
   },
   {
-    key: "new-trip",
-    label: "새 여행 만들기",
+    key: "new-travel",
+    label: "새 나만의 여행 만들기",
     description: "새 여행 일정 이름을 만들고 이 가게를 첫 코스로 담습니다.",
   },
   {
     key: "new-bucket",
-    label: "새 버킷 만들기",
+    label: "새 나만의 버킷 만들기",
     description: "새 버킷 목록을 만들고 이 가게를 저장합니다.",
   },
 ];
@@ -405,7 +406,7 @@ function getModeInfo(mode) {
     title: "방문 예약 중심 화면",
     desc: "같은 가게 정보를 감성여행2에서는 여행 일정, 방문 예약, 길찾기 흐름으로 보여줍니다.",
     primaryButton: "방문 예약하기",
-    secondaryButton: "여행 코스에 담기",
+    secondaryButton: "담기 선택",
     menuTitle: "방문 예약 메뉴",
     menuDesc: "감성여행2에서는 같은 메뉴 데이터를 방문 전 확인과 예약 흐름으로 연결합니다.",
     emptyAction: "예약 기능은 다음 단계에서 여행 일정과 연결됩니다.",
@@ -423,7 +424,7 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
   const [errorMessage, setErrorMessage] = useState("");
   const [noticeMessage, setNoticeMessage] = useState("");
   const [usedLocalMenus, setUsedLocalMenus] = useState(false);
-  const [travelSaveDropdownOpen, setTravelSaveDropdownOpen] = useState(false);
+  const [travelSaveDropdownKey, setTravelSaveDropdownKey] = useState("");
   const [travelSaveTargetName, setTravelSaveTargetName] = useState("");
 
   const modeInfo = useMemo(() => getModeInfo(mode), [mode]);
@@ -558,7 +559,7 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
     );
   }
 
-  function handleSecondaryAction(menuName = "") {
+  function handleSecondaryAction(menuName = "", dropdownKey = "store") {
     if (mode === "delivery") {
       setNoticeMessage(
         `${menuName ? `${menuName} ` : ""}장바구니 담기 기능은 다음 단계에서 감성배달 장바구니와 연결할 예정입니다.`
@@ -566,10 +567,10 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
       return;
     }
 
-    setTravelSaveTargetName(menuName);
-    setTravelSaveDropdownOpen((prev) => !prev);
+    setTravelSaveTargetName(menuName || storeName);
+    setTravelSaveDropdownKey((prev) => (prev === dropdownKey ? "" : dropdownKey));
     setNoticeMessage(
-      `${menuName ? `${menuName} ` : ""}어디에 담을지 선택해주세요.`
+      `${menuName ? `${menuName} ` : `${storeName} `}어디에 담을지 선택해주세요.`
     );
   }
 
@@ -577,18 +578,18 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
     const targetName = travelSaveTargetName || storeName;
     const targetText = targetName ? `${targetName}을/를` : "이 가게를";
 
-    setTravelSaveDropdownOpen(false);
+    setTravelSaveDropdownKey("");
 
-    if (option.key === "new-trip") {
+    if (option.key === "new-travel") {
       setNoticeMessage(
-        `${targetText} 새 여행 만들기 흐름과 연결할 예정입니다. 다음 단계에서 여행 이름 입력과 일정 저장 화면으로 이어집니다.`
+        `${targetText} 새 나만의 여행 만들기 흐름과 연결할 예정입니다. 다음 단계에서 여행 이름 입력과 일정 저장 화면으로 이어집니다.`
       );
       return;
     }
 
     if (option.key === "new-bucket") {
       setNoticeMessage(
-        `${targetText} 새 버킷 만들기 흐름과 연결할 예정입니다. 다음 단계에서 버킷 이름 입력과 공개 범위 설정으로 이어집니다.`
+        `${targetText} 새 나만의 버킷 만들기 흐름과 연결할 예정입니다. 다음 단계에서 버킷 이름 입력과 공개 범위 설정으로 이어집니다.`
       );
       return;
     }
@@ -601,7 +602,32 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
     }
 
     setNoticeMessage(
-      `${targetText} 내 여행에 담는 기능은 다음 단계에서 감성여행2 여행 일정 데이터와 연결할 예정입니다.`
+      `${targetText} 나만의 여행에 담는 기능은 다음 단계에서 감성여행2 여행 일정 데이터와 연결할 예정입니다.`
+    );
+  }
+
+  function renderTravelSaveDropdown(dropdownKey) {
+    if (mode !== "travel" || travelSaveDropdownKey !== dropdownKey) {
+      return null;
+    }
+
+    return (
+      <div className="store-mini-notice">
+        <strong>담기 선택</strong>
+        <p>어디에 담을까요? 감성여행2와 같은 명칭으로 나만의 여행 / 나만의 버킷 중에서 선택합니다.</p>
+
+        <div className="store-mini-actions">
+          {TRAVEL_SAVE_OPTIONS.map((option) => (
+            <button
+              key={option.key}
+              type="button"
+              onClick={() => handleTravelSaveChoice(option)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
     );
   }
 
@@ -669,7 +695,7 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
               {modeInfo.primaryButton}
             </button>
 
-            <button type="button" onClick={() => handleSecondaryAction()}>
+            <button type="button" onClick={() => handleSecondaryAction("", "store")}>
               {modeInfo.secondaryButton}
             </button>
 
@@ -689,27 +715,7 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
             </a>
           </div>
 
-          {mode === "travel" && travelSaveDropdownOpen ? (
-            <div className="store-mini-notice">
-              <strong>어디에 담을까요?</strong>
-              <p>
-                감성여행2 구조에 맞게 내 여행 또는 나만의 버킷 중에서 선택할 수
-                있게 준비했습니다.
-              </p>
-
-              <div className="store-mini-actions">
-                {TRAVEL_SAVE_OPTIONS.map((option) => (
-                  <button
-                    key={option.key}
-                    type="button"
-                    onClick={() => handleTravelSaveChoice(option)}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : null}
+          {renderTravelSaveDropdown("store")}
 
           {noticeMessage ? <p className="store-mini-notice">{noticeMessage}</p> : null}
         </div>
@@ -881,11 +887,18 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
 
                       <button
                         type="button"
-                        onClick={() => handleSecondaryAction(menuName)}
+                        onClick={() =>
+                          handleSecondaryAction(
+                            menuName,
+                            menu.id || `menu-${index}`
+                          )
+                        }
                       >
                         {modeInfo.secondaryButton}
                       </button>
                     </div>
+
+                    {renderTravelSaveDropdown(menu.id || `menu-${index}`)}
                   </div>
                 </article>
               );
