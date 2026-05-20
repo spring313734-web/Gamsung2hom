@@ -16,6 +16,8 @@
 // - 담기 성공한 항목은 체크 표시와 함께 주황색으로 고정하고 버튼 문구를 담기 성공으로 변경
 // - 같은 곳에 다시 담으면 카드 바로 아래에 중복 저장 안내를 표시
 // - V8: 드롭다운에서 이미 담긴 항목을 다시 누르면 담기 취소로 동작
+// - V9: 메뉴 카드의 방문 예약하기 / 예약 메뉴 담기도 다시 누르면 취소되는 토글 방식으로 동작
+// - 메뉴 예약 버튼은 선택 전 / 선택 완료 / 취소 상태를 버튼 글자와 안내문으로 바로 구분
 // - 담기 선택 패널은 버튼을 눌렀을 때만 작게 열리고, 선택 완료/취소 안내만 짧게 표시
 // - 데이터가 비어 있어도 준비중 안내가 자연스럽게 보이도록 구성
 // - 배달 가능 메뉴는 고객 오해를 줄이기 위해 '가능 · 배달료 별도'로 표시
@@ -487,6 +489,7 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
   const [travelSaveTargetName, setTravelSaveTargetName] = useState("");
   const [savedTravelItems, setSavedTravelItems] = useState({});
   const [travelSaveFeedbackMap, setTravelSaveFeedbackMap] = useState({});
+  const [visitReservationItems, setVisitReservationItems] = useState({});
   const [reservationMenuItems, setReservationMenuItems] = useState({});
 
   const modeInfo = useMemo(() => getModeInfo(mode), [mode]);
@@ -552,6 +555,7 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
       setTravelSaveTargetName("");
       setSavedTravelItems({});
       setTravelSaveFeedbackMap({});
+      setVisitReservationItems({});
       setReservationMenuItems({});
 
       if (!isSupabaseConfigured) {
@@ -637,7 +641,7 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
     };
   }, [storeId, travelSaveStorageKey]);
 
-  function handlePrimaryAction(menuName = "") {
+  function handlePrimaryAction(menuName = "", menuKey = "") {
     if (mode === "delivery") {
       setNoticeMessage(
         `${menuName ? `${menuName} ` : ""}배달 주문 기능은 다음 단계에서 장바구니 / 주문서와 연결할 예정입니다.`
@@ -645,9 +649,27 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
       return;
     }
 
-    setNoticeMessage(
-      `${menuName ? `${menuName} ` : ""}방문 예약 기능은 다음 단계에서 감성여행2 여행 일정과 연결할 예정입니다.`
-    );
+    const safeMenuKey = menuKey || menuName || "menu";
+    const alreadySelected = Boolean(visitReservationItems[safeMenuKey]);
+
+    if (alreadySelected) {
+      setVisitReservationItems((prev) => {
+        const nextItems = { ...prev };
+        delete nextItems[safeMenuKey];
+        return nextItems;
+      });
+      setNoticeMessage(`${menuName} 방문 예약 선택 취소`);
+      return;
+    }
+
+    setVisitReservationItems((prev) => ({
+      ...prev,
+      [safeMenuKey]: {
+        menuName,
+        selectedAt: new Date().toISOString(),
+      },
+    }));
+    setNoticeMessage(`${menuName} 방문 예약 선택 완료`);
   }
 
   function handleStoreSecondaryAction() {
@@ -688,9 +710,12 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
     const alreadySaved = Boolean(reservationMenuItems[safeMenuKey]);
 
     if (alreadySaved) {
-      setNoticeMessage(
-        `${menuName} 메뉴는 이미 예약 메뉴에 담겨 있습니다. 중복으로 다시 담기지 않습니다.`
-      );
+      setReservationMenuItems((prev) => {
+        const nextItems = { ...prev };
+        delete nextItems[safeMenuKey];
+        return nextItems;
+      });
+      setNoticeMessage(`${menuName} 예약 메뉴 담기 취소`);
       return;
     }
 
@@ -1027,6 +1052,9 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
               const isDeliveryUnavailable =
                 mode === "delivery" && deliveryAvailable === "불가";
               const reservationMenuKey = buildMenuReservationItemKey(menu, index);
+              const isVisitReservationSelected = Boolean(
+                visitReservationItems[reservationMenuKey]
+              );
               const isReservationMenuSaved = Boolean(
                 reservationMenuItems[reservationMenuKey]
               );
@@ -1083,10 +1111,21 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
                     <div className="store-product-actions">
                       <button
                         type="button"
-                        onClick={() => handlePrimaryAction(menuName)}
+                        className={
+                          mode === "travel" && isVisitReservationSelected
+                            ? "is-visit-reservation-selected"
+                            : ""
+                        }
+                        onClick={() =>
+                          handlePrimaryAction(menuName, reservationMenuKey)
+                        }
                         disabled={isDeliveryUnavailable}
                       >
-                        {isDeliveryUnavailable ? "배달 불가" : modeInfo.primaryButton}
+                        {isDeliveryUnavailable
+                          ? "배달 불가"
+                          : mode === "travel" && isVisitReservationSelected
+                            ? "방문 예약 선택됨"
+                            : modeInfo.primaryButton}
                       </button>
 
                       <button
@@ -1102,7 +1141,7 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
                       >
                         {mode === "travel"
                           ? isReservationMenuSaved
-                            ? "예약 메뉴에 담김"
+                            ? "예약 메뉴 담기 성공"
                             : "예약 메뉴 담기"
                           : modeInfo.secondaryButton}
                       </button>
