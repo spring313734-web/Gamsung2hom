@@ -3,6 +3,7 @@
    📌 감성여행2 홈페이지 소상공인 상품/메뉴 관리 화면 스타일
    - 결제 전에도 상품/메뉴와 사진을 준비하고 미리보기 가능한 화면
    - 입력 폼 / 가게 상태 / 미니홈피 메뉴 카드 미리보기 구성
+   - 사진 선택 시 링크가 아니라 이미지 미리보기 박스로 바로 표시
    - 공개 / 예약 / 배달 주문 접수는 결제 후 활성화되는 안내 강조
    ======================================== */
 
@@ -194,6 +195,62 @@
   color: #8a7564;
   font-size: 0.8rem;
   line-height: 1.55;
+  font-weight: 800;
+  word-break: keep-all;
+}
+
+.business-menu-draft-preview {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  padding: 14px;
+  border-radius: 20px;
+  background: rgba(255, 248, 238, 0.9);
+  border: 1px solid rgba(255, 107, 44, 0.28);
+}
+
+.business-menu-draft-image-box {
+  width: 150px;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at top left, rgba(255, 159, 28, 0.22), transparent 36%),
+    linear-gradient(135deg, #fff2dd, #f5efe8);
+  border: 1px solid rgba(143, 91, 39, 0.12);
+}
+
+.business-menu-draft-image-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.business-menu-draft-preview span {
+  display: block;
+  margin: 0 0 5px;
+  color: #c26417;
+  font-size: 0.8rem;
+  font-weight: 950;
+}
+
+.business-menu-draft-preview strong {
+  display: block;
+  color: #2f261f;
+  font-size: 1rem;
+  line-height: 1.4;
+  font-weight: 950;
+  word-break: break-word;
+}
+
+.business-menu-draft-preview p {
+  margin: 7px 0 0;
+  color: #6c5a4a;
+  font-size: 0.86rem;
+  line-height: 1.6;
   font-weight: 800;
   word-break: keep-all;
 }
@@ -508,6 +565,14 @@
 
   .business-menu-form {
     grid-template-columns: 1fr;
+  }
+
+  .business-menu-draft-preview {
+    grid-template-columns: 1fr;
+  }
+
+  .business-menu-draft-image-box {
+    width: 100%;
   }
 
   .business-menu-card-head {

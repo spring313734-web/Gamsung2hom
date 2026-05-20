@@ -5,6 +5,7 @@
 // - 로그인 세션 기준으로 profiles / owner_profiles / stores 정보를 조회
 // - stores에 연결된 가게가 있으면 store_menus 테이블에서 메뉴 목록을 불러옴
 // - store_menus 테이블이 없거나 저장 실패 시에도 화면 미리보기용으로 메뉴를 추가할 수 있음
+// - 사진 파일 선택 시 blob 링크를 입력창에 노출하지 않고 이미지 미리보기로 바로 표시
 // - 실제 공개 / 예약 접수 / 배달 주문 접수는 운영 시작 결제 후 활성화된다는 안내 표시
 // ========================================
 
@@ -21,6 +22,8 @@ const emptyDraft = {
   price: "",
   description: "",
   imageUrl: "",
+  imagePreviewUrl: "",
+  imageFileName: "",
   category: "",
 };
 
@@ -339,6 +342,14 @@ export default function BusinessMenuManagePage() {
     };
   }, [authLoading, isLoggedIn, userId, currentUser?.profile]);
 
+  useEffect(() => {
+    return () => {
+      if (draft.imagePreviewUrl?.startsWith("blob:")) {
+        URL.revokeObjectURL(draft.imagePreviewUrl);
+      }
+    };
+  }, [draft.imagePreviewUrl]);
+
   function updateDraft(key, value) {
     setDraft((prev) => ({
       ...prev,
@@ -355,11 +366,12 @@ export default function BusinessMenuManagePage() {
 
     setDraft((prev) => ({
       ...prev,
-      imageUrl: previewUrl,
+      imagePreviewUrl: previewUrl,
+      imageFileName: file.name,
     }));
 
     setNoticeMessage(
-      "선택한 사진은 현재 브라우저 미리보기용입니다. 실제 저장용 Supabase Storage 업로드는 다음 단계에서 연결하면 됩니다."
+      "선택한 사진을 아래 미리보기로 표시했습니다. 현재는 브라우저 미리보기용이며, 실제 저장용 Supabase Storage 업로드는 다음 단계에서 연결하면 됩니다."
     );
   }
 
@@ -374,6 +386,10 @@ export default function BusinessMenuManagePage() {
     }
 
     const price = parsePrice(draft.price);
+    const typedImageUrl = normalizeImageUrl(draft.imageUrl);
+    const previewImageUrl = normalizeImageUrl(draft.imagePreviewUrl);
+    const displayImageUrl = previewImageUrl || typedImageUrl;
+    const hasLocalFilePreview = previewImageUrl.startsWith("blob:");
 
     const nextMenu = {
       id: `local-${Date.now()}`,
@@ -382,17 +398,19 @@ export default function BusinessMenuManagePage() {
       name: menuName,
       price,
       description: draft.description.trim(),
-      image_url: draft.imageUrl.trim(),
+      image_url: displayImageUrl,
       category: draft.category.trim() || "대표 메뉴",
       is_available: true,
       sort_order: menus.length + 1,
     };
 
-    if (!hasStoreMiniHome || localOnlyMode) {
+    if (!hasStoreMiniHome || localOnlyMode || hasLocalFilePreview) {
       setMenus((prev) => [nextMenu, ...prev]);
       setDraft(emptyDraft);
       setNoticeMessage(
-        "화면 미리보기용 메뉴를 추가했습니다. stores와 store_menus 저장 구조가 연결되면 실제 저장까지 이어집니다."
+        hasLocalFilePreview
+          ? "사진 파일이 포함된 메뉴를 화면 미리보기용으로 추가했습니다. 실제 저장은 Supabase Storage 업로드 연결 후 가능합니다."
+          : "화면 미리보기용 메뉴를 추가했습니다. stores와 store_menus 저장 구조가 연결되면 실제 저장까지 이어집니다."
       );
       return;
     }
@@ -409,7 +427,7 @@ export default function BusinessMenuManagePage() {
           name: menuName,
           price,
           description: draft.description.trim(),
-          image_url: draft.imageUrl.trim(),
+          image_url: typedImageUrl,
           category: draft.category.trim() || "대표 메뉴",
           is_available: true,
           sort_order: menus.length + 1,
@@ -573,20 +591,37 @@ export default function BusinessMenuManagePage() {
               </label>
 
               <label>
-                <span>사진 URL</span>
+                <span>사진 주소 직접 입력</span>
                 <input
                   type="text"
                   value={draft.imageUrl}
                   onChange={(event) => updateDraft("imageUrl", event.target.value)}
-                  placeholder="https://... 또는 앱에서 저장된 이미지 주소"
+                  placeholder="선택 사항: https://... 이미지 주소"
                 />
               </label>
 
               <label className="image-file-label">
-                <span>사진 파일 미리보기</span>
+                <span>사진 파일 선택</span>
                 <input type="file" accept="image/*" onChange={handleImageFileChange} />
-                <small>지금은 브라우저 미리보기용입니다. 실제 업로드는 다음 단계에서 Storage와 연결합니다.</small>
+                <small>사진을 선택하면 링크가 아니라 아래에 이미지로 바로 보입니다. 실제 업로드는 다음 단계에서 Storage와 연결합니다.</small>
               </label>
+
+              {draft.imagePreviewUrl || draft.imageUrl ? (
+                <div className="business-menu-draft-preview">
+                  <div className="business-menu-draft-image-box">
+                    <img
+                      src={draft.imagePreviewUrl || normalizeImageUrl(draft.imageUrl)}
+                      alt={draft.menuName || "선택한 메뉴 사진 미리보기"}
+                    />
+                  </div>
+
+                  <div>
+                    <span>선택한 사진 미리보기</span>
+                    <strong>{draft.imageFileName || "직접 입력한 이미지 주소"}</strong>
+                    <p>이 사진은 상품/메뉴 추가 후 아래 미니홈피 미리보기 카드에도 표시됩니다.</p>
+                  </div>
+                </div>
+              ) : null}
 
               <label className="full">
                 <span>설명</span>
