@@ -12,6 +12,7 @@
 // - 서버 저장 실패 시에도 브라우저 임시 저장으로 입력 내용이 사라지지 않도록 보호
 // - 실제 공개 / 예약 접수 / 배달 주문 접수는 운영 시작 결제 후 활성화된다는 안내 표시
 // - 배달 가능 메뉴는 고객 오해를 줄이기 위해 '가능 · 배달료 별도'로 표시
+// - 이벤트 적용 선택칸을 두고, 이벤트 없음이면 고객 화면에 이벤트를 표시하지 않음
 // ========================================
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -24,6 +25,15 @@ const MENU_TABLE_NAME = "store_menus";
 const STORAGE_BUCKET_NAME = "store-menu-images";
 const STORAGE_PREFIX = "gamsung2.business-menu.v1";
 
+const EVENT_LABEL_OPTIONS = [
+  "이벤트 없음",
+  "오늘의 할인",
+  "방문 예약 할인",
+  "포장 할인",
+  "배달 할인",
+  "직접 입력",
+];
+
 const emptyDraft = {
   menuName: "",
   price: "",
@@ -35,6 +45,8 @@ const emptyDraft = {
   targetCustomer: "",
   takeoutAvailable: "가능",
   deliveryAvailable: "가능",
+  eventLabel: "이벤트 없음",
+  customEventLabel: "",
 };
 
 function normalizeText(value) {
@@ -229,6 +241,25 @@ function getMenuDeliveryAvailable(menu) {
   }
 
   return deliveryText;
+}
+
+function getMenuEventLabel(menu) {
+  const eventText =
+    menu?.event_label ||
+    menu?.eventLabel ||
+    menu?.discount_label ||
+    menu?.promotion_label ||
+    "이벤트 없음";
+
+  const cleanText = String(eventText || "").trim();
+
+  return cleanText || "이벤트 없음";
+}
+
+function shouldShowMenuEvent(menu) {
+  const eventLabel = getMenuEventLabel(menu);
+
+  return Boolean(eventLabel && eventLabel !== "이벤트 없음");
 }
 
 function sortMenus(a, b) {
@@ -730,6 +761,14 @@ export default function BusinessMenuManagePage() {
     const price = parsePrice(draft.price);
     const imageFileToUpload = selectedImageFile;
     const previewImageUrl = normalizeImageUrl(draft.imagePreviewUrl);
+    const selectedEventLabel =
+      draft.eventLabel === "직접 입력"
+        ? draft.customEventLabel.trim()
+        : draft.eventLabel;
+    const eventLabel =
+      selectedEventLabel && selectedEventLabel !== "직접 입력"
+        ? selectedEventLabel
+        : "이벤트 없음";
 
     const nextMenu = {
       id: localId,
@@ -747,6 +786,8 @@ export default function BusinessMenuManagePage() {
       recommended_for: draft.targetCustomer.trim(),
       takeout_available: draft.takeoutAvailable,
       delivery_available: draft.deliveryAvailable,
+      event_label: eventLabel,
+      eventLabel,
       is_takeout_available: draft.takeoutAvailable === "가능",
       is_delivery_available: draft.deliveryAvailable === "가능",
       is_available: true,
@@ -810,6 +851,7 @@ export default function BusinessMenuManagePage() {
           recommended_for: draft.targetCustomer.trim(),
           takeout_available: draft.takeoutAvailable,
           delivery_available: draft.deliveryAvailable,
+          event_label: eventLabel,
           is_takeout_available: draft.takeoutAvailable === "가능",
           is_delivery_available: draft.deliveryAvailable === "가능",
           is_available: true,
@@ -1092,6 +1134,37 @@ export default function BusinessMenuManagePage() {
                       ))}
                     </div>
                   </div>
+
+                  <label className="business-menu-event-select">
+                    <span>이벤트 적용</span>
+                    <select
+                      value={draft.eventLabel}
+                      onChange={(event) => updateDraft("eventLabel", event.target.value)}
+                    >
+                      {EVENT_LABEL_OPTIONS.map((label) => (
+                        <option key={label} value={label}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                    <small>
+                      이벤트 없음이면 고객 미니홈피에는 이벤트 표시가 나오지 않습니다.
+                    </small>
+                  </label>
+
+                  {draft.eventLabel === "직접 입력" ? (
+                    <label>
+                      <span>직접 입력 이벤트명</span>
+                      <input
+                        type="text"
+                        value={draft.customEventLabel}
+                        onChange={(event) =>
+                          updateDraft("customEventLabel", event.target.value)
+                        }
+                        placeholder="예: 오늘만 배달료 무료"
+                      />
+                    </label>
+                  ) : null}
                 </div>
               </div>
 
@@ -1190,6 +1263,11 @@ export default function BusinessMenuManagePage() {
 
                     <div className="business-menu-item-body">
                       <span>{getMenuCategory(menu)}</span>
+                      {shouldShowMenuEvent(menu) ? (
+                        <em className="business-menu-event-badge">
+                          {getMenuEventLabel(menu)}
+                        </em>
+                      ) : null}
                       <h3>{getMenuName(menu)}</h3>
                       <strong>{formatPrice(getMenuPrice(menu))}</strong>
 

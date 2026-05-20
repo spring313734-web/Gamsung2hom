@@ -7,6 +7,7 @@
    - 원산지 / 추천 대상 / 포장 / 배달 4개 기본 정보만 간단히 표시
    - 메뉴가 1개 또는 2개일 때도 미리보기 카드가 보기 좋게 정렬되도록 조정
    - 공개 / 예약 / 배달 주문 접수는 결제 후 활성화되는 안내 강조
+   - 이벤트 적용 선택칸과 메뉴 카드 이벤트 배지를 표시
    ======================================== */
 
 .business-menu-page {
@@ -160,7 +161,8 @@
 }
 
 .business-menu-form input,
-.business-menu-form textarea {
+.business-menu-form textarea,
+.business-menu-form select {
   width: 100%;
   border: 1px solid rgba(143, 91, 39, 0.18);
   border-radius: 16px;
@@ -177,6 +179,12 @@
   padding: 0 14px;
 }
 
+.business-menu-form select {
+  min-height: 50px;
+  padding: 0 14px;
+  cursor: pointer;
+}
+
 .business-menu-form textarea {
   padding: 14px;
   resize: vertical;
@@ -184,7 +192,8 @@
 }
 
 .business-menu-form input:focus,
-.business-menu-form textarea:focus {
+.business-menu-form textarea:focus,
+.business-menu-form select:focus {
   border-color: rgba(255, 107, 44, 0.5);
   box-shadow: 0 0 0 4px rgba(255, 107, 44, 0.08);
 }
@@ -303,10 +312,19 @@
   gap: 12px;
 }
 
-.business-menu-choice-group {
+.business-menu-choice-group,
+.business-menu-event-select {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.business-menu-event-select small {
+  color: #8a7564;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  font-weight: 800;
+  word-break: keep-all;
 }
 
 .business-menu-choice-group > span {
@@ -547,6 +565,19 @@
   background: #fff0dc;
   color: #b95c13;
   font-size: 0.75rem;
+  font-weight: 950;
+}
+
+.business-menu-event-badge {
+  display: inline-flex;
+  width: fit-content;
+  margin: 0 0 10px 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(124, 84, 201, 0.12);
+  color: #5b37b7;
+  font-size: 0.75rem;
+  font-style: normal;
   font-weight: 950;
 }
 

@@ -11,6 +11,7 @@
 // - 메뉴 데이터는 공통으로 쓰고, 감성배달은 장바구니 / 배달 주문 중심으로 표시
 // - 데이터가 비어 있어도 준비중 안내가 자연스럽게 보이도록 구성
 // - 배달 가능 메뉴는 고객 오해를 줄이기 위해 '가능 · 배달료 별도'로 표시
+// - 이벤트가 없으면 고객 미니홈피에서 이벤트 영역 자체를 숨김
 // ========================================
 
 import { useEffect, useMemo, useState } from "react";
@@ -243,6 +244,25 @@ function getMenuDeliveryAvailable(menu) {
   }
 
   return deliveryText;
+}
+
+function getMenuEventLabel(menu) {
+  const eventText =
+    menu?.event_label ||
+    menu?.eventLabel ||
+    menu?.discount_label ||
+    menu?.promotion_label ||
+    "이벤트 없음";
+
+  const cleanText = String(eventText || "").trim();
+
+  return cleanText || "이벤트 없음";
+}
+
+function shouldShowMenuEvent(menu) {
+  const eventLabel = getMenuEventLabel(menu);
+
+  return Boolean(eventLabel && eventLabel !== "이벤트 없음");
 }
 
 function getEventTitle(event) {
@@ -734,6 +754,12 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
                       {getMenuCategory(menu)}
                     </span>
 
+                    {shouldShowMenuEvent(menu) ? (
+                      <span className="store-product-category">
+                        {getMenuEventLabel(menu)}
+                      </span>
+                    ) : null}
+
                     <h3>{menuName}</h3>
 
                     <strong>{formatPrice(getMenuPrice(menu))}</strong>
@@ -794,20 +820,20 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
         )}
       </section>
 
-      <section className="store-mini-section">
-        <div className="store-mini-section-head">
-          <div>
-            <span className="store-mini-label">EVENT</span>
-            <h2>가게 이벤트 / 혜택</h2>
+      {events.length > 0 ? (
+        <section className="store-mini-section">
+          <div className="store-mini-section-head">
+            <div>
+              <span className="store-mini-label">EVENT</span>
+              <h2>가게 이벤트 / 혜택</h2>
+            </div>
+
+            <p>
+              사장님이 할인, 혜택, 관광객 대상 이벤트를 등록하면 이곳에 함께
+              표시됩니다.
+            </p>
           </div>
 
-          <p>
-            사장님이 할인, 혜택, 관광객 대상 이벤트를 등록하면 이곳에 함께
-            표시됩니다.
-          </p>
-        </div>
-
-        {events.length > 0 ? (
           <div className="store-event-grid">
             {events.map((event) => {
               const eventImageUrl = getEventImageUrl(event);
@@ -831,16 +857,8 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
               );
             })}
           </div>
-        ) : (
-          <div className="store-mini-ready-box">
-            <strong>진행 중인 가게 이벤트가 없습니다</strong>
-            <p>
-              사장님이 이벤트를 등록하면 감성여행2와 감성배달 미니홈피에 함께
-              표시됩니다.
-            </p>
-          </div>
-        )}
-      </section>
+        </section>
+      ) : null}
 
       <section className="store-mini-bottom-card">
         <div>
