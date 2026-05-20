@@ -7,8 +7,8 @@
 // - store_menus 테이블이 없거나 저장 실패 시에도 화면 미리보기용으로 메뉴를 추가할 수 있음
 // - 사진 파일 선택만 사용하고 주소 입력칸은 제거하여 사장님이 사진만 고르면 바로 미리보기로 표시
 // - 가격 입력 시 숫자만 받아 천 단위 콤마를 자동 표시
-// - 원산지 / 추천 대상 / 포장 가능 / 배달 가능 4개 기본 정보만 추가해 입력 부담을 줄임
-// - 설명은 제일 아래에 두어 메뉴 특징을 자유롭게 작성할 수 있게 구성
+// - 사장님 입력 부담을 줄이기 위해 원산지 / 추천 대상 / 포장 / 배달 4개 기본 정보만 사용
+// - 메뉴가 1개 또는 2개일 때도 미니홈피 미리보기 카드가 어색하게 붙지 않도록 보기 좋게 정렬
 // - 실제 공개 / 예약 접수 / 배달 주문 접수는 운영 시작 결제 후 활성화된다는 안내 표시
 // ========================================
 
@@ -28,7 +28,7 @@ const emptyDraft = {
   imageFileName: "",
   category: "",
   origin: "",
-  recommendedFor: "",
+  targetCustomer: "",
   takeoutAvailable: "가능",
   deliveryAvailable: "가능",
 };
@@ -170,32 +170,56 @@ function getMenuCategory(menu) {
 }
 
 function getMenuOrigin(menu) {
-  return menu?.origin || menu?.origin_info || menu?.country_of_origin || "";
+  return (
+    menu?.origin ||
+    menu?.ingredient_origin ||
+    menu?.country_of_origin ||
+    menu?.menu_origin ||
+    "미입력"
+  );
 }
 
-function getMenuRecommendedFor(menu) {
-  return menu?.recommended_for || menu?.recommendedFor || menu?.target_customer || "";
+function getMenuTargetCustomer(menu) {
+  return (
+    menu?.target_customer ||
+    menu?.recommended_for ||
+    menu?.recommend_target ||
+    menu?.targetCustomer ||
+    "미입력"
+  );
+}
+
+function getAvailabilityText(value, fallback = "가능") {
+  if (value === true) return "가능";
+  if (value === false) return "불가";
+
+  const text = String(value || "").trim();
+
+  if (!text) return fallback;
+  if (text === "true") return "가능";
+  if (text === "false") return "불가";
+
+  return text;
 }
 
 function getMenuTakeoutAvailable(menu) {
-  return menu?.takeout_available || menu?.takeoutAvailable || menu?.takeout || "";
+  return getAvailabilityText(
+    menu?.takeout_available ??
+      menu?.is_takeout_available ??
+      menu?.packing_available ??
+      menu?.takeoutAvailable,
+    "가능"
+  );
 }
 
 function getMenuDeliveryAvailable(menu) {
-  return menu?.delivery_available || menu?.deliveryAvailable || menu?.delivery || "";
+  return getAvailabilityText(
+    menu?.delivery_available ??
+      menu?.is_delivery_available ??
+      menu?.deliveryAvailable,
+    "가능"
+  );
 }
-
-function buildMenuDetailText(menu) {
-  const rows = [
-    ["원산지", getMenuOrigin(menu)],
-    ["추천 대상", getMenuRecommendedFor(menu)],
-    ["포장", getMenuTakeoutAvailable(menu)],
-    ["배달", getMenuDeliveryAvailable(menu)],
-  ].filter(([, value]) => String(value || "").trim());
-
-  return rows;
-}
-
 
 function sortMenus(a, b) {
   const aOrder = Number(a?.sort_order ?? a?.order_no ?? 9999);
@@ -256,6 +280,12 @@ export default function BusinessMenuManagePage() {
   const sortedMenus = useMemo(() => {
     return [...menus].sort(sortMenus);
   }, [menus]);
+
+  const previewGridClassName = useMemo(() => {
+    if (sortedMenus.length === 1) return "business-menu-grid is-single";
+    if (sortedMenus.length === 2) return "business-menu-grid is-double";
+    return "business-menu-grid";
+  }, [sortedMenus.length]);
 
   useEffect(() => {
     let mounted = true;
@@ -404,6 +434,10 @@ export default function BusinessMenuManagePage() {
 
     if (!file) return;
 
+    if (draft.imagePreviewUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(draft.imagePreviewUrl);
+    }
+
     const previewUrl = URL.createObjectURL(file);
 
     setDraft((prev) => ({
@@ -441,9 +475,13 @@ export default function BusinessMenuManagePage() {
       image_url: previewImageUrl,
       category: draft.category.trim() || "대표 메뉴",
       origin: draft.origin.trim(),
-      recommended_for: draft.recommendedFor.trim(),
+      ingredient_origin: draft.origin.trim(),
+      target_customer: draft.targetCustomer.trim(),
+      recommended_for: draft.targetCustomer.trim(),
       takeout_available: draft.takeoutAvailable,
       delivery_available: draft.deliveryAvailable,
+      is_takeout_available: draft.takeoutAvailable === "가능",
+      is_delivery_available: draft.deliveryAvailable === "가능",
       is_available: true,
       sort_order: menus.length + 1,
     };
@@ -473,6 +511,14 @@ export default function BusinessMenuManagePage() {
           description: draft.description.trim(),
           image_url: "",
           category: draft.category.trim() || "대표 메뉴",
+          origin: draft.origin.trim(),
+          ingredient_origin: draft.origin.trim(),
+          target_customer: draft.targetCustomer.trim(),
+          recommended_for: draft.targetCustomer.trim(),
+          takeout_available: draft.takeoutAvailable,
+          delivery_available: draft.deliveryAvailable,
+          is_takeout_available: draft.takeoutAvailable === "가능",
+          is_delivery_available: draft.deliveryAvailable === "가능",
           is_available: true,
           sort_order: menus.length + 1,
         })
@@ -483,7 +529,7 @@ export default function BusinessMenuManagePage() {
         throw error;
       }
 
-      setMenus((prev) => [data ? { ...data, ...nextMenu, id: data.id || nextMenu.id } : nextMenu, ...prev]);
+      setMenus((prev) => [data || nextMenu, ...prev]);
       setDraft(emptyDraft);
       setNoticeMessage("상품/메뉴를 저장했습니다.");
     } catch (error) {
@@ -491,7 +537,7 @@ export default function BusinessMenuManagePage() {
       setMenus((prev) => [nextMenu, ...prev]);
       setLocalOnlyMode(true);
       setNoticeMessage(
-        "store_menus 저장 연결을 확인해야 합니다. 우선 화면 미리보기용으로 메뉴를 추가했습니다."
+        "store_menus 저장 컬럼을 확인해야 합니다. 우선 화면 미리보기용으로 메뉴를 추가했습니다."
       );
     } finally {
       setSaving(false);
@@ -578,8 +624,8 @@ export default function BusinessMenuManagePage() {
 
           <p>
             결제 전에도 메뉴명, 가격, 사진, 원산지, 추천 대상, 포장·배달 가능 여부를
-            간단히 등록하고 미니홈피에서 어떻게 보일지 확인할 수 있습니다. 실제 고객
-            공개와 예약·배달 주문 접수는 운영 시작 결제 후 활성화됩니다.
+            등록하고 미니홈피에서 어떻게 보일지 확인할 수 있습니다. 실제 고객 공개와
+            예약·배달 주문 접수는 운영 시작 결제 후 활성화됩니다.
           </p>
         </div>
 
@@ -626,7 +672,7 @@ export default function BusinessMenuManagePage() {
                 />
               </label>
 
-              <label>
+              <label className="full">
                 <span>분류</span>
                 <input
                   type="text"
@@ -639,7 +685,10 @@ export default function BusinessMenuManagePage() {
               <label className="image-file-label">
                 <span>사진 파일 선택</span>
                 <input type="file" accept="image/*" onChange={handleImageFileChange} />
-                <small>사진을 선택하면 아래에 바로 미리보기로 표시됩니다. 실제 업로드는 다음 단계에서 Storage와 연결합니다.</small>
+                <small>
+                  사진을 선택하면 아래에 바로 미리보기로 표시됩니다. 실제 업로드는 다음
+                  단계에서 Storage와 연결합니다.
+                </small>
               </label>
 
               {draft.imagePreviewUrl ? (
@@ -659,10 +708,11 @@ export default function BusinessMenuManagePage() {
                 </div>
               ) : null}
 
-              <div className="business-menu-basic-info full">
+              <div className="business-menu-basic-box">
                 <div className="business-menu-basic-head">
-                  <span>기본 정보</span>
-                  <p>사장님이 부담 없이 입력할 수 있도록 꼭 필요한 4개만 넣었습니다.</p>
+                  <span>BASIC INFO</span>
+                  <h3>메뉴 기본 정보</h3>
+                  <p>고객이 꼭 확인하는 정보만 간단하게 입력합니다.</p>
                 </div>
 
                 <div className="business-menu-basic-grid">
@@ -672,7 +722,7 @@ export default function BusinessMenuManagePage() {
                       type="text"
                       value={draft.origin}
                       onChange={(event) => updateDraft("origin", event.target.value)}
-                      placeholder="예: 복어 국내산, 쌀 국내산"
+                      placeholder="예: 국내산 복어"
                     />
                   </label>
 
@@ -680,23 +730,23 @@ export default function BusinessMenuManagePage() {
                     <span>추천 대상</span>
                     <input
                       type="text"
-                      value={draft.recommendedFor}
-                      onChange={(event) => updateDraft("recommendedFor", event.target.value)}
-                      placeholder="예: 가족 식사, 모임, 담백한 음식 선호 고객"
+                      value={draft.targetCustomer}
+                      onChange={(event) =>
+                        updateDraft("targetCustomer", event.target.value)
+                      }
+                      placeholder="예: 모임, 가족 식사, 관광객"
                     />
                   </label>
 
-                  <div className="business-menu-choice-field">
-                    <span>포장 가능</span>
+                  <div className="business-menu-choice-group">
+                    <span>포장 가능 여부</span>
                     <div className="business-menu-choice-row">
                       {["가능", "불가"].map((value) => (
                         <button
-                          key={`takeout-${value}`}
                           type="button"
+                          key={`takeout-${value}`}
                           className={
-                            draft.takeoutAvailable === value
-                              ? "business-menu-choice-button active"
-                              : "business-menu-choice-button"
+                            draft.takeoutAvailable === value ? "selected" : ""
                           }
                           onClick={() => updateDraft("takeoutAvailable", value)}
                         >
@@ -706,17 +756,15 @@ export default function BusinessMenuManagePage() {
                     </div>
                   </div>
 
-                  <div className="business-menu-choice-field">
-                    <span>배달 가능</span>
+                  <div className="business-menu-choice-group">
+                    <span>배달 가능 여부</span>
                     <div className="business-menu-choice-row">
                       {["가능", "불가"].map((value) => (
                         <button
-                          key={`delivery-${value}`}
                           type="button"
+                          key={`delivery-${value}`}
                           className={
-                            draft.deliveryAvailable === value
-                              ? "business-menu-choice-button active"
-                              : "business-menu-choice-button"
+                            draft.deliveryAvailable === value ? "selected" : ""
                           }
                           onClick={() => updateDraft("deliveryAvailable", value)}
                         >
@@ -733,12 +781,12 @@ export default function BusinessMenuManagePage() {
                 <textarea
                   value={draft.description}
                   onChange={(event) => updateDraft("description", event.target.value)}
-                  placeholder="메뉴 특징, 맛, 구성, 사장님이 추천하는 이유를 자유롭게 적어주세요."
+                  placeholder="메뉴 특징이나 추천 이유를 짧게 적어주세요."
                   rows={4}
                 />
               </label>
 
-              <button type="submit" className="business-menu-submit-btn" disabled={saving}>
+              <button type="submit" disabled={saving}>
                 {saving ? "저장 중..." : "상품/메뉴 추가"}
               </button>
             </form>
@@ -801,13 +849,15 @@ export default function BusinessMenuManagePage() {
           </div>
 
           {sortedMenus.length > 0 ? (
-            <div className="business-menu-grid">
+            <div className={previewGridClassName}>
               {sortedMenus.map((menu, index) => {
                 const imageUrl = getMenuImageUrl(menu);
-                const detailRows = buildMenuDetailText(menu);
 
                 return (
-                  <article className="business-menu-item" key={menu.id || `${getMenuName(menu)}-${index}`}>
+                  <article
+                    className="business-menu-item"
+                    key={menu.id || `${getMenuName(menu)}-${index}`}
+                  >
                     <div className="business-menu-image-box">
                       {imageUrl ? (
                         <img src={imageUrl} alt={getMenuName(menu)} />
@@ -824,16 +874,27 @@ export default function BusinessMenuManagePage() {
                       <h3>{getMenuName(menu)}</h3>
                       <strong>{formatPrice(getMenuPrice(menu))}</strong>
 
-                      {detailRows.length > 0 ? (
-                        <dl className="business-menu-meta-list">
-                          {detailRows.map(([label, value]) => (
-                            <div key={`${getMenuName(menu)}-${label}`}>
-                              <dt>{label}</dt>
-                              <dd>{value}</dd>
-                            </div>
-                          ))}
-                        </dl>
-                      ) : null}
+                      <dl className="business-menu-meta-list">
+                        <div>
+                          <dt>원산지</dt>
+                          <dd>{getDisplayValue(getMenuOrigin(menu))}</dd>
+                        </div>
+
+                        <div>
+                          <dt>추천 대상</dt>
+                          <dd>{getDisplayValue(getMenuTargetCustomer(menu))}</dd>
+                        </div>
+
+                        <div>
+                          <dt>포장</dt>
+                          <dd>{getMenuTakeoutAvailable(menu)}</dd>
+                        </div>
+
+                        <div>
+                          <dt>배달</dt>
+                          <dd>{getMenuDeliveryAvailable(menu)}</dd>
+                        </div>
+                      </dl>
 
                       <p>{getMenuDescription(menu)}</p>
                     </div>
@@ -846,8 +907,8 @@ export default function BusinessMenuManagePage() {
               <span>🍽️</span>
               <h3>아직 등록된 상품/메뉴가 없습니다</h3>
               <p>
-                위 입력창에서 메뉴명, 가격, 사진, 원산지, 추천 대상, 포장·배달 가능 여부를
-                넣으면 이곳에서 미니홈피에 보일 모습을 먼저 확인할 수 있습니다.
+                위 입력창에서 메뉴명, 가격, 사진, 원산지, 추천 대상, 포장·배달
+                가능 여부를 넣으면 이곳에서 미니홈피에 보일 모습을 먼저 확인할 수 있습니다.
               </p>
             </div>
           )}
