@@ -3,7 +3,9 @@
 // 📌 감성여행2 홈페이지 비밀번호 찾기 / 재설정 페이지
 // - 일반회원 / 소상공인 / 지자체·기관 유형별 비밀번호 재설정 요청 제공
 // - 일반회원과 지자체는 가입 이메일로 재설정 메일 발송
-// - 소상공인은 사업자번호 또는 이메일로 가입 이메일을 찾아 재설정 메일 발송
+// - 소상공인은 사업자번호 또는 이메일로 실제 수신 가능한 가입 이메일을 찾아 재설정 메일 발송
+// - 사업자번호용 내부 이메일(biz-사업자번호@gamsung-biz.com)은 재설정 메일 발송에 사용하지 않음
+// - 실제 이메일이 연결되지 않은 소상공인 계정은 관리자 확인 / 가입 이메일 입력 안내 메시지 표시
 // - Supabase Auth resetPasswordForEmail / updateUser 흐름 사용
 // - 이메일 링크로 돌아온 경우 새 비밀번호 입력 화면으로 전환
 // - 원본 회원 정보는 수정하지 않고 비밀번호 재설정 요청과 Auth 비밀번호 변경만 수행
@@ -38,6 +40,8 @@ const INITIAL_FORM = {
   newPasswordConfirm: "",
 };
 
+const INTERNAL_BUSINESS_EMAIL_DOMAIN = "gamsung-biz.com";
+
 function normalizeText(value) {
   return String(value || "").trim();
 }
@@ -60,29 +64,53 @@ function looksLikeBusinessNumber(value) {
   return cleaned.length >= 8 && cleaned.length <= 13;
 }
 
-function buildInternalBusinessEmail(businessNumber) {
-  const safeNumber = cleanBusinessNumber(businessNumber);
+function isInternalBusinessEmail(value) {
+  const email = normalizeEmail(value);
 
-  if (!safeNumber) return "";
-
-  return `biz-${safeNumber}@gamsung-biz.com`;
-}
-
-function getProfileEmail(profile) {
   return (
-    normalizeEmail(profile?.email) ||
-    normalizeEmail(profile?.login_email) ||
-    normalizeEmail(profile?.auth_email)
+    email.endsWith(`@${INTERNAL_BUSINESS_EMAIL_DOMAIN}`) ||
+    /^biz-\d+@/i.test(email)
   );
 }
 
-function getOwnerProfileEmail(ownerProfile) {
-  return (
-    normalizeEmail(ownerProfile?.email) ||
-    normalizeEmail(ownerProfile?.store_email) ||
-    normalizeEmail(ownerProfile?.login_email) ||
-    normalizeEmail(ownerProfile?.auth_email)
-  );
+function isUsableResetEmail(value) {
+  const email = normalizeEmail(value);
+
+  return Boolean(looksLikeEmail(email) && !isInternalBusinessEmail(email));
+}
+
+function getProfileEmailCandidates(profile) {
+  if (!profile) return [];
+
+  return [
+    profile.email,
+    profile.login_email,
+    profile.auth_email,
+    profile.contact_email,
+    profile.reset_email,
+  ]
+    .map(normalizeEmail)
+    .filter(Boolean);
+}
+
+function getOwnerProfileEmailCandidates(ownerProfile) {
+  if (!ownerProfile) return [];
+
+  return [
+    ownerProfile.email,
+    ownerProfile.store_email,
+    ownerProfile.login_email,
+    ownerProfile.auth_email,
+    ownerProfile.contact_email,
+    ownerProfile.reset_email,
+    ownerProfile.owner_email,
+  ]
+    .map(normalizeEmail)
+    .filter(Boolean);
+}
+
+function pickUsableResetEmail(candidates) {
+  return candidates.find(isUsableResetEmail) || "";
 }
 
 async function loadFirstRowByColumn(tableName, columnName, value) {
@@ -113,12 +141,14 @@ async function loadFirstRowByColumn(tableName, columnName, value) {
   }
 }
 
-async function findBusinessLoginEmailByNumber(businessNumber) {
+async function findBusinessResetEmailByNumber(businessNumber) {
   const safeBusinessNumber = cleanBusinessNumber(businessNumber);
 
   if (!safeBusinessNumber) {
     return "";
   }
+
+  const emailCandidates = [];
 
   const profileByUsername = await loadFirstRowByColumn(
     "profiles",
@@ -126,11 +156,7 @@ async function findBusinessLoginEmailByNumber(businessNumber) {
     safeBusinessNumber
   );
 
-  const profileEmail = getProfileEmail(profileByUsername);
-
-  if (profileEmail) {
-    return profileEmail;
-  }
+  emailCandidates.push(...getProfileEmailCandidates(profileByUsername));
 
   const ownerByBusinessNumber = await loadFirstRowByColumn(
     "owner_profiles",
@@ -138,24 +164,16 @@ async function findBusinessLoginEmailByNumber(businessNumber) {
     safeBusinessNumber
   );
 
-  const ownerBusinessEmail = getOwnerProfileEmail(ownerByBusinessNumber);
-
-  if (ownerBusinessEmail) {
-    return ownerBusinessEmail;
-  }
+  emailCandidates.push(...getOwnerProfileEmailCandidates(ownerByBusinessNumber));
 
   if (ownerByBusinessNumber?.user_id) {
-    const ownerProfile = await loadFirstRowByColumn(
+    const linkedProfile = await loadFirstRowByColumn(
       "profiles",
       "user_id",
       ownerByBusinessNumber.user_id
     );
 
-    const ownerProfileEmail = getProfileEmail(ownerProfile);
-
-    if (ownerProfileEmail) {
-      return ownerProfileEmail;
-    }
+    emailCandidates.push(...getProfileEmailCandidates(linkedProfile));
   }
 
   const ownerByBizNo = await loadFirstRowByColumn(
@@ -164,27 +182,19 @@ async function findBusinessLoginEmailByNumber(businessNumber) {
     safeBusinessNumber
   );
 
-  const ownerBizNoEmail = getOwnerProfileEmail(ownerByBizNo);
-
-  if (ownerBizNoEmail) {
-    return ownerBizNoEmail;
-  }
+  emailCandidates.push(...getOwnerProfileEmailCandidates(ownerByBizNo));
 
   if (ownerByBizNo?.user_id) {
-    const ownerProfile = await loadFirstRowByColumn(
+    const linkedProfile = await loadFirstRowByColumn(
       "profiles",
       "user_id",
       ownerByBizNo.user_id
     );
 
-    const ownerProfileEmail = getProfileEmail(ownerProfile);
-
-    if (ownerProfileEmail) {
-      return ownerProfileEmail;
-    }
+    emailCandidates.push(...getProfileEmailCandidates(linkedProfile));
   }
 
-  return buildInternalBusinessEmail(safeBusinessNumber);
+  return pickUsableResetEmail(emailCandidates);
 }
 
 function getLoginFieldLabel(accountType) {
@@ -201,7 +211,7 @@ function getLoginFieldLabel(accountType) {
 
 function getLoginFieldPlaceholder(accountType) {
   if (accountType === "business") {
-    return "사업자번호 또는 이메일을 입력해주세요";
+    return "사업자번호 또는 실제 가입 이메일";
   }
 
   if (accountType === "gov") {
@@ -211,11 +221,27 @@ function getLoginFieldPlaceholder(accountType) {
   return "example@email.com";
 }
 
+function getLoginFieldHelp(accountType) {
+  if (accountType === "business") {
+    return "사업자번호로 찾을 때는 계정에 실제 수신 가능한 이메일이 연결되어 있어야 합니다.";
+  }
+
+  if (accountType === "gov") {
+    return "지자체 / 기관 담당자 이메일로 재설정 메일을 받습니다.";
+  }
+
+  return "가입한 이메일로 재설정 메일을 받습니다.";
+}
+
 function getResetErrorMessage(error) {
   const message = error?.message || "";
 
   if (message.includes("User not found")) {
     return "입력한 정보로 가입된 계정을 찾지 못했습니다.";
+  }
+
+  if (message.includes("Email address") && message.includes("invalid")) {
+    return "비밀번호 재설정 메일을 보낼 수 있는 실제 이메일이 아닙니다. 가입 때 입력한 이메일로 다시 시도해주세요.";
   }
 
   if (message.includes("rate limit")) {
@@ -254,6 +280,7 @@ export default function ResetPasswordPage() {
 
   const loginFieldLabel = getLoginFieldLabel(selectedAccountType);
   const loginFieldPlaceholder = getLoginFieldPlaceholder(selectedAccountType);
+  const loginFieldHelp = getLoginFieldHelp(selectedAccountType);
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
@@ -304,6 +331,10 @@ export default function ResetPasswordPage() {
     if (submitting) return;
 
     setSelectedAccountType(type);
+    setForm((prev) => ({
+      ...prev,
+      loginId: "",
+    }));
     setResultMessage("");
     setErrorMessage("");
   }
@@ -314,7 +345,15 @@ export default function ResetPasswordPage() {
     }
 
     if (looksLikeEmail(safeLoginId)) {
-      return normalizeEmail(safeLoginId);
+      const email = normalizeEmail(safeLoginId);
+
+      if (isInternalBusinessEmail(email)) {
+        throw new Error(
+          "사업자번호 로그인용 내부 이메일은 실제 메일함이 없어 재설정 메일을 받을 수 없습니다. 실제 가입 이메일을 입력하거나 관리자에게 비밀번호 초기화를 요청해주세요."
+        );
+      }
+
+      return email;
     }
 
     if (selectedAccountType !== "business") {
@@ -325,11 +364,11 @@ export default function ResetPasswordPage() {
       throw new Error("사업자번호는 숫자 기준 8~13자리로 입력해주세요.");
     }
 
-    const businessEmail = await findBusinessLoginEmailByNumber(safeLoginId);
+    const businessEmail = await findBusinessResetEmailByNumber(safeLoginId);
 
     if (!businessEmail) {
       throw new Error(
-        "사업자번호와 연결된 로그인 이메일을 찾지 못했습니다. 아이디 찾기에서 먼저 확인해주세요."
+        "이 사업자번호에는 실제 수신 가능한 이메일이 연결되어 있지 않습니다. 가입 때 입력한 이메일로 다시 시도하거나 관리자에게 비밀번호 초기화를 요청해주세요."
       );
     }
 
@@ -443,7 +482,8 @@ export default function ResetPasswordPage() {
 
           <p className="login-desc">
             일반회원과 지자체는 가입 이메일을 입력하고, 소상공인은
-            사업자번호 또는 이메일로 비밀번호 재설정 메일을 받을 수 있습니다.
+            사업자번호 또는 실제 가입 이메일로 비밀번호 재설정 메일을 받을 수
+            있습니다.
           </p>
         </div>
 
@@ -490,10 +530,16 @@ export default function ResetPasswordPage() {
               placeholder={loginFieldPlaceholder}
               disabled={submitting}
             />
-            <em className="login-field-help">
-              재설정 메일은 Supabase Auth에 등록된 이메일로 발송됩니다.
-            </em>
+            <em className="login-field-help">{loginFieldHelp}</em>
           </label>
+
+          {selectedAccountType === "business" ? (
+            <p className="login-result error">
+              사업자번호로 로그인은 가능하지만, 비밀번호 재설정 메일은 실제
+              이메일 주소로만 받을 수 있습니다. 가입 때 이메일을 입력하지 않은
+              소상공인 계정은 관리자 확인이 필요합니다.
+            </p>
+          ) : null}
 
           {errorMessage ? (
             <p className="login-result error" role="alert">
