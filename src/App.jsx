@@ -3,7 +3,7 @@
 // 📌 감성여행2 홈페이지 라우터 메인 구성
 // - 공용 상단 헤더 표시
 // - 홈 / 감성여행2 소개 / 감성배달 소개 / 이벤트 / 문의 라우팅 연결
-// - 로그인 / 회원가입 / 권한별 관리 화면 라우팅 연결
+// - 로그인 / 회원가입 / 아이디 찾기 / 비밀번호 찾기 / 권한별 관리 화면 라우팅 연결
 // - 권한별 마이페이지 /my 연결
 // - 소상공인 내 가게 관리 /business/dashboard 연결
 // - 소상공인 상품/메뉴 관리 /business/menu 연결
@@ -30,6 +30,8 @@ import EventsPage from "./pages/EventsPage";
 import AppDownloadPage from "./pages/AppDownloadPage";
 import AdminInquiriesPage from "./pages/AdminInquiriesPage";
 import LoginPage from "./pages/LoginPage";
+import FindIdPage from "./pages/FindIdPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import SignupPage from "./pages/SignupPage";
 import UserSignupPage from "./pages/UserSignupPage";
 import BusinessSignupPage from "./pages/BusinessSignupPage";
@@ -103,6 +105,10 @@ export default function App() {
             <Route path="/app" element={<AppDownloadPage />} />
 
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/find-id" element={<FindIdPage />} />
+            <Route path="/find-business-id" element={<FindIdPage defaultAccountType="business" />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/reset-password/complete" element={<ResetPasswordPage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/signup/user" element={<UserSignupPage />} />
             <Route path="/signup/business" element={<BusinessSignupPage />} />

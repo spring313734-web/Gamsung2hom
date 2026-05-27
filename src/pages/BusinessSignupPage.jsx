@@ -11,6 +11,7 @@
 // - owner_subscriptions는 가입 단계에서 저장하지 않고, 나중에 결제 완료 시 저장
 // - 크롬 자동완성 오입력 방지를 위해 input name / autoComplete / inputMode를 명확히 지정
 // - 가입 완료 후 홈이 아니라 소상공인 내 가게 관리 준비 화면으로 이동
+// - 이미 계정이 있는 소상공인은 로그인 / 사업자번호 찾기 / 비밀번호 찾기로 이동
 // ========================================
 
 import { useMemo, useState } from "react";
@@ -313,6 +314,10 @@ export default function BusinessSignupPage() {
         <div className="business-signup-hero">
           <Link to="/signup" className="business-signup-back">
             ← 회원가입 유형 선택으로 돌아가기
+          </Link>
+
+          <Link to="/login" className="business-signup-back">
+            ← 이미 입점 계정이 있다면 로그인하기
           </Link>
 
           <p className="business-signup-badge">감성배달 · 감성여행2 입점</p>

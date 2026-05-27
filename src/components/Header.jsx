@@ -4,8 +4,8 @@
 // - 왼쪽 로고는 PNG 이미지 파일로 표시하고 홈으로 이동
 // - 로고 파일 위치: public/logo-gamsung2-header.png
 // - 감성여행2 소개 / 감성배달 소개 / 이벤트 / 제휴문의 메뉴 표시
-// - 로그인 전에는 로그인 버튼과 회원가입 버튼을 함께 표시
-// - 로그인 후에는 회원가입 버튼 대신 공개 이름 기준 별명/아이디 표시
+// - 로그인 전에는 로그인 버튼만 표시하고 회원가입은 로그인 화면 안에서 연결
+// - 로그인 후에는 공개 이름 기준 별명/아이디 표시
 // - 로그인 후 마이페이지 버튼 표시
 // - 공개 이름 선택이 별명이면 별명 우선, 아니면 아이디 우선 표시
 // - 로그아웃 버튼으로 Supabase 세션 종료
@@ -317,29 +317,17 @@ export default function Header() {
                 </button>
               </div>
             ) : (
-              <>
-                <NavLink
-                  to="/login"
-                  className={({ isActive }) =>
-                    isActive
-                      ? "nav-link active login-nav-link"
-                      : "nav-link login-nav-link"
-                  }
-                >
-                  로그인
-                </NavLink>
-
-                <NavLink
-                  to="/signup"
-                  className={({ isActive }) =>
-                    isActive
-                      ? "nav-link active signup-nav-link"
-                      : "nav-link signup-nav-link"
-                  }
-                >
-                  회원가입
-                </NavLink>
-              </>
+              <NavLink
+                to="/login"
+                className={({ isActive }) =>
+                  isActive
+                    ? "nav-link active login-nav-link"
+                    : "nav-link login-nav-link"
+                }
+                onClick={closeAllMenus}
+              >
+                로그인
+              </NavLink>
             )}
 
             <button

@@ -11,6 +11,7 @@
 // - 기관 식별번호와 부서 대표전화도 gov_profiles 기존 컬럼과 새 컬럼에 함께 저장
 // - 앱에서 성공한 Supabase 공용 구조와 동일하게 profiles.gov_profile_id를 연결
 // - Auth 트리거가 실행될 때도 예전 컬럼(org_name/email/manager 등)이 채워지도록 metadata 보강
+// - 이미 계정이 있는 담당자는 로그인 / 아이디 찾기 / 비밀번호 찾기로 이동
 // - gov_profiles 저장 후 한 번 더 update하여 새 컬럼과 예전 컬럼 누락을 방지
 // ========================================
 
@@ -363,6 +364,10 @@ export default function GovSignupPage() {
         <div className="gov-signup-hero">
           <Link to="/signup" className="gov-signup-back">
             ← 회원가입 유형 선택으로 돌아가기
+          </Link>
+
+          <Link to="/login" className="gov-signup-back">
+            ← 이미 기관 계정이 있다면 로그인하기
           </Link>
 
           <p className="gov-signup-badge">감성여행2 지자체 / 기관 회원가입</p>

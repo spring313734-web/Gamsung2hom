@@ -14,6 +14,7 @@
 // - 내국인 / 외국인 선택값은 auth metadata에 traveler_type으로 보관
 // - 전화번호 / 이메일 / 주소 자동완성 오입력 방지를 위해 name / autoComplete / inputMode 지정
 // - 감성여행2 / 감성배달 / 홈페이지 공통 user_id 체계 준비
+// - 이미 계정이 있는 사용자는 로그인 / 아이디 찾기 / 비밀번호 찾기로 이동
 // ========================================
 
 import { useMemo, useState } from "react";
@@ -459,6 +460,10 @@ export default function UserSignupPage() {
         <div className="user-signup-hero">
           <Link to="/signup" className="user-signup-back">
             ← 회원가입 유형 선택으로 돌아가기
+          </Link>
+
+          <Link to="/login" className="user-signup-back">
+            ← 이미 계정이 있다면 로그인하기
           </Link>
 
           <p className="user-signup-badge">감성여행2 일반회원 가입</p>

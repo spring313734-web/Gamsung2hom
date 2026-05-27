@@ -2,6 +2,7 @@
 // ========================================
 // 📌 감성여행2 홈페이지 로그인 페이지
 // - 일반회원 / 소상공인 / 지자체 계정 유형 선택 UI 제공
+// - 로그인 화면 안에서 회원가입 / 아이디 찾기 / 비밀번호 찾기로 이동
 // - 소상공인은 사업자번호 또는 이메일 둘 다 로그인 가능
 // - 사업자번호 입력 시 profiles.username 또는 owner_profiles의 사업자번호에서 실제 로그인 이메일을 찾음
 // - 아이디 기억하기를 체크했을 때만 로그인 아이디를 localStorage에 저장
@@ -766,7 +767,12 @@ export default function LoginPage() {
           </button>
 
           <div className="login-links">
-            <Link to="/signup">아직 계정이 없어요</Link>
+            <Link to="/find-id">아이디 / 가입 이메일 찾기</Link>
+            <Link to="/reset-password">비밀번호 찾기</Link>
+          </div>
+
+          <div className="login-links">
+            <Link to="/signup">회원가입 유형 선택</Link>
             <Link to="/signup/business">소상공인 무료 입점</Link>
             <Link to="/signup/gov">지자체 / 기관 가입</Link>
           </div>
