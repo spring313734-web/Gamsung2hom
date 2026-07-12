@@ -306,7 +306,6 @@ export default function GovSignupPage() {
             org_name: safeOrganizationName,
             biz_no: safeOrganizationNumber,
             rep_phone: safeDepartmentPhone,
-            address: safeRegionName,
             email: safeManagerEmail,
             manager: safeManagerName,
 

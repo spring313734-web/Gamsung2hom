@@ -774,15 +774,6 @@ export default function StoreMiniHomePage({ mode = "travel" }) {
     setTravelSaveFeedback(dropdownKey, savedMessage, "saved");
   }
 
-  function handleTravelChoiceKeyDown(event, option, dropdownKey, targetName = "") {
-    if (event.key !== "Enter" && event.key !== " ") {
-      return;
-    }
-
-    event.preventDefault();
-    handleTravelSaveChoice(option, dropdownKey, targetName);
-  }
-
   function renderStoreTravelSavePanel(targetName = "") {
     if (mode !== "travel" || !storeSavePanelOpen) {
       return null;

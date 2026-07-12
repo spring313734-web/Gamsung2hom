@@ -11,7 +11,7 @@
 // - 원본 회원 정보는 수정하지 않고 비밀번호 재설정 요청과 Auth 비밀번호 변경만 수행
 // ========================================
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import "./LoginPage.css";

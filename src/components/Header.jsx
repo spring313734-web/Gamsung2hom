@@ -155,7 +155,14 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
-    closeAllMenus();
+    const timeoutId = window.setTimeout(() => {
+      setIsOpen(false);
+      setIsMobileMenuOpen(false);
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
   }, [location.pathname]);
 
   return (

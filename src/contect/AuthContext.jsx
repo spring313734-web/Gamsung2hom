@@ -325,10 +325,13 @@ export function AuthProvider({ children }) {
     };
   }, [loadProfileForSession]);
 
-  async function refreshUserProfile(nextSession = session) {
-    setLoading(true);
-    await loadProfileForSession(nextSession);
-  }
+  const refreshUserProfile = useCallback(
+    async (nextSession = session) => {
+      setLoading(true);
+      await loadProfileForSession(nextSession);
+    },
+    [loadProfileForSession, session]
+  );
 
   async function logout() {
     try {
@@ -406,11 +409,13 @@ export function AuthProvider({ children }) {
       updateProfile,
       refreshUserProfile,
     };
-  }, [currentUser, session, loading]);
+  }, [currentUser, session, loading, refreshUserProfile]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+// AuthProvider와 함께 사용하는 공용 훅의 기존 import 경로를 유지합니다.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const context = useContext(AuthContext);
 
