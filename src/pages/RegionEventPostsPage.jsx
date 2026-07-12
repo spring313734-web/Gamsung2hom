@@ -13,7 +13,7 @@
 // - 후기 데이터가 없어도 빈 상태 화면이 깨지지 않도록 방어 처리
 // ========================================
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import PageHero from "../components/PageHero";
 import { getRegionBySlug } from "../data/regionEvents";
@@ -432,20 +432,19 @@ export default function RegionEventPostsPage() {
   const festivalEvents = normalizeArray(region?.festivalEvents);
   const tourEvents = normalizeArray(region?.tourEvents);
 
-  const postItems = useMemo(
-    () => buildPostItems(region, festivalEvents, tourEvents, currentUserId),
-    [region, festivalEvents, tourEvents, currentUserId]
+  const postItems = buildPostItems(
+    region,
+    festivalEvents,
+    tourEvents,
+    currentUserId
   );
 
-  const visiblePostItems = useMemo(() => {
-    const filteredItems = filterPostItems(postItems, filterType, isLoggedIn);
-    return sortPostItems(filteredItems, sortType);
-  }, [postItems, filterType, sortType, isLoggedIn]);
-
-  const myPostCount = useMemo(
-    () => postItems.filter((item) => item?.isMine).length,
-    [postItems]
+  const visiblePostItems = sortPostItems(
+    filterPostItems(postItems, filterType, isLoggedIn),
+    sortType
   );
+
+  const myPostCount = postItems.filter((item) => item?.isMine).length;
 
   const heroBadge = "PARTICIPANT POSTS";
   const heroTitle = `${region?.name ?? "지역"} 후기 / 참여글`;

@@ -9,7 +9,7 @@
 // - 후기/참여글 실데이터는 이후 Firebase gov_posts 연결 또는 별도 이전 단계에서 확장
 // ========================================
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import PageHero from "../components/PageHero";
 import { getGovRegionBySlug } from "../lib/govEventApi";
@@ -527,40 +527,6 @@ export default function RegionEventHubDetailPage() {
     navigate(`/events/region/${slug}/posts`);
   }
 
-  if (isLoading) {
-    return (
-      <div className="region-detail-page">
-        <div className="region-detail-empty">
-          <p className="region-detail-empty-badge">EVENT HUB</p>
-          <h1>지역 허브를 불러오는 중입니다.</h1>
-          <p>지자체에서 등록한 이벤트 데이터를 서버에서 불러오고 있습니다.</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!region) {
-    return (
-      <div className="region-detail-page">
-        <div className="region-detail-empty">
-          <p className="region-detail-empty-badge">EVENT HUB</p>
-          <h1>지역 정보를 찾을 수 없습니다.</h1>
-          <p>
-            {errorMessage ||
-              "선택한 지역 허브 정보가 아직 준비되지 않았거나 주소가 잘못되었습니다."}
-          </p>
-          <button
-            type="button"
-            className="region-detail-back-button"
-            onClick={handleGoEventsHub}
-          >
-            이벤트 허브 메인으로 돌아가기
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   const tags = normalizeArray(region?.tags);
   const festivalEvents = normalizeArray(region?.festivalEvents);
   const tourEvents = normalizeArray(region?.tourEvents);
@@ -599,20 +565,69 @@ export default function RegionEventHubDetailPage() {
   );
 
   useEffect(() => {
-    setPhotoPage(1);
+    const timeoutId = window.setTimeout(() => {
+      setPhotoPage(1);
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
   }, [slug]);
 
   useEffect(() => {
+    let timeoutId;
+
     if (photoPage > photoPageCount) {
-      setPhotoPage(photoPageCount);
+      timeoutId = window.setTimeout(() => {
+        setPhotoPage(photoPageCount);
+      }, 0);
     }
+
+    return () => {
+      if (timeoutId !== undefined) {
+        window.clearTimeout(timeoutId);
+      }
+    };
   }, [photoPage, photoPageCount]);
 
-  const pagedPhotoItems = useMemo(() => {
-    const startIndex = (photoPage - 1) * PHOTO_ITEMS_PER_PAGE;
-    const endIndex = startIndex + PHOTO_ITEMS_PER_PAGE;
-    return photoItems.slice(startIndex, endIndex);
-  }, [photoItems, photoPage]);
+  const startIndex = (photoPage - 1) * PHOTO_ITEMS_PER_PAGE;
+  const endIndex = startIndex + PHOTO_ITEMS_PER_PAGE;
+  const pagedPhotoItems = photoItems.slice(startIndex, endIndex);
+
+
+  if (isLoading) {
+    return (
+      <div className="region-detail-page">
+        <div className="region-detail-empty">
+          <p className="region-detail-empty-badge">EVENT HUB</p>
+          <h1>지역 허브를 불러오는 중입니다.</h1>
+          <p>지자체에서 등록한 이벤트 데이터를 서버에서 불러오고 있습니다.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!region) {
+    return (
+      <div className="region-detail-page">
+        <div className="region-detail-empty">
+          <p className="region-detail-empty-badge">EVENT HUB</p>
+          <h1>지역 정보를 찾을 수 없습니다.</h1>
+          <p>
+            {errorMessage ||
+              "선택한 지역 허브 정보가 아직 준비되지 않았거나 주소가 잘못되었습니다."}
+          </p>
+          <button
+            type="button"
+            className="region-detail-back-button"
+            onClick={handleGoEventsHub}
+          >
+            이벤트 허브 메인으로 돌아가기
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
